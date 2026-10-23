@@ -53,4 +53,20 @@ describe("POST /api/auth/register", () => {
     expect(res.status).toBe(400);
     expect(res.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
   });
+
+  it("creates a USER and returns token without passwordHash", async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({ email: "newuser@example.com", password: "password1" });
+
+    expect(res.status).toBe(201);
+    expect(res.body.user).toMatchObject({
+      email: "newuser@example.com",
+      role: "USER",
+    });
+    expect(res.body.user.id).toEqual(expect.any(String));
+    expect(res.body.user.passwordHash).toBeUndefined();
+    expect(res.body.token).toEqual(expect.any(String));
+  });
 });
