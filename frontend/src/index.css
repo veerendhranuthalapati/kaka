@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --canvas: 245 244 239;
+    --surface: 255 255 255;
+    --raised: 239 237 230;
+    --ink: 22 32 42;
+    --muted: 91 104 117;
+    --line: 211 208 198;
+    --accent: 15 118 110;
+    --accent-strong: 13 95 89;
+    --danger: 185 28 28;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --canvas: 14 20 24;
+      --surface: 23 32 38;
+      --raised: 31 43 50;
+      --ink: 232 237 241;
+      --muted: 156 170 181;
+      --line: 53 68 78;
+      --accent: 45 212 191;
+      --accent-strong: 94 234 212;
+      --danger: 248 113 113;
+    }
+  }
+
+  html {
+    @apply bg-canvas text-ink antialiased;
+  }
+
+  body {
+    @apply min-h-screen bg-canvas font-sans text-ink;
+  }
+
+  ::selection {
+    @apply bg-accent/30;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-canvas;
+  }
+}
+
+@layer components {
+  .shell {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .surface {
+    @apply rounded-2xl border border-line bg-surface shadow-card;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-semibold text-ink;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink shadow-sm placeholder:text-muted/80 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition duration-200 ease-gentle focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent text-canvas hover:bg-accent-strong active:translate-y-px;
+  }
+
+  .btn-secondary {
+    @apply btn border border-line bg-surface text-ink hover:bg-raised active:translate-y-px;
+  }
+
+  .btn-danger {
+    @apply btn border border-danger/40 bg-danger/10 text-danger hover:bg-danger/20;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full border border-line bg-raised px-2.5 py-1 text-xs font-semibold tracking-wide text-muted;
+  }
+
+  .link {
+    @apply rounded font-semibold text-accent underline-offset-4 transition-colors hover:text-accent-strong hover:underline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
