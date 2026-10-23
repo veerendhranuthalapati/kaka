@@ -44,4 +44,27 @@ describe("POST /api/vehicles", () => {
     expect(res.status).toBe(403);
     expect(res.body.error).toMatchObject({ code: "FORBIDDEN" });
   });
+
+  it("rejects invalid or negative vehicle input", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const missingModel = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, model: undefined });
+    const negativePrice = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, price: -1 });
+    const negativeQuantity = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, quantity: -1 });
+
+    for (const res of [missingModel, negativePrice, negativeQuantity]) {
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+    }
+  });
 });
