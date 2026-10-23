@@ -50,4 +50,19 @@ describe("requireAuth", () => {
     expect(res.status).toBe(401);
     expect(res.body.error).toMatchObject({ code: "UNAUTHORIZED" });
   });
+
+  it("rejects a token signed with a different algorithm", async () => {
+    const token = jwt.sign(
+      { sub: "user-1", email: "user@example.com", role: "USER" },
+      process.env.JWT_SECRET!,
+      { algorithm: "HS384", expiresIn: "15m" },
+    );
+
+    const res = await request(protectedApp())
+      .get("/protected")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toMatchObject({ code: "UNAUTHORIZED" });
+  });
 });
