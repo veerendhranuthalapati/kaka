@@ -27,6 +27,7 @@ export interface VehicleRepository {
   search(filters: VehicleSearchFilters): Promise<Vehicle[]>;
   findById(id: string): Promise<Vehicle | null>;
   update(id: string, data: UpdateVehicleInput): Promise<Vehicle>;
+  delete(id: string): Promise<Vehicle>;
 }
 
 export class PrismaVehicleRepository implements VehicleRepository {
@@ -44,6 +45,10 @@ export class PrismaVehicleRepository implements VehicleRepository {
 
   update(id: string, data: UpdateVehicleInput): Promise<Vehicle> {
     return prisma.vehicle.update({ where: { id }, data });
+  }
+
+  delete(id: string): Promise<Vehicle> {
+    return prisma.vehicle.delete({ where: { id } });
   }
 
   search(filters: VehicleSearchFilters): Promise<Vehicle[]> {

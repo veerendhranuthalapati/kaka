@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createVehicle,
+  deleteVehicle,
   listVehicles,
   searchVehicles,
   updateVehicle,
@@ -41,4 +42,12 @@ vehiclesRouter.put(
   validateParams(vehicleIdParamsSchema),
   validateBody(updateVehicleBodySchema),
   updateVehicle,
+);
+
+vehiclesRouter.delete(
+  "/:id",
+  requireAuth,
+  requireRole("ADMIN"),
+  validateParams(vehicleIdParamsSchema),
+  deleteVehicle,
 );

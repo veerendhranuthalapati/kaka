@@ -398,3 +398,53 @@ describe("PUT /api/vehicles/:id", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("DELETE /api/vehicles/:id", () => {
+  afterEach(async () => {
+    await truncateTables();
+  });
+
+  it("allows an admin to delete a vehicle and returns 204", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send(vehicle);
+
+    const res = await request(app)
+      .delete(`/api/vehicles/${created.body.id}`)
+      .set("Authorization", admin.auth);
+
+    expect(res.status).toBe(204);
+    expect(res.body).toEqual({});
+
+    const list = await request(app)
+      .get("/api/vehicles")
+      .set("Authorization", admin.auth);
+    expect(list.body).toHaveLength(0);
+  });
+
+  it("returns 404 for an unknown id", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const res = await request(app)
+      .delete("/api/vehicles/00000000-0000-0000-0000-000000000000")
+      .set("Authorization", admin.auth);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 400 for an invalid UUID", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const res = await request(app)
+      .delete("/api/vehicles/not-a-uuid")
+      .set("Authorization", admin.auth);
+
+    expect(res.status).toBe(400);
+  });
+});

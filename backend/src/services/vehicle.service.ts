@@ -58,4 +58,12 @@ export class VehicleService {
     const vehicle = await this.vehicles.update(id, data as never);
     return toVehicleDto(vehicle);
   }
+
+  async remove(id: string): Promise<void> {
+    const existing = await this.vehicles.findById(id);
+    if (!existing) {
+      throw new ApiError(404, "NOT_FOUND", "Vehicle not found");
+    }
+    await this.vehicles.delete(id);
+  }
 }

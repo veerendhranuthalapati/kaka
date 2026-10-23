@@ -58,3 +58,16 @@ export async function updateVehicle(
     next(error);
   }
 }
+
+export async function deleteVehicle(
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    await vehicleService.remove(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
