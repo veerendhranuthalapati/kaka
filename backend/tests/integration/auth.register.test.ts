@@ -74,4 +74,15 @@ describe("POST /api/auth/register", () => {
     expect(res.body.user.passwordHash).toBeUndefined();
     expect(res.body.token).toEqual(expect.any(String));
   });
+
+  it("returns 409 when email is already registered", async () => {
+    const app = createApp();
+    const payload = { email: "taken@example.com", password: "password1" };
+    await request(app).post("/api/auth/register").send(payload);
+
+    const res = await request(app).post("/api/auth/register").send(payload);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatchObject({ code: "EMAIL_TAKEN" });
+  });
 });
