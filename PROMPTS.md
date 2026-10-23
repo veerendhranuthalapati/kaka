@@ -175,3 +175,44 @@ ORDER OF WORK
 
 RULES UNCHANGED
 RED: one failing test, paste failing output, commit "test: ...". GREEN: minimum code only. REFACTOR separate. Co-author trailer exactly "Co-authored-by: OpenCode AI <AI@users.noreply.github.com>" after two blank lines. Summary line after every 3 pairs. No frontend until I say.
+
+### Prompt 4 - 2026-10-23T16:05:39Z
+
+Work autonomously for this whole phase. Do not wait for me. The takeover rules, TDD rules, decisions list and co-author trailer all still apply. Re-read them if unsure.
+SCOPE (in this order)
+1. Everything in my previous "GO" prompt not yet done (commit the uncommitted GREEN, chores a-d, map the register tests, fail-fast config).
+2. Login: RED/GREEN pairs for wrong password -> 401 INVALID_CREDENTIALS; unknown email -> identical 401 body; dummy-hash bcrypt compare on unknown email; success returns user (no passwordHash) + HS256 JWT with sub/email/role claims and 15m expiry; strict zod body, 400 on invalid.
+3. Auth middleware (requireAuth) and role guard (requireRole("ADMIN")): no token, malformed header, tampered, expired, and wrong-algorithm (e.g. alg none / HS512) tokens all -> 401 UNAUTHORIZED; valid token attaches req.user. Pin algorithms: ["HS256"] on verify. Test the middleware against a small protected test route, not vehicles yet.
+4. One REFACTOR commit at the end of the phase if duplication exists (shared validateBody, shared error classes, token helpers).
+
+HARD RULES FOR UNATTENDED RUNS
+- Each RED commit: run the test, confirm it fails for the RIGHT reason (assertion on behavior, not an import/syntax error), and paste the failing output into your running transcript.
+- Never edit or weaken an existing test to make it pass. If a past test seems wrong, STOP and tell me.
+- Never mix tests and src changes in one commit. Never use git reset --hard, rebase, push, or amend. Never delete files outside backend/src, backend/tests, scripts.
+- Only add dependencies from this list: bcrypt, jsonwebtoken, zod, dotenv, helmet, cors, express-rate-limit, @vitest/coverage-v8, supertest, @types/*. Pin exact versions. Run npm audit and report, but don't auto-fix with --force.
+- Run the FULL suite plus tsc --noEmit before every GREEN and REFACTOR commit.
+- STOP CONDITIONS: if the same test fails after 3 attempts, if the suite goes red for something unrelated, or if the DB is unreachable, stop and write a short "BLOCKED:" report with what you tried. Don't loop.
+- Log my raw prompts to PROMPTS.md as agreed (separate docs: commits).
+
+WHEN DONE, output exactly:
+1. Commit list (hash, message) for this phase.
+2. Test counts and coverage percentages.
+3. Any test that passed immediately on first run (list them).
+4. Assumptions you made and anything you skipped.
+5. Notes for the README "My AI Usage" section. Work autonomously for this whole phase. All previous rules, stop conditions and the final-report format still apply.
+
+SCOPE
+1. Prisma Vehicle model (uuid id, make, model, category, price Decimal(12,2), quantity Int default 0, timestamps, indexes on make/model/category/price) as its own "chore: add Vehicle model and migration" commit. Update truncateTables() for the new table.
+2. VehicleRepository interface + Prisma implementation; VehicleService; controller; routes. Prisma only in the repository. A serializer converts Decimal to a JSON number.
+3. RED/GREEN pairs, one behavior each, in this order:
+   - GET /api/vehicles without token -> 401
+   - POST create: admin 201; user 403; invalid body 400; negative price 400; negative or non-integer quantity 400; unknown fields rejected (strict); max lengths on make/model/category
+   - GET list: authenticated user 200, includes quantity 0 vehicles
+   - GET search, registered BEFORE /:id: make contains (case-insensitive), model contains, category exact (case-insensitive), minPrice and maxPrice inclusive, combined filters, no matches -> empty array, minPrice > maxPrice -> 400, non-numeric price -> 400. Treat % and _ in make/model as literal characters, never as wildcards.
+   - PUT /:id: admin 200 partial update; user 403; quantity in body -> 400; empty body -> 400; unknown id -> 404; invalid uuid format -> 400 or 404 (pick one and document it)
+   - DELETE /:id: user 403; admin 204; unknown id -> 404
+4. A REFACTOR commit only if there's real duplication.
+
+Before you start, list the ids used and confirm that a non-UUID :id can't cause a 500. If a test passes immediately, say so in the commit body.
+
+Final report in the same format as before.
