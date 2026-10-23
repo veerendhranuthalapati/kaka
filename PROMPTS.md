@@ -247,3 +247,39 @@ SECURITY
 No dangerouslySetInnerHTML; no secrets in the bundle; .env.example with VITE_API_URL only; CORS must match backend CORS_ORIGIN.
 
 Run npm run build, tsc --noEmit, lint and the tests before each GREEN commit. Final report: commits, tests, a list of screens and routes, anything skipped, and notes for the README "My AI Usage" section.
+
+### Prompt 6 - 2026-10-23T18:46:02Z
+
+Final deliverables (do these now, in order):
+
+1. Root README.md covering:
+   - Project explanation
+   - Stack + how to run
+   - Architecture (Mermaid diagram)
+   - Local setup (backend, frontend, DB, env, seed)
+   - API table
+   - Error codes
+   - Assumptions/decisions
+   - Test report: paste the actual output of your backend + frontend coverage runs
+   - Screenshots section with placeholders at docs/screenshots/*.png
+   - "My AI Usage" section. This must include:
+     * Tools used (Cursor, OpenCode, Antigravity) — specific usage
+     * For each: what you used it for, what you accepted/rejected, anything you changed
+     * A short honest reflection
+     * Mark with [TODO] anything that must be in my own words; do not invent my personal usage.
+
+2. Add a root script or note (docs only; no new dependencies) for running everything.
+
+3. Final verification pass:
+   - Fresh clone simulation into a temp dir: install, migrate, test.
+   - Secrets scan across full git history (not just recent commits).
+   - Audit backend and frontend production dependencies.
+   - Run the test suites with coverage.
+   - Check the README instructions match the actual commands and paths.
+
+4. Final report in this chat: what's missing, what to fix before submission, commit list, test/coverage numbers, screens/route list, anything skipped.
+
+Constraints:
+- Do NOT write PROMPTS.md contents beyond logging my raw prompts.
+- Add TESTPROMPTS.md reference in the README.
+- No new dependencies. No refactors.
