@@ -274,4 +274,36 @@ describe("GET /api/vehicles/search", () => {
     expect(combined.body).toHaveLength(1);
     expect(combined.body[0]).toMatchObject({ model: "RAV4" });
   });
+
+  it("returns 400 for non-numeric price and for minPrice > maxPrice", async () => {
+    const app = createApp();
+    const user = await createTestUser("USER");
+
+    const badNumeric = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ minPrice: "abc" });
+    const badRange = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ minPrice: 30000, maxPrice: 20000 });
+
+    expect(badNumeric.status).toBe(400);
+    expect(badNumeric.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(badRange.status).toBe(400);
+    expect(badRange.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("returns an empty array when no matches are found", async () => {
+    const app = createApp();
+    const user = await createTestUser("USER");
+
+    const res = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ make: "NonExistentBrandXYZ" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
 });

@@ -13,6 +13,8 @@ export type VehicleSearchFilters = {
   make?: string;
   model?: string;
   category?: string;
+  minPrice?: number;
+  maxPrice?: number;
 };
 
 export interface VehicleRepository {
@@ -41,6 +43,15 @@ export class PrismaVehicleRepository implements VehicleRepository {
     }
     if (filters.category !== undefined) {
       where.category = { equals: filters.category, mode: "insensitive" };
+    }
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+      where.price = {};
+      if (filters.minPrice !== undefined) {
+        where.price.gte = filters.minPrice;
+      }
+      if (filters.maxPrice !== undefined) {
+        where.price.lte = filters.maxPrice;
+      }
     }
 
     return prisma.vehicle.findMany({
