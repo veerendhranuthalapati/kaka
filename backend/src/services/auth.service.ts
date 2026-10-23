@@ -22,6 +22,9 @@ export type RegisterResult = {
   token: string;
 };
 
+const DUMMY_PASSWORD_HASH =
+  "$2b$12$ahDuA3JokgR8gAcja/yCDeO71rfknRaIfytQ2wXWwB4DahB13gqRq";
+
 function toPublicUser(user: {
   id: string;
   email: string;
@@ -45,8 +48,10 @@ export class AuthService {
 
   async login(body: LoginBody): Promise<RegisterResult> {
     const user = await this.users.findByEmail(body.email.toLowerCase());
+    const passwordHash = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
+    const passwordMatches = await bcrypt.compare(body.password, passwordHash);
 
-    if (!user || !(await bcrypt.compare(body.password, user.passwordHash))) {
+    if (!user || !passwordMatches) {
       throw new ApiError(
         401,
         "INVALID_CREDENTIALS",
