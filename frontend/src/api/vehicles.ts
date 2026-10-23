@@ -1,10 +1,10 @@
+import { apiRequest } from "./client";
 import type {
   Vehicle,
   VehicleInput,
   VehicleSearchParams,
   VehicleUpdateInput,
 } from "../types";
-import { apiRequest } from "./client";
 
 function searchQuery(params: VehicleSearchParams): string {
   const query = new URLSearchParams();
@@ -21,6 +21,16 @@ function searchQuery(params: VehicleSearchParams): string {
 
 export function listVehicles(): Promise<Vehicle[]> {
   return apiRequest<Vehicle[]>("/api/vehicles");
+}
+
+export function getVehicle(id: string): Promise<Vehicle> {
+  return apiRequest<Vehicle[]>(`/api/vehicles`).then((vehicles) => {
+    const vehicle = vehicles.find((v) => v.id === id);
+    if (!vehicle) {
+      throw new Error("Vehicle not found");
+    }
+    return vehicle;
+  });
 }
 
 export function searchVehicles(params: VehicleSearchParams): Promise<Vehicle[]> {

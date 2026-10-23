@@ -1,8 +1,29 @@
+import { Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./auth/AuthContext";
+import { AdminRoute } from "./components/AdminRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { DashboardPage } from "./pages/Dashboard";
+import { LoginPage } from "./pages/Login";
+import { RegisterPage } from "./pages/Register";
+import { NotFoundPage } from "./pages/NotFound";
+import { AddVehiclePage } from "./pages/admin/AddVehicle";
+import { EditVehiclePage } from "./pages/admin/EditVehicle";
+
 export function App() {
   return (
-    <main className="shell py-16">
-      <h1 className="text-3xl font-bold">Auto Yard</h1>
-      <p className="mt-2 text-muted">Dealership inventory</p>
-    </main>
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/vehicles/new" element={<AddVehiclePage />} />
+            <Route path="/admin/vehicles/:id/edit" element={<EditVehiclePage />} />
+          </Route>
+        </Route>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </AuthProvider>
   );
 }
