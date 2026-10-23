@@ -31,4 +31,17 @@ describe("POST /api/vehicles", () => {
     expect(res.body.id).toEqual(expect.any(String));
     expect(typeof res.body.price).toBe("number");
   });
+
+  it("forbids a non-admin from creating a vehicle", async () => {
+    const app = createApp();
+    const user = await createTestUser("USER");
+
+    const res = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", user.auth)
+      .send(vehicle);
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toMatchObject({ code: "FORBIDDEN" });
+  });
 });
