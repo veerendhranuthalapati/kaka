@@ -307,3 +307,94 @@ describe("GET /api/vehicles/search", () => {
     expect(res.body).toEqual([]);
   });
 });
+
+describe("PUT /api/vehicles/:id", () => {
+  afterEach(async () => {
+    await truncateTables();
+  });
+
+  it("allows an admin to partially update make, model, category, or price", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send(vehicle);
+
+    const res = await request(app)
+      .put(`/api/vehicles/${created.body.id}`)
+      .set("Authorization", admin.auth)
+      .send({ price: 19999.99, make: "Honda" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id: created.body.id,
+      make: "Honda",
+      model: vehicle.model,
+      category: vehicle.category,
+      price: 19999.99,
+      quantity: vehicle.quantity,
+    });
+  });
+
+  it("rejects updating quantity", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send(vehicle);
+
+    const res = await request(app)
+      .put(`/api/vehicles/${created.body.id}`)
+      .set("Authorization", admin.auth)
+      .send({ quantity: 10 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("rejects an empty body", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send(vehicle);
+
+    const res = await request(app)
+      .put(`/api/vehicles/${created.body.id}`)
+      .set("Authorization", admin.auth)
+      .send({});
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("returns 404 for an unknown id", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const res = await request(app)
+      .put("/api/vehicles/00000000-0000-0000-0000-000000000000")
+      .set("Authorization", admin.auth)
+      .send({ price: 10000 });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 400 for an invalid UUID", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const res = await request(app)
+      .put("/api/vehicles/not-a-uuid")
+      .set("Authorization", admin.auth)
+      .send({ price: 10000 });
+
+    expect(res.status).toBe(400);
+  });
+});

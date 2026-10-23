@@ -1,4 +1,5 @@
 import type { Vehicle } from "@prisma/client";
+import { ApiError } from "../errors/ApiError.js";
 import {
   PrismaVehicleRepository,
   type CreateVehicleInput,
@@ -44,5 +45,17 @@ export class VehicleService {
   async search(filters: VehicleSearchFilters): Promise<VehicleDto[]> {
     const vehicles = await this.vehicles.search(filters);
     return vehicles.map(toVehicleDto);
+  }
+
+  async update(
+    id: string,
+    data: Partial<Pick<VehicleDto, "make" | "model" | "category" | "price">>,
+  ): Promise<VehicleDto> {
+    const existing = await this.vehicles.findById(id);
+    if (!existing) {
+      throw new ApiError(404, "NOT_FOUND", "Vehicle not found");
+    }
+    const vehicle = await this.vehicles.update(id, data as never);
+    return toVehicleDto(vehicle);
   }
 }

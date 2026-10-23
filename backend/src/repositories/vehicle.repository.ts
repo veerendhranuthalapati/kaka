@@ -17,10 +17,16 @@ export type VehicleSearchFilters = {
   maxPrice?: number;
 };
 
+export type UpdateVehicleInput = Partial<
+  Pick<Vehicle, "make" | "model" | "category"> & { price: number }
+>;
+
 export interface VehicleRepository {
   create(data: CreateVehicleInput): Promise<Vehicle>;
   findAll(): Promise<Vehicle[]>;
   search(filters: VehicleSearchFilters): Promise<Vehicle[]>;
+  findById(id: string): Promise<Vehicle | null>;
+  update(id: string, data: UpdateVehicleInput): Promise<Vehicle>;
 }
 
 export class PrismaVehicleRepository implements VehicleRepository {
@@ -30,6 +36,14 @@ export class PrismaVehicleRepository implements VehicleRepository {
 
   findAll(): Promise<Vehicle[]> {
     return prisma.vehicle.findMany({ orderBy: { createdAt: "asc" } });
+  }
+
+  findById(id: string): Promise<Vehicle | null> {
+    return prisma.vehicle.findUnique({ where: { id } });
+  }
+
+  update(id: string, data: UpdateVehicleInput): Promise<Vehicle> {
+    return prisma.vehicle.update({ where: { id }, data });
   }
 
   search(filters: VehicleSearchFilters): Promise<Vehicle[]> {
