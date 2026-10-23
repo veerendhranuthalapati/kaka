@@ -38,6 +38,22 @@ describe("POST /api/auth/login", () => {
     expect(unknownEmail.body.error.message).toEqual(expect.any(String));
   });
 
+  it("rejects invalid login bodies with 400", async () => {
+    const app = createApp();
+
+    const invalidEmail = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "not-an-email", password: "short" });
+    const unknownField = await request(app)
+      .post("/api/auth/login")
+      .send({ email: EMAIL, password: PASSWORD, role: "ADMIN" });
+
+    for (const res of [invalidEmail, unknownField]) {
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+    }
+  });
+
   it("returns a JWT with the role claim and no passwordHash", async () => {
     const app = createApp();
     await registerUser(app);
