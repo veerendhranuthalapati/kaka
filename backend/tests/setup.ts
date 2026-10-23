@@ -13,7 +13,8 @@ if (!databaseName.endsWith("_test")) {
 }
 
 process.env.DATABASE_URL = databaseUrl;
-process.env.JWT_SECRET = process.env.JWT_SECRET ?? "test-jwt-secret-for-vitest";
+process.env.JWT_SECRET =
+  process.env.JWT_SECRET ?? "test-jwt-secret-for-vitest-0123456789";
 
 beforeAll(() => {
   execSync("npx prisma migrate deploy", {

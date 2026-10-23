@@ -1,11 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { Role } from "@prisma/client";
-import {
-  getJwtSecret,
-  JWT_ALGORITHM,
-  JWT_EXPIRES_IN,
-} from "../config/jwt.js";
+import { config } from "../config/env.js";
+import { JWT_ALGORITHM, JWT_EXPIRES_IN } from "../config/jwt.js";
 import type { RegisterBody } from "../validators/auth.register.schema.js";
 import {
   PrismaUserRepository,
@@ -43,7 +40,7 @@ export class AuthService {
     });
     const token = jwt.sign(
       { sub: user.id, email: user.email, role: user.role },
-      getJwtSecret(),
+      config.jwtSecret,
       { algorithm: JWT_ALGORITHM, expiresIn: JWT_EXPIRES_IN },
     );
     return { user: toPublicUser(user), token };
