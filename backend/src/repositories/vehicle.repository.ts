@@ -11,10 +11,15 @@ export type CreateVehicleInput = {
 
 export interface VehicleRepository {
   create(data: CreateVehicleInput): Promise<Vehicle>;
+  findAll(): Promise<Vehicle[]>;
 }
 
 export class PrismaVehicleRepository implements VehicleRepository {
   create(data: CreateVehicleInput): Promise<Vehicle> {
     return prisma.vehicle.create({ data });
+  }
+
+  findAll(): Promise<Vehicle[]> {
+    return prisma.vehicle.findMany({ orderBy: { createdAt: "asc" } });
   }
 }

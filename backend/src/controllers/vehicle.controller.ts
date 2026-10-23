@@ -16,3 +16,16 @@ export async function createVehicle(
     next(error);
   }
 }
+
+export async function listVehicles(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const vehicles = await vehicleService.list();
+    res.status(200).json(vehicles);
+  } catch (error) {
+    next(error);
+  }
+}

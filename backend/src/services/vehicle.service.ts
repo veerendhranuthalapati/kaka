@@ -34,4 +34,9 @@ export class VehicleService {
     const vehicle = await this.vehicles.create(input);
     return toVehicleDto(vehicle);
   }
+
+  async list(): Promise<VehicleDto[]> {
+    const vehicles = await this.vehicles.findAll();
+    return vehicles.map(toVehicleDto);
+  }
 }
