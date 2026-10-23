@@ -68,3 +68,36 @@ describe("POST /api/vehicles", () => {
     }
   });
 });
+
+describe("GET /api/vehicles", () => {
+  afterEach(async () => {
+    await truncateTables();
+  });
+
+  it("lists vehicles for any authenticated user", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send(vehicle);
+    await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, make: "Honda", model: "Civic" });
+
+    const res = await request(app)
+      .get("/api/vehicles")
+      .set("Authorization", user.auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+    expect(res.body[0]).toMatchObject({
+      make: expect.any(String),
+      price: expect.any(Number),
+      quantity: expect.any(Number),
+    });
+  });
+});
