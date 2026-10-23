@@ -67,6 +67,29 @@ describe("POST /api/vehicles", () => {
       expect(res.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
     }
   });
+
+  it("rejects non-integer quantity, unknown fields, and overlong strings", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const nonIntegerQuantity = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, quantity: 1.5 });
+    const unknownField = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, color: "red" });
+    const overlongMake = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, make: "a".repeat(101) });
+
+    for (const res of [nonIntegerQuantity, unknownField, overlongMake]) {
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+    }
+  });
 });
 
 describe("GET /api/vehicles", () => {
