@@ -65,4 +65,61 @@ describe("requireAuth", () => {
     expect(res.status).toBe(401);
     expect(res.body.error).toMatchObject({ code: "UNAUTHORIZED" });
   });
+
+  it("rejects a malformed authorization header", async () => {
+    const res = await request(protectedApp())
+      .get("/protected")
+      .set("Authorization", "Token not-a-bearer-token");
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("rejects an alg=none token", async () => {
+    const header = Buffer.from(
+      JSON.stringify({ alg: "none", typ: "JWT" }),
+    ).toString("base64url");
+    const body = Buffer.from(
+      JSON.stringify({
+        sub: "user-1",
+        email: "user@example.com",
+        role: "USER",
+      }),
+    ).toString("base64url");
+
+    const res = await request(protectedApp())
+      .get("/protected")
+      .set("Authorization", `Bearer ${header}.${body}.`);
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("rejects an HS512 token", async () => {
+    const token = jwt.sign(
+      { sub: "user-1", email: "user@example.com", role: "USER" },
+      process.env.JWT_SECRET!,
+      { algorithm: "HS512", expiresIn: "15m" },
+    );
+
+    const res = await request(protectedApp())
+      .get("/protected")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("attaches the decoded user for a valid token", async () => {
+    const res = await request(protectedApp())
+      .get("/protected")
+      .set("Authorization", `Bearer ${signToken()}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.user).toMatchObject({
+      id: "user-1",
+      email: "user@example.com",
+      role: "USER",
+    });
+  });
 });
