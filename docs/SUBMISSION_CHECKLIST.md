@@ -15,6 +15,7 @@
 - [x] Backend: `npx tsc --noEmit` and `npm run build` pass
 - [x] Backend: `npm audit --omit=dev` → 0 vulnerabilities
 - [x] Frontend: `npm test` → 5 files, 22 tests passed
+- [x] Frontend coverage: All files 88.04% stmts, 84.73% branch, 88.46% funcs, 87.79% lines
 - [x] Frontend: `npx tsc --noEmit`, `npm run lint`, `npm run build` pass
 - [x] Frontend: `npm audit --omit=dev` → 0 vulnerabilities
 - [x] No `dangerouslySetInnerHTML`, no secrets in bundle/history

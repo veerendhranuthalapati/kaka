@@ -181,7 +181,31 @@ All files          |   93.91 |    83.14 |     100 |   93.91 |
    Duration  4.54s (environment 66%, tests 18%, setup 11%, import 4%, transform 1%)
 ```
 
-**Notes:** No coverage script configured in frontend package.json; tests cover API client, auth context, route guards, vehicle card states, and search filters validation.
+**Coverage (actual):** `npm run test:coverage`
+```
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   88.04 |    84.73 |   88.46 |   87.79 |                   
+ api               |      85 |    79.31 |      75 |      85 |                   
+  auth.ts          |       0 |      100 |       0 |       0 | 10-17              
+  client.ts        |   89.47 |    79.31 |     100 |   89.47 | 57-58,87,107       
+ auth              |   87.09 |       88 |   94.44 |   86.44 |                   
+  AuthContext.tsx  |   82.85 |       75 |    90.9 |   81.81 | 36,64-67,93        
+  session.ts       |   92.59 |    94.11 |     100 |    92.3 | 33,51              
+ components        |   89.61 |    83.82 |   86.36 |    89.7 |                   
+  AdminRoute.tsx   |   83.33 |       75 |     100 |   83.33 | 8                  
+  ...ctedRoute.tsx |     100 |      100 |     100 |     100 |                   
+  ...chFilters.tsx |   91.52 |    77.27 |   93.75 |      92 | 46,50,110-111      
+  VehicleCard.tsx  |   71.42 |      100 |      50 |   71.42 | 97-105             
+ test              |     100 |      100 |     100 |     100 |                   
+  fixtures.ts      |     100 |      100 |     100 |     100 |                   
+ utils             |     100 |      100 |     100 |     100 |                   
+  format.ts        |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------
+```
+
+Coverage is measured from files loaded by the test suite (V8); pages exercised only through the running app are not included. Logic-heavy slices requested for TDD are covered: API client, auth session lifecycle, route guards, vehicle card states, and search validation/debounce.
 
 ### Audits
 - Backend `npm audit --omit=dev`: **found 0 vulnerabilities**
@@ -212,8 +236,30 @@ Screenshots are expected at `docs/screenshots/*.png`. Placeholders are tracked i
 - CORS must match backend `CORS_ORIGIN`.
 
 ## Development commands
-- Root/dev docs: see this README and [`backend/README.md`](backend/README.md)
-- Run full verification: backend `npm test && npx tsc --noEmit && npm run build && npm audit --omit=dev`; frontend `npm test && npx tsc --noEmit && npm run lint && npm run build && npm audit --omit=dev`
+
+### Run both apps
+No root package manager is used. Open two terminals:
+
+```bash
+# Terminal 1 - API on http://localhost:3000
+cd backend && npm run dev
+
+# Terminal 2 - web app on http://localhost:5173
+cd frontend && npm run dev
+```
+
+Set `VITE_API_URL=http://localhost:3000` in `frontend/.env` and keep backend `CORS_ORIGIN=http://localhost:5173` (the defaults).
+
+### Run full verification
+```bash
+# Backend
+cd backend
+npm test && npx tsc --noEmit && npm run build && npm run test:coverage && npm audit --omit=dev
+
+# Frontend
+cd frontend
+npm test && npm run test:coverage && npx tsc --noEmit && npm run lint && npm run build && npm audit --omit=dev
+```
 
 ## Additional references
 - Prompt history (raw): [`PROMPTS.md`](PROMPTS.md)
