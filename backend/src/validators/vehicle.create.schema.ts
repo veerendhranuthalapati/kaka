@@ -2,11 +2,11 @@ import { z } from "zod";
 
 export const createVehicleBodySchema = z
   .object({
-    make: z.string(),
-    model: z.string(),
-    category: z.string(),
-    price: z.number(),
-    quantity: z.number().int(),
+    make: z.string().min(1),
+    model: z.string().min(1),
+    category: z.string().min(1),
+    price: z.number().nonnegative(),
+    quantity: z.number().int().nonnegative(),
   })
   .strict();
 
