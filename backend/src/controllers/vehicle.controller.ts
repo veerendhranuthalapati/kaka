@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { CreateVehicleBody } from "../validators/vehicle.create.schema.js";
+import type { SearchVehiclesQuery } from "../validators/vehicle.search.schema.js";
 import { VehicleService } from "../services/vehicle.service.js";
 
 const vehicleService = new VehicleService();
@@ -24,6 +25,20 @@ export async function listVehicles(
 ): Promise<void> {
   try {
     const vehicles = await vehicleService.list();
+    res.status(200).json(vehicles);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function searchVehicles(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const query = res.locals.query as SearchVehiclesQuery;
+    const vehicles = await vehicleService.search(query);
     res.status(200).json(vehicles);
   } catch (error) {
     next(error);

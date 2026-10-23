@@ -3,6 +3,7 @@ import {
   PrismaVehicleRepository,
   type CreateVehicleInput,
   type VehicleRepository,
+  type VehicleSearchFilters,
 } from "../repositories/vehicle.repository.js";
 
 export type VehicleDto = {
@@ -37,6 +38,11 @@ export class VehicleService {
 
   async list(): Promise<VehicleDto[]> {
     const vehicles = await this.vehicles.findAll();
+    return vehicles.map(toVehicleDto);
+  }
+
+  async search(filters: VehicleSearchFilters): Promise<VehicleDto[]> {
+    const vehicles = await this.vehicles.search(filters);
     return vehicles.map(toVehicleDto);
   }
 }
