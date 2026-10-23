@@ -84,3 +84,16 @@ export async function purchaseVehicle(
     next(error);
   }
 }
+
+export async function restockVehicle(
+  req: Request<{ id: string }, object, { amount: number }>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const vehicle = await vehicleService.restock(req.params.id, req.body.amount);
+    res.status(200).json(vehicle);
+  } catch (error) {
+    next(error);
+  }
+}

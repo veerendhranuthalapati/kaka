@@ -87,4 +87,13 @@ export class VehicleService {
     }
     return toVehicleDto(updated);
   }
+
+  async restock(id: string, amount: number): Promise<VehicleDto> {
+    const existing = await this.vehicles.findById(id);
+    if (!existing) {
+      throw new ApiError(404, "NOT_FOUND", "Vehicle not found");
+    }
+    const vehicle = await this.vehicles.restock(id, amount);
+    return toVehicleDto(vehicle);
+  }
 }

@@ -520,3 +520,76 @@ describe("POST /api/vehicles/:id/purchase", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("POST /api/vehicles/:id/restock", () => {
+  afterEach(async () => {
+    await truncateTables();
+  });
+
+  it("allows an admin to restock and returns the vehicle", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, quantity: 1 });
+
+    const res = await request(app)
+      .post(`/api/vehicles/${created.body.id}/restock`)
+      .set("Authorization", admin.auth)
+      .send({ amount: 5 });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ id: created.body.id, quantity: 6 });
+  });
+
+  it("rejects non-admin restock", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send(vehicle);
+
+    const res = await request(app)
+      .post(`/api/vehicles/${created.body.id}/restock`)
+      .set("Authorization", user.auth)
+      .send({ amount: 1 });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("rejects invalid amount", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send(vehicle);
+
+    const res = await request(app)
+      .post(`/api/vehicles/${created.body.id}/restock`)
+      .set("Authorization", admin.auth)
+      .send({ amount: 0 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("returns 404 for an unknown id", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const res = await request(app)
+      .post("/api/vehicles/00000000-0000-0000-0000-000000000000/restock")
+      .set("Authorization", admin.auth)
+      .send({ amount: 1 });
+
+    expect(res.status).toBe(404);
+  });
+});

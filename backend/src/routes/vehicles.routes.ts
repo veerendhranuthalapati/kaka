@@ -4,6 +4,7 @@ import {
   deleteVehicle,
   listVehicles,
   purchaseVehicle,
+  restockVehicle,
   searchVehicles,
   updateVehicle,
 } from "../controllers/vehicle.controller.js";
@@ -16,6 +17,7 @@ import { createVehicleBodySchema } from "../validators/vehicle.create.schema.js"
 import { searchVehiclesQuerySchema } from "../validators/vehicle.search.schema.js";
 import { vehicleIdParamsSchema } from "../validators/vehicle.params.schema.js";
 import { updateVehicleBodySchema } from "../validators/vehicle.update.schema.js";
+import { restockVehicleBodySchema } from "../validators/vehicle.restock.schema.js";
 
 export const vehiclesRouter = Router();
 
@@ -58,4 +60,13 @@ vehiclesRouter.post(
   requireAuth,
   validateParams(vehicleIdParamsSchema),
   purchaseVehicle,
+);
+
+vehiclesRouter.post(
+  "/:id/restock",
+  requireAuth,
+  requireRole("ADMIN"),
+  validateParams(vehicleIdParamsSchema),
+  validateBody(restockVehicleBodySchema),
+  restockVehicle,
 );
