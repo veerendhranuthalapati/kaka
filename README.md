@@ -106,9 +106,11 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 - **One-unit purchase:** `POST /:id/purchase` takes no body and decrements exactly 1 unit atomically with `quantity > 0` guard (409 `OUT_OF_STOCK` on failure). This prevents oversells without complex cart logic.
 - **Search semantics:** `/search` is registered before `/:id` to avoid route shadowing. make/model use case-insensitive contains; category uses case-insensitive exact match; price filters are inclusive; invalid ranges return 400. `%` and `_` are treated as literal characters (not wildcards) per Prisma parameterization.
 - **Auth behavior:** Bcrypt cost 12, password 8-72 chars and <=72 UTF-8 bytes. On login, unknown emails still run bcrypt compare against a dummy hash to mitigate user enumeration/timing leaks; error messages are identical. JWT HS256 pinned on sign and verify, 15m expiry. Tokens stored in **sessionStorage** (cleared on tab close) as a tradeoff: reduces persistent XSS exposure vs localStorage, but is still vulnerable to XSS - treat it as non-httpOnly client storage and rely on CSP/sanitization.
-- **Trust proxy/rate limiting:** Auth endpoints are rate-limited per client IP. Behind Render/Vercel (single proxy), set `TRUST_PROXY=1`; never use `TRUST_PROXY=true` as it trusts client headers. The limiter keys on `req.ip` and returns the standard error envelope on 429.
+- **Trust proxy/rate limiting:** Auth endpoints are rate-limited per client IP. Behind reverse proxies, set `TRUST_PROXY` to the exact hop count (e.g., `1`); **never use `true`** (only `false`/unset, positive integer, or IP/subnet string). The limiter keys on `req.ip` and returns the standard error envelope on 429 (single-instance in-memory store; see below).
 - **Validation & safety:** Zod validates every endpoint with strict schemas (reject unknown fields). No stack traces in 500 responses. `passwordHash` never returned. PUT disallows quantity changes. CORS limited to `CORS_ORIGIN`.
 - **Error envelope:** All API errors follow the standardized envelope for consistent frontend parsing.
+- **Rate limiting & scaling:** Auth routes are rate-limited only (`/api/auth`). The limiter uses `express-rate-limit`'s in-memory store and is a **single-instance assumption** (no shared store like Redis) - in multi-replica deployments, limits will be per instance; swap to a shared store (e.g., `rate-limit-redis`) if scaling horizontally.
+- **Prisma placement:** `prisma` is listed as a dependency (not only devDependency) because `prisma migrate deploy` is used at build/deploy time and the Prisma CLI/schema may be required in production containers/images without dev dependencies installed.
 - **Frontend UX:** Debounced search (300ms), min<=max validation before sending, out-of-stock buttons disabled with label, purchase shows loading and on 409 refreshes that card without full reload with "just sold out" toast, admin quantity field omitted on edit, delete requires confirmation, restock integer 1-10000.
 
 ## Test report
@@ -186,10 +188,10 @@ All files          |   93.91 |    83.14 |     100 |   93.91 |
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   88.04 |    84.73 |   88.46 |   87.79 |                   
- api               |      85 |    79.31 |      75 |      85 |                   
+All files          |   88.04 |    83.96 |   88.46 |   87.79 |                   
+ api               |      85 |    75.86 |      75 |      85 |                   
   auth.ts          |       0 |      100 |       0 |       0 | 10-17              
-  client.ts        |   89.47 |    79.31 |     100 |   89.47 | 57-58,87,107       
+  client.ts        |   89.47 |    75.86 |     100 |   89.47 | 57-58,87,107       
  auth              |   87.09 |       88 |   94.44 |   86.44 |                   
   AuthContext.tsx  |   82.85 |       75 |    90.9 |   81.81 | 36,64-67,93        
   session.ts       |   92.59 |    94.11 |     100 |    92.3 | 33,51              
@@ -263,7 +265,7 @@ npm test && npm run test:coverage && npx tsc --noEmit && npm run lint && npm run
 
 ## Additional references
 - Prompt history (raw): [`PROMPTS.md`](PROMPTS.md)
-- Auditor prompts (raw): [`TESTPROMPTS.md`](TESTPROMPTS.md)
+- Auditor prompts (raw): [`testprompts.md`](testprompts.md)
 - Backend details: [`backend/README.md`](backend/README.md)
 
 ## My AI Usage
