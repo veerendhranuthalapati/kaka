@@ -216,3 +216,34 @@ SCOPE
 Before you start, list the ids used and confirm that a non-UUID :id can't cause a 500. If a test passes immediately, say so in the commit body.
 
 Final report in the same format as before.
+
+### Prompt 5 - 2026-10-23T18:00:56Z
+
+Backend is done. Start the frontend. All previous rules apply: autonomous run, stop conditions, co-author trailer, separate docs: commits for PROMPTS.md, no history rewriting, only the dependencies listed below, pinned exact versions.
+STACK
+React + TypeScript (Vite), Tailwind CSS (use v3.4 with tailwind.config.js so it matches the kata wording), React Router, Vitest + React Testing Library + @testing-library/user-event + jsdom. No UI component libraries and no state libraries; use React context and hooks.
+
+ARCHITECTURE
+- src/api: one small fetch client that attaches the Bearer token, parses the backend error envelope into a typed ApiError, and on 401 clears the session and redirects to /login. Base URL from VITE_API_URL. Typed functions per endpoint.
+- src/auth: AuthContext (login, register, logout, user, token). Store the token in sessionStorage (document the XSS tradeoff in the README). Decode the JWT only to read role/email for UI display; the server remains the authority. Handle expired tokens on load.
+- ProtectedRoute and AdminRoute components. Admin-only UI must be hidden for USER, but never rely on that for security.
+- src/pages: Login, Register, Dashboard (vehicle grid), NotFound. Admin: add/edit vehicle forms (modal or page), delete with confirm dialog, restock control.
+- src/components: VehicleCard, SearchFilters, Toast/Alert, ConfirmDialog, Spinner, EmptyState.
+
+FUNCTIONALITY
+- Register and login forms with client-side validation mirroring the server (email format, password 8-72 chars), showing server errors.
+- Dashboard lists vehicles; search by make, model, category and min/max price (debounced, calls /api/vehicles/search, validates min <= max before sending); clear-filters button; loading, empty and error states.
+- Purchase button on each card: disabled with an "Out of stock" label when quantity is 0; shows a loading state; on 409 shows "just sold out" and refreshes that card; updates quantity after success without a full reload; prevents double-clicks.
+- Admin: create, edit (no quantity field on edit), delete with confirmation, restock with an amount input (integer 1-10000).
+- Display prices with Intl.NumberFormat.
+
+DESIGN
+- Modern, responsive (mobile-first grid, sticky header, readable at 375px), a dark/light-friendly palette, consistent spacing and focus rings, accessible labels, aria-live for toasts, keyboard-operable dialogs, sufficient contrast. Create a coherent look (not default template styling), with subtle transitions that respect prefers-reduced-motion.
+
+TDD FOR THE FRONTEND
+Write tests first for logic-heavy parts, as RED/GREEN commits: API client error parsing and 401 handling; AuthContext login/logout/expired token; ProtectedRoute and AdminRoute redirects; VehicleCard purchase button disabled at quantity 0; admin controls hidden for USER and shown for ADMIN; SearchFilters rejects min > max. Purely visual markup needs no test-first, but commit it as "feat(ui): ...". Never edit a test to make it pass.
+
+SECURITY
+No dangerouslySetInnerHTML; no secrets in the bundle; .env.example with VITE_API_URL only; CORS must match backend CORS_ORIGIN.
+
+Run npm run build, tsc --noEmit, lint and the tests before each GREEN commit. Final report: commits, tests, a list of screens and routes, anything skipped, and notes for the README "My AI Usage" section.
