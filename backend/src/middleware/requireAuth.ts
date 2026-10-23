@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../config/env.js";
+import { JWT_ALGORITHM } from "../config/jwt.js";
 import { ApiError } from "../errors/ApiError.js";
 
 export function requireAuth(
@@ -17,7 +18,9 @@ export function requireAuth(
 
   try {
     const token = header.slice("Bearer ".length).trim();
-    const payload = jwt.verify(token, config.jwtSecret) as jwt.JwtPayload;
+    const payload = jwt.verify(token, config.jwtSecret, {
+      algorithms: [JWT_ALGORITHM],
+    }) as jwt.JwtPayload;
 
     if (
       typeof payload.sub !== "string" ||
