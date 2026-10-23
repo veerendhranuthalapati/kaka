@@ -12,6 +12,17 @@ const vehicle = {
   quantity: 3,
 };
 
+async function createVehicle(
+  app: ReturnType<typeof createApp>,
+  auth: string,
+  overrides: Partial<typeof vehicle> = {},
+): Promise<void> {
+  await request(app)
+    .post("/api/vehicles")
+    .set("Authorization", auth)
+    .send({ ...vehicle, ...overrides });
+}
+
 describe("POST /api/vehicles", () => {
   afterEach(async () => {
     await truncateTables();
@@ -150,5 +161,62 @@ describe("GET /api/vehicles", () => {
       price: expect.any(Number),
       quantity: expect.any(Number),
     });
+  });
+});
+
+describe("GET /api/vehicles/search", () => {
+  afterEach(async () => {
+    await truncateTables();
+  });
+
+  it("matches make/model contains and category exactly, case-insensitively", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    await createVehicle(app, admin.auth, {
+      make: "Toyota",
+      model: "Corolla",
+      category: "Sedan",
+    });
+    await createVehicle(app, admin.auth, {
+      make: "toyota",
+      model: "RAV4",
+      category: "SUV",
+    });
+    await createVehicle(app, admin.auth, {
+      make: "Honda",
+      model: "Civic",
+      category: "sedan",
+    });
+
+    const byMake = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ make: "TOYO" });
+    const byModel = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ model: "civ" });
+    const byCategory = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ category: "SEDAN" });
+
+    expect(byMake.status).toBe(200);
+    expect(byMake.body).toHaveLength(2);
+    for (const found of byMake.body) {
+      expect(found.make.toLowerCase()).toContain("toyo");
+    }
+
+    expect(byModel.status).toBe(200);
+    expect(byModel.body).toHaveLength(1);
+    expect(byModel.body[0]).toMatchObject({ model: "Civic" });
+
+    expect(byCategory.status).toBe(200);
+    expect(byCategory.body).toHaveLength(2);
+    for (const found of byCategory.body) {
+      expect(found.category.toLowerCase()).toBe("sedan");
+    }
   });
 });
