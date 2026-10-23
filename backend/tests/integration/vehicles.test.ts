@@ -74,6 +74,34 @@ describe("GET /api/vehicles", () => {
     await truncateTables();
   });
 
+  it("rejects unauthenticated list requests", async () => {
+    const app = createApp();
+
+    const res = await request(app).get("/api/vehicles");
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("includes vehicles with zero quantity", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, quantity: 0 });
+
+    const res = await request(app)
+      .get("/api/vehicles")
+      .set("Authorization", user.auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({ quantity: 0 });
+  });
+
   it("lists vehicles for any authenticated user", async () => {
     const app = createApp();
     const admin = await createTestUser("ADMIN");
