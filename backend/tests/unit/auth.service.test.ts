@@ -9,7 +9,7 @@ describe("AuthService.login", () => {
   });
 
   it("still runs bcrypt.compare when the email is unknown", async () => {
-    const compare = vi.spyOn(bcrypt, "compare").mockResolvedValue(false);
+    const compare = vi.spyOn(bcrypt, "compare");
     const users: UserRepository = {
       create: vi.fn(),
       findByEmail: vi.fn().mockResolvedValue(null),
