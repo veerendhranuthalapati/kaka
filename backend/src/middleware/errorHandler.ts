@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import type { ErrorRequestHandler } from "express";
 import { ApiError } from "../errors/ApiError.js";
 
@@ -9,19 +8,6 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
         code: err.code,
         message: err.message,
         ...(err.details === undefined ? {} : { details: err.details }),
-      },
-    });
-    return;
-  }
-
-  if (
-    err instanceof Prisma.PrismaClientKnownRequestError &&
-    err.code === "P2002"
-  ) {
-    res.status(409).json({
-      error: {
-        code: "EMAIL_TAKEN",
-        message: "Email already registered",
       },
     });
     return;
