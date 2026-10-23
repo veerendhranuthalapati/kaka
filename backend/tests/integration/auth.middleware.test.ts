@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { errorHandler } from "../../src/middleware/errorHandler.js";
 import { requireAuth } from "../../src/middleware/requireAuth.js";
 
-function signToken(expiresIn: string = "15m"): string {
+function signToken(expiresIn: number = 900): string {
   return jwt.sign(
     { sub: "user-1", email: "user@example.com", role: "USER" },
     process.env.JWT_SECRET!,
@@ -45,7 +45,7 @@ describe("requireAuth", () => {
   it("rejects an expired token", async () => {
     const res = await request(protectedApp())
       .get("/protected")
-      .set("Authorization", `Bearer ${signToken("-1s")}`);
+      .set("Authorization", `Bearer ${signToken(-1)}`);
 
     expect(res.status).toBe(401);
     expect(res.body.error).toMatchObject({ code: "UNAUTHORIZED" });
