@@ -219,4 +219,59 @@ describe("GET /api/vehicles/search", () => {
       expect(found.category.toLowerCase()).toBe("sedan");
     }
   });
+
+  it("filters by an inclusive price range and combines filters", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    await createVehicle(app, admin.auth, {
+      make: "Toyota",
+      model: "Corolla",
+      category: "Sedan",
+      price: 20000,
+    });
+    await createVehicle(app, admin.auth, {
+      make: "Honda",
+      model: "Civic",
+      category: "Sedan",
+      price: 25000,
+    });
+    await createVehicle(app, admin.auth, {
+      make: "Toyota",
+      model: "RAV4",
+      category: "SUV",
+      price: 30000,
+    });
+    await createVehicle(app, admin.auth, {
+      make: "Tesla",
+      model: "Model Y",
+      category: "SUV",
+      price: 40000,
+    });
+
+    const byPrice = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ minPrice: 25000, maxPrice: 30000 });
+    const combined = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({
+        make: "toyota",
+        category: "suv",
+        minPrice: 25000,
+        maxPrice: 35000,
+      });
+
+    expect(byPrice.status).toBe(200);
+    expect(byPrice.body.map((found: { model: string }) => found.model)).toEqual([
+      "Civic",
+      "RAV4",
+    ]);
+
+    expect(combined.status).toBe(200);
+    expect(combined.body).toHaveLength(1);
+    expect(combined.body[0]).toMatchObject({ model: "RAV4" });
+  });
 });
