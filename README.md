@@ -4,7 +4,7 @@ Full-stack TDD kata: Node/Express + PostgreSQL (Prisma) backend, React (Vite) fr
 
 ## Local setup
 
-*(Backend and frontend setup steps will be added as the project is built.)*
+Backend setup, migrations, seeding, tests, and coverage are documented in [`backend/README.md`](backend/README.md). Frontend setup will be added when the frontend is built.
 
 ### Database (Docker)
 
