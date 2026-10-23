@@ -1,8 +1,13 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
+import { truncateTables } from "../helpers/db.js";
 
 describe("POST /api/auth/register", () => {
+  afterEach(async () => {
+    await truncateTables();
+  });
+
   it("rejects invalid email with 400", async () => {
     const app = createApp();
     const res = await request(app)
