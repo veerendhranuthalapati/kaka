@@ -27,16 +27,34 @@ export type AppConfig = {
 };
 
 function parseTrustProxy(value: string | undefined): TrustProxySetting {
+  if (typeof value === "boolean") {
+    throw new Error("TRUST_PROXY must not be true; use false or a positive integer/hop count");
+  }
   if (value === undefined || value === "" || value === "false") {
     return false;
   }
-  if (value === "true") {
-    return true;
+  if (typeof value === "string" && value.trim().toLowerCase() === "true") {
+    throw new Error("TRUST_PROXY must not be true; use false or a positive integer/hop count");
   }
-  if (/^\d+$/.test(value)) {
-    return Number(value);
+  if (typeof value === "string" && /^\d+$/.test(value)) {
+    const n = Number(value);
+    if (n >= 1) {
+      return n;
+    }
+    throw new Error("TRUST_PROXY must be a positive integer");
   }
-  return value;
+  if (typeof value === "string") {
+    // allow IP/subnet values as string (e.g. 'loopback', comma list) but not true/false booleans
+    const v = value.trim();
+    if (v === "" || v.toLowerCase() === "false") {
+      return false;
+    }
+    if (v.toLowerCase() === "true") {
+      throw new Error("TRUST_PROXY must not be true; use false or a positive integer/hop count");
+    }
+    return v;
+  }
+  throw new Error("TRUST_PROXY must not be true; use false or a positive integer/hop count");
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
