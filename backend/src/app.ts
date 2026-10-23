@@ -41,8 +41,6 @@ export function createApp(options: AppOptions = {}): Express {
   });
   app.use("/api/auth", authLimiter);
   app.use("/api/auth", authRouter);
-
-  app.use("/api/auth", authRouter);
   app.use("/api/vehicles", vehiclesRouter);
 
   app.get("/health", (_req, res) => {
