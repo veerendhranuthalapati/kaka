@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import type { Role } from "@prisma/client";
 import { config } from "../config/env.js";
 import { JWT_ALGORITHM, JWT_EXPIRES_IN } from "../config/jwt.js";
+import { ApiError } from "../errors/ApiError.js";
+import type { LoginBody } from "../validators/auth.login.schema.js";
 import type { RegisterBody } from "../validators/auth.register.schema.js";
 import {
   PrismaUserRepository,
@@ -38,11 +40,28 @@ export class AuthService {
       passwordHash,
       role: "USER",
     });
-    const token = jwt.sign(
+    return { user: toPublicUser(user), token: this.signToken(user) };
+  }
+
+  async login(body: LoginBody): Promise<RegisterResult> {
+    const user = await this.users.findByEmail(body.email.toLowerCase());
+
+    if (!user || !(await bcrypt.compare(body.password, user.passwordHash))) {
+      throw new ApiError(
+        401,
+        "INVALID_CREDENTIALS",
+        "Invalid email or password",
+      );
+    }
+
+    return { user: toPublicUser(user), token: this.signToken(user) };
+  }
+
+  private signToken(user: { id: string; email: string; role: Role }): string {
+    return jwt.sign(
       { sub: user.id, email: user.email, role: user.role },
       config.jwtSecret,
       { algorithm: JWT_ALGORITHM, expiresIn: JWT_EXPIRES_IN },
     );
-    return { user: toPublicUser(user), token };
   }
 }
