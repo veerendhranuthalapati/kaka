@@ -29,11 +29,12 @@ model Vehicle {
   model     String
   category  String
   price     Decimal  @db.Decimal(12, 2)
-  quantity  Int
+  quantity  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([make])
   @@index([model])
   @@index([category])
+  @@index([price])
 }
