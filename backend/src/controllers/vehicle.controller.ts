@@ -71,3 +71,16 @@ export async function deleteVehicle(
     next(error);
   }
 }
+
+export async function purchaseVehicle(
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const vehicle = await vehicleService.purchase(req.params.id);
+    res.status(200).json(vehicle);
+  } catch (error) {
+    next(error);
+  }
+}

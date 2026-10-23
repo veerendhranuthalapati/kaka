@@ -28,6 +28,7 @@ export interface VehicleRepository {
   findById(id: string): Promise<Vehicle | null>;
   update(id: string, data: UpdateVehicleInput): Promise<Vehicle>;
   delete(id: string): Promise<Vehicle>;
+  purchase(id: string): Promise<{ count: number }>;
 }
 
 export class PrismaVehicleRepository implements VehicleRepository {
@@ -49,6 +50,14 @@ export class PrismaVehicleRepository implements VehicleRepository {
 
   delete(id: string): Promise<Vehicle> {
     return prisma.vehicle.delete({ where: { id } });
+  }
+
+  async purchase(id: string): Promise<{ count: number }> {
+    const result = await prisma.vehicle.updateMany({
+      where: { id, quantity: { gt: 0 } },
+      data: { quantity: { decrement: 1 } },
+    });
+    return { count: result.count };
   }
 
   search(filters: VehicleSearchFilters): Promise<Vehicle[]> {

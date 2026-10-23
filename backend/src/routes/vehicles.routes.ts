@@ -3,6 +3,7 @@ import {
   createVehicle,
   deleteVehicle,
   listVehicles,
+  purchaseVehicle,
   searchVehicles,
   updateVehicle,
 } from "../controllers/vehicle.controller.js";
@@ -50,4 +51,11 @@ vehiclesRouter.delete(
   requireRole("ADMIN"),
   validateParams(vehicleIdParamsSchema),
   deleteVehicle,
+);
+
+vehiclesRouter.post(
+  "/:id/purchase",
+  requireAuth,
+  validateParams(vehicleIdParamsSchema),
+  purchaseVehicle,
 );

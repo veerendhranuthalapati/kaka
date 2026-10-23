@@ -448,3 +448,75 @@ describe("DELETE /api/vehicles/:id", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("POST /api/vehicles/:id/purchase", () => {
+  afterEach(async () => {
+    await truncateTables();
+  });
+
+  it("decrements quantity by 1 on purchase and returns the vehicle", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, quantity: 3 });
+
+    const res = await request(app)
+      .post(`/api/vehicles/${created.body.id}/purchase`)
+      .set("Authorization", user.auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id: created.body.id,
+      quantity: 2,
+    });
+
+    const list = await request(app)
+      .get("/api/vehicles")
+      .set("Authorization", admin.auth);
+    expect(list.body[0].quantity).toBe(2);
+  });
+
+  it("returns 409 OUT_OF_STOCK when quantity is zero", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, quantity: 0 });
+
+    const res = await request(app)
+      .post(`/api/vehicles/${created.body.id}/purchase`)
+      .set("Authorization", user.auth);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatchObject({ code: "OUT_OF_STOCK" });
+  });
+
+  it("returns 404 for an unknown id", async () => {
+    const app = createApp();
+    const user = await createTestUser("USER");
+
+    const res = await request(app)
+      .post("/api/vehicles/00000000-0000-0000-0000-000000000000/purchase")
+      .set("Authorization", user.auth);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 400 for an invalid UUID", async () => {
+    const app = createApp();
+    const user = await createTestUser("USER");
+
+    const res = await request(app)
+      .post("/api/vehicles/not-a-uuid/purchase")
+      .set("Authorization", user.auth);
+
+    expect(res.status).toBe(400);
+  });
+});

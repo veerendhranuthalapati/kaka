@@ -66,4 +66,25 @@ export class VehicleService {
     }
     await this.vehicles.delete(id);
   }
+
+  async purchase(id: string): Promise<VehicleDto> {
+    const existing = await this.vehicles.findById(id);
+    if (!existing) {
+      throw new ApiError(404, "NOT_FOUND", "Vehicle not found");
+    }
+    if (existing.quantity <= 0) {
+      throw new ApiError(409, "OUT_OF_STOCK", "Vehicle is out of stock");
+    }
+
+    const result = await this.vehicles.purchase(id);
+    if (result.count === 0) {
+      throw new ApiError(409, "OUT_OF_STOCK", "Vehicle is out of stock");
+    }
+
+    const updated = await this.vehicles.findById(id);
+    if (!updated) {
+      throw new ApiError(404, "NOT_FOUND", "Vehicle not found");
+    }
+    return toVehicleDto(updated);
+  }
 }
