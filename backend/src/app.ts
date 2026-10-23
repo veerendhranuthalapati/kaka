@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { authRouter } from "./routes/auth.routes.js";
+import { vehiclesRouter } from "./routes/vehicles.routes.js";
 
 /** Express application factory for production and Supertest. */
 export function createApp(): Express {
@@ -8,6 +9,7 @@ export function createApp(): Express {
   app.use(express.json());
 
   app.use("/api/auth", authRouter);
+  app.use("/api/vehicles", vehiclesRouter);
 
   app.get("/health", (_req, res) => {
     res.status(200).json({ status: "ok" });

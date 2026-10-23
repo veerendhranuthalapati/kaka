@@ -22,3 +22,18 @@ model User {
 
   @@index([email])
 }
+
+model Vehicle {
+  id        String   @id @default(uuid())
+  make      String
+  model     String
+  category  String
+  price     Decimal  @db.Decimal(12, 2)
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([make])
+  @@index([model])
+  @@index([category])
+}
