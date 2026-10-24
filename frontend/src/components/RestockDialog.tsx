@@ -94,7 +94,7 @@ export function RestockDialog({
           Current inventory: {vehicle.quantity} units. Add 1 to 10,000 units.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-4 grid gap-4">
+        <form onSubmit={handleSubmit} className="mt-4 grid gap-4" noValidate>
           <div>
             <label className="label" htmlFor="restock-amount">
               Restock amount

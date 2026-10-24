@@ -107,7 +107,11 @@ export function AddVehiclePage() {
       </header>
       <main className="shell py-6 sm:py-8">
         <section className="surface mx-auto w-full max-w-2xl p-6 sm:p-8">
-          <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
+          <form
+            className="grid gap-4 sm:grid-cols-2"
+            onSubmit={handleSubmit}
+            noValidate
+          >
             <div className="sm:col-span-2">
               <label className="label" htmlFor="make">
                 Make
