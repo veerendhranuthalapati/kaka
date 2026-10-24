@@ -48,11 +48,25 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): voi
   unauthorizedHandler = handler;
 }
 
+export const GATEWAY_UNAVAILABLE_MESSAGE =
+  "The server is temporarily unavailable. Please try again in a moment.";
+
+export const SERVER_ERROR_GENERIC_MESSAGE =
+  "Something went wrong on the server. Please try again.";
+
 function getBaseUrl(): string {
   return import.meta.env.VITE_API_URL ?? "";
 }
 
+function isGatewayStatus(status: number): boolean {
+  return status === 502 || status === 503 || status === 504;
+}
+
 function toApiError(status: number, payload: unknown): ApiError {
+  if (isGatewayStatus(status)) {
+    return new ApiError(status, "SERVICE_UNAVAILABLE", GATEWAY_UNAVAILABLE_MESSAGE);
+  }
+
   const envelope =
     typeof payload === "object" && payload !== null
       ? (payload as ApiErrorBody).error
@@ -70,7 +84,38 @@ function toApiError(status: number, payload: unknown): ApiError {
     message = "Too many attempts. Try again in a minute.";
   }
 
+  if (status === 500 && typeof envelope?.message !== "string") {
+    code = "INTERNAL_ERROR";
+    message = SERVER_ERROR_GENERIC_MESSAGE;
+  }
+
   return new ApiError(status, code, message, envelope?.details);
+}
+
+function apiErrorForUnreadableBody(status: number): ApiError {
+  if (isGatewayStatus(status)) {
+    return new ApiError(status, "SERVICE_UNAVAILABLE", GATEWAY_UNAVAILABLE_MESSAGE);
+  }
+
+  if (status === 429) {
+    return new ApiError(
+      429,
+      "TOO_MANY_REQUESTS",
+      "Too many attempts. Try again in a minute.",
+    );
+  }
+
+  if (status === 500) {
+    return new ApiError(500, "INTERNAL_ERROR", SERVER_ERROR_GENERIC_MESSAGE);
+  }
+
+  return new ApiError(
+    status,
+    "INVALID_RESPONSE",
+    status > 0
+      ? `The server returned an unreadable response (status ${status}).`
+      : "The server returned an unreadable response.",
+  );
 }
 
 export function handleUnauthorized(): void {
@@ -131,21 +176,7 @@ export async function apiRequest<T>(
   try {
     payload = await response.json();
   } catch {
-    if (response.status === 429) {
-      throw new ApiError(
-        429,
-        "TOO_MANY_REQUESTS",
-        "Too many attempts. Try again in a minute.",
-      );
-    }
-
-    throw new ApiError(
-      response.status,
-      "INVALID_RESPONSE",
-      response.status > 0
-        ? `The server returned an unreadable response (status ${response.status}).`
-        : "The server returned an unreadable response.",
-    );
+    throw apiErrorForUnreadableBody(response.status);
   }
 
   if (!response.ok) {
