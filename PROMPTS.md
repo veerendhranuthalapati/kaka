@@ -454,3 +454,20 @@ Append my raw prompt to PROMPTS.md in a separate "docs:" commit (append only). S
 5. README: update the real test and coverage numbers by running the coverage commands; leave screenshots and "My AI Usage" TODOs untouched.
 
 FINAL REPORT (print and write to docs/UI-REPORT-2.md, uncommitted): differences found vs the reference and what was changed, commits, coverage before/after per package, tests changed (with reason), BLOCKED or skipped items, assumptions.
+
+### Prompt 8 - 2026-10-24T11:38:00+05:30
+
+BUILD task. Same rules as before: strict TDD for logic, tests and source in separate commits, never weaken or delete an assertion, no new dependencies, never git push/rebase/amend/reset --hard, PowerShell syntax. Every commit ends with two blank lines then exactly:
+Co-authored-by: Cursor <AI@users.noreply.github.com>
+Append my raw prompt to PROMPTS.md in a separate "docs:" commit (append only). Stop after 3 failed attempts on an item and write "BLOCKED:".
+
+CONTEXT: I have no vehicle photos, so ignore any earlier instruction to stop when raster photos or docs/design/reference.png are missing. Images are OPTIONAL per vehicle; the app must look good with none.
+
+1. CATEGORY FALLBACK (TDD): add a pure helper fallbackImageForCategory(category) returning one of the existing SVGs in frontend/public/cars (list the folder first; only reference files that exist): case-insensitive match for SUV, Sedan, Truck, Hatchback, Coupe, EV/Electric, Wagon, with a deterministic default (placeholder.svg) for unknown categories. RED tests: each known category (any casing, surrounding spaces), unknown, empty string. Then update VehicleImage: use imageUrl when valid; on a missing imageUrl OR an image load error, show the category illustration; if that also fails, show the inline placeholder. Tests for all three levels.
+2. FORMS: in the Add and Edit vehicle forms make the Image URL field clearly optional: label "Image URL (optional)", helper text "Leave empty to use a category illustration", a Clear button, live preview showing exactly what the card will show (the URL image, or the category illustration updating as the category changes). Keep the validation (https:// or /path only, max 2048; reject javascript:, data:, http:, //host). Tests: empty submits without imageUrl, invalid values show the field error, preview switches to the category illustration when cleared.
+3. SEED: make seed:demo not depend on photos. Its demo vehicles use imageUrl null for most (so the fallback shows) and one or two use a /cars/*.svg path for variety; the rule for matching photo files can stay but must never fail when none exist. No STOP condition on missing photos. Keep it idempotent and refusing to run in production or against a database name ending in "_test".
+4. STYLING: SVG illustrations must look intentional on the hero and grid cards: a soft tinted background behind the illustration, object-contain with padding (not object-cover) for SVG/fallback images, object-cover for real URLs, fixed aspect ratio, readable text over both (gradient overlay), no layout shift. Check at 375, 768 and 1280px.
+5. If docs/design/reference.png exists, compare composition only and fix obvious differences; if not, skip this silently. It is git-ignored and must never be committed.
+6. README "Vehicle images": explain optional URL, category illustrations, why file upload was not implemented, and how to add local images. CREDITS.md stays accurate (SVGs are original work). Run backend and frontend suites, tsc, lint and builds before each commit, keep frontend line coverage at or above 80%, and update README numbers with real output.
+
+FINAL REPORT (print and write to docs/UI-REPORT-3.md, uncommitted): commits, tests added, coverage per package, BLOCKED or skipped items, assumptions.
