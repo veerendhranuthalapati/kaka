@@ -17,12 +17,8 @@ The following files in `frontend/public/cars/` are original SVG artwork created 
 
 ## Photographs
 
-When photo files are present in `frontend/public/cars/`, list them here with attribution. The `seed:demo` script matches photos by make-model slug (for example `aurora-lx.jpg` for make Aurora, model LX).
-
-_No photograph files were detected in the repository at the last automated scan. For each photo you add, append a line:_
-
-- `filename.jpg` — [TODO: author and licence]
+No photograph files are bundled in this repository. Optional admin image URLs may point to external `https://` assets or files you add under `frontend/public/cars/`.
 
 ## Adding assets
 
-Place new files under `frontend/public/cars/` and reference them with a site-relative path such as `/cars/your-file.jpg` in the admin Image URL field.
+Place new files under `frontend/public/cars/` and reference them with a site-relative path such as `/cars/your-file.jpg` in the admin Image URL field, or leave Image URL empty to use the built-in category illustration.

@@ -117,10 +117,11 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 
 ## Vehicle images
 
-- **Formats:** Use `https://` URLs or site-relative paths such as `/cars/sedan-01.svg` (max 2048 characters). Dangerous schemes (`http:`, `javascript:`, `data:`, `file:`, protocol-relative `//`) are rejected server-side and in admin forms.
-- **No upload:** Images are referenced by URL only; the API does not accept file uploads to keep the backend stateless and avoid malware/storage concerns.
-- **Local assets:** Add files under `frontend/public/cars/` and set Image URL in admin to `/cars/<filename>`. Demo inventory: `cd backend && npm run seed:demo` (refuses `NODE_ENV=production`).
-- **Credits:** See [`CREDITS.md`](CREDITS.md).
+- **Optional URL:** `imageUrl` is nullable. Leave the admin **Image URL (optional)** field empty and the storefront shows a **category illustration** (one of the original SVGs in `frontend/public/cars/`, matched by category name). You can still set an explicit URL when you have one.
+- **Formats:** `https://` URLs or site-relative paths such as `/cars/sedan-01.svg` (max 2048 characters). Dangerous schemes (`http:`, `javascript:`, `data:`, `file:`, protocol-relative `//`) are rejected server-side and in admin forms.
+- **No upload:** File upload is not implemented so the API stays stateless and we avoid storage, virus scanning, and size-limit concerns. Images are referenced by URL only; host files under `frontend/public/cars/` or on an HTTPS CDN.
+- **Local assets:** Add files under `frontend/public/cars/` and reference `/cars/<filename>` in admin, or rely on category illustrations with an empty URL. Demo inventory: `cd backend && npm run seed:demo` (refuses `NODE_ENV=production` and databases whose name ends with `_test`).
+- **Credits:** See [`CREDITS.md`](CREDITS.md) for the bundled SVG illustrations.
 
 ## Test report
 
@@ -129,16 +130,16 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 **Output (actual):**
 ```
  Test Files  15 passed (15)
-      Tests  72 passed (72)
+      Tests  73 passed (73)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 94.38% ( 269/285 )
-Branches     : 88.23% ( 120/136 )
-Functions    : 100% ( 70/70 )
-Lines        : 94.38% ( 269/285 )
+Statements   : 94.15% ( 274/291 )
+Branches     : 87.32% ( 124/142 )
+Functions    : 100% ( 71/71 )
+Lines        : 94.15% ( 274/291 )
 ================================================================================
 ```
 
@@ -146,17 +147,17 @@ Lines        : 94.38% ( 269/285 )
 **Command:** `npm test` (from `frontend/`)  
 **Output (actual):**
 ```
- Test Files  20 passed (20)
-      Tests  61 passed (61)
+ Test Files  21 passed (21)
+      Tests  68 passed (68)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 78.56% ( 546/695 )
-Branches     : 73.17% ( 341/466 )
-Functions    : 75.37% ( 150/199 )
-Lines        : 80% ( 508/635 )
+Statements   : 79.41% ( 575/724 )
+Branches     : 74.28% ( 364/490 )
+Functions    : 76.21% ( 157/206 )
+Lines        : 80.87% ( 537/664 )
 ================================================================================
 ```
 
