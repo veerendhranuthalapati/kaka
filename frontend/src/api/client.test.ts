@@ -166,6 +166,103 @@ describe("apiRequest", () => {
     });
   });
 
+  const gatewayMessage =
+    "The server is temporarily unavailable. Please try again in a moment.";
+  const serverGenericMessage =
+    "Something went wrong on the server. Please try again.";
+
+  it.each([502, 503, 504] as const)(
+    "maps %i responses to a temporary unavailable message without leaking the body",
+    async (status) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status,
+          headers: new Headers({ "content-type": "text/html" }),
+          json: async () => {
+            throw new SyntaxError("Unexpected token < in JSON");
+          },
+          text: async () => "<html>Bad Gateway</html>",
+        } as unknown as Response),
+      );
+
+      const error = (await apiRequest("/api/vehicles").catch(
+        (err: unknown) => err,
+      )) as ApiError;
+
+      expect(error).toBeInstanceOf(ApiError);
+      expect(error.status).toBe(status);
+      expect(error.message).toBe(gatewayMessage);
+      expect(error.message).not.toContain("<html>");
+    },
+  );
+
+  it.each([502, 503, 504] as const)(
+    "maps %i JSON error envelopes to the temporary unavailable message",
+    async (status) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(
+          response(status, {
+            error: {
+              code: "UPSTREAM_ERROR",
+              message: "nginx upstream timed out",
+            },
+          }),
+        ),
+      );
+
+      await expect(apiRequest("/api/vehicles")).rejects.toMatchObject({
+        status,
+        message: gatewayMessage,
+      });
+    },
+  );
+
+  it("maps a 500 non-JSON body to a generic server message", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        headers: new Headers({ "content-type": "text/plain" }),
+        json: async () => {
+          throw new SyntaxError("Unexpected end of JSON input");
+        },
+        text: async () => "Internal Server Error stack trace here",
+      } as unknown as Response),
+    );
+
+    const error = (await apiRequest("/api/vehicles").catch(
+      (err: unknown) => err,
+    )) as ApiError;
+
+    expect(error.status).toBe(500);
+    expect(error.message).toBe(serverGenericMessage);
+    expect(error.message).not.toContain("stack trace");
+  });
+
+  it("keeps the server message for a 500 response with a valid error envelope", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        response(500, {
+          error: {
+            code: "INTERNAL_ERROR",
+            message: "Database connection failed",
+          },
+        }),
+      ),
+    );
+
+    await expect(apiRequest("/api/vehicles")).rejects.toMatchObject({
+      status: 500,
+      code: "INTERNAL_ERROR",
+      message: "Database connection failed",
+    });
+  });
+
   it("maps VALIDATION_ERROR details to field-level messages", async () => {
     vi.stubGlobal(
       "fetch",
