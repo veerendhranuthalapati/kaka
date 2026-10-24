@@ -15,6 +15,13 @@ The following files in `frontend/public/cars/` are original SVG artwork created 
 - `truck-01.svg`
 - `wagon-01.svg`
 
+## Typography
+
+- **Manrope** — headings, model names, and prices. [SIL Open Font License 1.1](https://openfontlicense.org). Self-hosted via `@fontsource-variable/manrope@5.3.0` (latin subset).
+- **Inter** — body copy, labels, inputs, and buttons. [SIL Open Font License 1.1](https://openfontlicense.org). Self-hosted via `@fontsource-variable/inter@5.3.0` (latin subset).
+
+Font files are bundled at build time; the app does not request Google Fonts or other third-party font CDNs.
+
 ## Photographs
 
 No photograph files are bundled in this repository. Optional admin image URLs may point to external `https://` assets or files you add under `frontend/public/cars/`.

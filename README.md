@@ -113,7 +113,7 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 - **Prisma placement:** `prisma` is listed as a dependency (not only devDependency) because `prisma migrate deploy` is used at build/deploy time and the Prisma CLI/schema may be required in production containers/images without dev dependencies installed.
 - **Frontend UX:** Debounced search (300ms), min<=max validation before sending, out-of-stock buttons disabled with label, purchase shows loading and on 409 patches that card to quantity 0 (no full-page reload) with a "Just sold out" toast, admin quantity field omitted on edit, delete requires confirmation, restock integer 1-10000.
 - **Featured carousel:** In-stock vehicles only, sorted by `createdAt` descending, maximum six slides (documented on the dashboard).
-- **Visual design:** Visual style inspired by contemporary automotive storefronts; implementation, branding, and imagery are original (see design reference under `docs/design/`, git-ignored).
+- **Visual design:** Showroom-style layout inspired by contemporary automotive storefronts; implementation, branding, and imagery are original. **Typography:** Manrope (display — headings, model names, prices) and Inter (UI/body), self-hosted via Fontsource (`@fontsource-variable/manrope` / `inter` @ 5.3.0, latin subset in `src/fonts/latin-fonts.css`). **Tokens:** warm neutrals, electric-blue accent (`#2f5bff`), 20px card radius, 12px control radius, 8px spacing grid, `max-w-shell` (1280px). Customize in `tailwind.config.js`, `src/index.css` (`:root` CSS variables), and `src/utils/designTokens.ts` (contrast pairs). Dark mode follows `prefers-color-scheme` with the same token names.
 
 ## Vehicle images
 
@@ -147,17 +147,17 @@ Lines        : 94.15% ( 274/291 )
 **Command:** `npm test` (from `frontend/`)  
 **Output (actual):**
 ```
- Test Files  21 passed (21)
-      Tests  68 passed (68)
+ Test Files  22 passed (22)
+      Tests  72 passed (72)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 79.41% ( 575/724 )
-Branches     : 74.28% ( 364/490 )
-Functions    : 76.21% ( 157/206 )
-Lines        : 80.87% ( 537/664 )
+Statements   : 79.83% ( 598/749 )
+Branches     : 73.9% ( 371/502 )
+Functions    : 76.74% ( 165/215 )
+Lines        : 81.25% ( 559/688 )
 ================================================================================
 ```
 
