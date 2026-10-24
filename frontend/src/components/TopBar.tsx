@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { AuthUser } from "../types";
 
@@ -18,7 +18,9 @@ export function TopBar({
   activeCategory?: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onScroll() {
@@ -38,6 +40,17 @@ export function TopBar({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (!accountOpen) return;
+    function onPointerDown(event: MouseEvent) {
+      if (!accountRef.current?.contains(event.target as Node)) {
+        setAccountOpen(false);
+      }
+    }
+    window.addEventListener("mousedown", onPointerDown);
+    return () => window.removeEventListener("mousedown", onPointerDown);
+  }, [accountOpen]);
+
   return (
     <header
       className={`sticky top-0 z-40 border-b transition-colors duration-ui ease-gentle motion-reduce:transition-none ${
@@ -49,7 +62,7 @@ export function TopBar({
       <div className="shell grid h-[4.25rem] grid-cols-[1fr_auto_1fr] items-center gap-4">
         <Link
           to="/"
-          className="font-display text-card-title tracking-tight text-ink"
+          className="font-display text-card-title tracking-tight text-ink whitespace-nowrap"
         >
           Auto Yard
         </Link>
@@ -60,7 +73,7 @@ export function TopBar({
         >
           <button
             type="button"
-            className={`nav-link ${!activeCategory ? "nav-link-active" : ""}`}
+            className={`nav-link whitespace-nowrap ${!activeCategory ? "nav-link-active" : ""}`}
             onClick={onInventoryClick}
           >
             Inventory
@@ -69,7 +82,7 @@ export function TopBar({
             <button
               key={category}
               type="button"
-              className={`nav-link ${
+              className={`nav-link whitespace-nowrap ${
                 activeCategory === category ? "nav-link-active" : ""
               }`}
               onClick={() => onCategorySelect(category)}
@@ -80,23 +93,62 @@ export function TopBar({
         </nav>
 
         <div className="hidden items-center justify-end gap-3 md:flex">
-          <span className="max-w-[10rem] truncate font-sans text-body text-muted">
+          <span className="hidden max-w-[12rem] truncate font-sans text-body text-muted lg:inline">
             {user?.email}
           </span>
-          <span className="badge">{user?.role}</span>
+          <span className="badge hidden lg:inline whitespace-nowrap">{user?.role}</span>
           {user?.role === "ADMIN" && (
-            <Link className="link text-body" to="/admin/vehicles/new">
+            <Link className="link text-body whitespace-nowrap" to="/admin/vehicles/new">
               Admin
             </Link>
           )}
-          <button type="button" className="btn-ghost min-h-11 px-3" onClick={onLogout}>
+          <div className="relative lg:hidden" ref={accountRef}>
+            <button
+              type="button"
+              className="btn-ghost min-h-11 whitespace-nowrap px-3"
+              aria-expanded={accountOpen}
+              onClick={() => setAccountOpen((open) => !open)}
+            >
+              Account
+            </button>
+            {accountOpen && (
+              <div
+                className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-card border border-line bg-surface p-3 shadow-resting"
+                role="menu"
+              >
+                <p className="truncate text-sm text-muted">{user?.email}</p>
+                <p className="mt-1 text-label text-ink">{user?.role}</p>
+                {user?.role === "ADMIN" && (
+                  <Link
+                    className="link mt-2 block text-body whitespace-nowrap"
+                    to="/admin/vehicles/new"
+                    onClick={() => setAccountOpen(false)}
+                  >
+                    Admin
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  className="btn-ghost mt-3 w-full whitespace-nowrap"
+                  onClick={onLogout}
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            className="btn-ghost hidden min-h-11 whitespace-nowrap px-3 lg:inline-flex"
+            onClick={onLogout}
+          >
             Sign out
           </button>
         </div>
 
         <button
           type="button"
-          className="btn-secondary col-start-3 justify-self-end px-3 md:hidden"
+          className="btn-secondary col-start-3 justify-self-end whitespace-nowrap px-3 md:hidden"
           aria-expanded={menuOpen}
           aria-controls="mobile-nav"
           onClick={() => setMenuOpen((open) => !open)}
@@ -115,7 +167,7 @@ export function TopBar({
           <div className="flex flex-col gap-2">
             <button
               type="button"
-              className="nav-link text-left"
+              className="nav-link text-left whitespace-nowrap"
               onClick={() => {
                 onInventoryClick();
                 setMenuOpen(false);
@@ -127,7 +179,7 @@ export function TopBar({
               <button
                 key={category}
                 type="button"
-                className={`nav-link text-left ${
+                className={`nav-link text-left whitespace-nowrap ${
                   activeCategory === category ? "nav-link-active" : ""
                 }`}
                 onClick={() => {
@@ -138,12 +190,14 @@ export function TopBar({
                 {category}
               </button>
             ))}
+            <p className="truncate px-3 pt-2 text-sm text-muted">{user?.email}</p>
+            <p className="px-3 text-label text-ink">{user?.role}</p>
             {user?.role === "ADMIN" && (
-              <Link to="/admin/vehicles/new" className="nav-link font-medium">
+              <Link to="/admin/vehicles/new" className="nav-link font-medium whitespace-nowrap">
                 Admin
               </Link>
             )}
-            <button type="button" className="btn-secondary mt-2" onClick={onLogout}>
+            <button type="button" className="btn-secondary mt-2 whitespace-nowrap" onClick={onLogout}>
               Sign out
             </button>
           </div>
