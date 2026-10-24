@@ -7,7 +7,8 @@ import {
   listAllCarAssetFilenames,
   listDemoCarImagePaths,
   refuseProductionSeed,
-  resolveDemoVehicleImageUrl,
+  refuseTestDatabase,
+  resolveOptionalDemoImageUrl,
 } from "../../scripts/seed-demo.lib.js";
 
 describe("seed:demo helpers", () => {
@@ -20,6 +21,15 @@ describe("seed:demo helpers", () => {
     expect(() => refuseProductionSeed("test")).not.toThrow();
   });
 
+  it("refuses to run against a database name ending in _test", () => {
+    expect(() =>
+      refuseTestDatabase("postgresql://user:pass@localhost:5432/dealership_test"),
+    ).toThrow(/_test database/i);
+    expect(() =>
+      refuseTestDatabase("postgresql://user:pass@localhost:5432/dealership_dev"),
+    ).not.toThrow();
+  });
+
   it("lists only files that exist under frontend/public/cars", () => {
     const paths = listDemoCarImagePaths();
     expect(paths.length).toBeGreaterThanOrEqual(8);
@@ -29,7 +39,7 @@ describe("seed:demo helpers", () => {
     }
   });
 
-  it("resolves make-model photo filenames before falling back to SVG rotation", () => {
+  it("resolves optional photo filenames and returns null when nothing matches", () => {
     const root = join(tmpdir(), `seed-demo-test-${Date.now()}`);
     const carsDir = join(root, "frontend", "public", "cars");
     mkdirSync(carsDir, { recursive: true });
@@ -37,12 +47,10 @@ describe("seed:demo helpers", () => {
     writeFileSync(join(carsDir, "aurora-lx.jpg"), "jpeg");
 
     expect(demoVehicleImageSlug("Aurora", "LX")).toBe("aurora-lx");
-    expect(
-      resolveDemoVehicleImageUrl("Aurora", "LX", root, ["/cars/sedan-01.svg"], 0),
-    ).toBe("/cars/aurora-lx.jpg");
-    expect(
-      resolveDemoVehicleImageUrl("Summit", "Tour", root, ["/cars/sedan-01.svg"], 0),
-    ).toBe("/cars/sedan-01.svg");
+    expect(resolveOptionalDemoImageUrl("Aurora", "LX", root)).toBe(
+      "/cars/aurora-lx.jpg",
+    );
+    expect(resolveOptionalDemoImageUrl("Summit", "Tour", root)).toBeNull();
 
     rmSync(root, { recursive: true, force: true });
   });
