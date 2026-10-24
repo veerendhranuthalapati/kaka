@@ -37,7 +37,12 @@ export function InventoryVehicleCard({
         className="block w-full text-left"
         onClick={() => onDetails(vehicle)}
       >
-        <VehicleImage src={vehicle.imageUrl} alt={title} className="rounded-none" />
+        <VehicleImage
+          src={vehicle.imageUrl}
+          category={vehicle.category}
+          alt={title}
+          className="rounded-none"
+        />
       </button>
       <div className="flex flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-2">

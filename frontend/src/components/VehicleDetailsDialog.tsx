@@ -44,6 +44,7 @@ export function VehicleDetailsDialog({
       >
         <VehicleImage
           src={vehicle.imageUrl}
+          category={vehicle.category}
           alt={`${vehicle.make} ${vehicle.model}`}
           className="rounded-2xl"
         />

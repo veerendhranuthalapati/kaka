@@ -64,8 +64,10 @@ export function HeroCarousel({
               <div className="relative aspect-[16/10] w-full max-h-[min(72vh,520px)] sm:aspect-[16/9]">
                 <VehicleImage
                   src={vehicle.imageUrl}
+                  category={vehicle.category}
                   alt={`${vehicle.make} ${vehicle.model}`}
                   loading={slideIndex === 0 ? "eager" : "lazy"}
+                  fixedAspect={false}
                   className="h-full max-h-[min(72vh,520px)] rounded-[2rem]"
                 />
                 <div
