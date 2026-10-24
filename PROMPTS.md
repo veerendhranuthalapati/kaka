@@ -341,3 +341,75 @@ FINAL REPORT (write it to docs/OVERNIGHT-REPORT.md AND print it, not committed w
 ### Prompt 2 - 2026-10-24T02:05:56Z
 
 continue
+
+### Prompt 3 - 2026-10-24T04:50:27Z
+
+You are a READ-ONLY reviewer. Do not edit, create or delete any files except appending my raw prompts to PROMPTS.md. Do not commit.
+
+This code was written by a different AI agent. Review it with fresh eyes for:
+1. Security: every route's guard against (POST/PUT/DELETE vehicles and restock = ADMIN; list, search, purchase = any authenticated user); JWT HS256 pinning; login timing and enumeration; mass assignment (role on register, quantity on PUT); passwordHash leakage; error handler leakage; CORS, helmet and rate limit configuration; frontend token handling and XSS risks (dangerouslySetInnerHTML, unsanitized rendering).
+2. Correctness: the purchase concurrency test's real strength, search semantics (% and _ treated literally), invalid UUID handling, double-click protection on the frontend, stale quantity after a 409.
+3. Test quality: trivially passing tests, weak assertions, flaky shared-DB risk, tests that mock away the thing under test.
+4. Git history: commits mixing tests and source, missing or wrong co-author trailers (the tool named in the trailer must be the tool that did the work), and secrets in history.
+5. Deliverables vs the kata brief: list every requirement in the brief and mark Met / Partial / Missing with evidence.
+
+Report exact pass/fail counts from running both test suites. Output a severity table (High/Med/Low, file:line, issue, suggested failing test). If you did not read a file, say so.
+
+### Prompt 4 - 2026-10-24T10:30:00+05:30
+
+You are a READ-ONLY reviewer. Do not edit, create or delete any files except appending my raw prompts to PROMPTS.md. Do not commit.
+
+This code was written by a different AI agent. Review it with fresh eyes for:
+1. Security: every route's guard against (POST/PUT/DELETE vehicles and restock = ADMIN; list, search, purchase = any authenticated user); JWT HS256 pinning; login timing and enumeration; mass assignment (role on register, quantity on PUT); passwordHash leakage; error handler leakage; CORS, helmet and rate limit configuration; frontend token handling and XSS risks (dangerouslySetInnerHTML, unsanitized rendering).
+2. Correctness: the purchase concurrency test's real strength, search semantics (% and _ treated literally), invalid UUID handling, double-click protection on the frontend, stale quantity after a 409.
+3. Test quality: trivially passing tests, weak assertions, flaky shared-DB risk, tests that mock away the thing under test.
+4. Git history: commits mixing tests and source, missing or wrong co-author trailers (the tool named in the trailer must be the tool that did the work), and secrets in history.
+5. Deliverables vs the kata brief: list every requirement in the brief and mark Met / Partial / Missing with evidence.
+
+Report exact pass/fail counts from running both test suites. Output a severity table (High/Med/Low, file:line, issue, suggested failing test). If you did not read a file, say so. Work autonomously. All previous rules apply: strict RED/GREEN/REFACTOR with separate commits, paste failing output after each RED, never weaken a test, no push/rebase/amend/reset, PowerShell syntax, stop after 3 failed attempts on the same item and write "BLOCKED:".
+
+From now on every commit ends with two blank lines then exactly:
+Co-authored-by: OpenCode AI <AI@users.noreply.github.com>
+
+An earlier audit by another agent produced findings. VERIFY EACH ONE BEFORE ACTING. Some may be wrong.
+
+1. Concurrency: search recursively (Get-ChildItem -Recurse backend\tests | Select-String "Promise.all") for an existing parallel-purchase test. If one exists, report its file and name and move on. If none exists, add a test: 5 parallel purchases on stock 2 -> exactly two 200s, three 409s, final quantity 0. It should pass immediately because the repository update is atomic; commit it as "test: lock in concurrent purchase safety (already satisfied)". Run it 10 times and report any flakiness.
+2. Search wildcards: write a RED test where make "Ford_F150" and "FordXF150" exist and searching make=Ford_ returns only the first; add one for "%". Run it honestly. If it passes immediately, commit as a lock-in test and say so. If it fails, GREEN: escape backslash, % and _ in make/model before passing to Prisma contains (mode insensitive), and verify the escaping works against real Postgres.
+3. Authorization matrix: tighten the permissive assertions (not.toBe(401), [400,401] and [200,409] toContain). Use exact expected statuses and deterministic stock. Commit as "test: tighten authorization matrix assertions". This strengthens tests; it must not remove any case.
+4. Frontend 409: RED component test that on a 409 OUT_OF_STOCK the page shows "Just sold out" and updates only that card (no full-page spinner, other cards stay mounted); GREEN: refetch or patch that single vehicle in state instead of calling load().
+5. Docs: add a README section "Known limitations and provenance": some early backend commits and some frontend commits mix tests and source; commits from bae3c8c to 25d61ad were produced in an Antigravity session but carry the OpenCode trailer; earlier commits were made with Cursor. Do not rewrite history.
+
+Run the full backend and frontend suites, tsc --noEmit and the build before each GREEN commit. Log my raw prompt to PROMPTS.md in a separate "docs:" commit, appending only. Final report: commits, test counts, which findings were false or already handled, and anything skipped.
+
+### Prompt 5 - 2026-10-24T10:47:00+05:30
+
+This is a BUILD task. You may edit files and make commits. Ignore any earlier "read-only reviewer" instructions; they no longer apply. Work autonomously; I'm away and won't answer questions. State assumptions in the final report.
+
+RULES
+- Strict TDD: one failing test per behavior, run it, PASTE the failing output, commit "test: ..."; then minimum code, commit "feat:"/"fix:"; refactors separate. Never put tests and source in the same commit. If a new test passes immediately, say so and commit it as "test: lock in ... (already satisfied)". Never weaken or delete an existing test.
+- Every commit ends with two blank lines, then exactly:
+  Co-authored-by: Cursor <AI@users.noreply.github.com>
+- Windows + PowerShell syntax. Never git push, rebase, amend, reset --hard, or --force. Don't rewrite history. No new dependencies. Destructive DB operations only if the database name ends in "_test".
+- Run the full backend and frontend suites, tsc --noEmit and the builds before every GREEN/REFACTOR commit.
+- Stop conditions: the same item failing 3 times -> write "BLOCKED:" with evidence and move to the next item.
+- Append my raw prompt to PROMPTS.md verbatim (append only; verify with git diff that no earlier lines were removed) in a separate "docs: update PROMPTS.md" commit.
+
+TASKS, in order
+1. Wildcards in search (confirmed bug). RED: integration test with makes "Ford_F150" and "FordXF150": GET /api/vehicles/search?make=Ford_ returns only Ford_F150. Add the same for "%" (e.g. "100%Hybrid" vs "100XHybrid") and for model. GREEN: in the repository, escape backslash, % and _ in make/model before using contains (mode insensitive). Verify against real Postgres that the backslash escape works with Prisma's contains; if it doesn't, use a parameterized $queryRaw with ILIKE ... ESCAPE, keeping Prisma inside the repository layer. Existing search tests must stay green.
+2. Concurrency. Add: 5 parallel purchases (Promise.all) on stock 2 -> exactly two 200s, three 409s, final quantity 0. It should pass immediately; commit as a lock-in test. Run it 10 times and report any flakiness.
+3. Authorization matrix: replace the permissive assertions (not.toBe(401), [400,401], [200,409]) with exact expected statuses and deterministic stock (set quantity before purchase, then assert 200, then 409 at zero). This tightens tests; it must not remove any case. Commit as "test: tighten authorization matrix assertions".
+4. Frontend 409. RED component test: two cards; mock a 409 OUT_OF_STOCK on one purchase -> the page shows the sold-out message, the other card stays mounted, no full-page spinner appears, and the affected card shows quantity 0 / "Out of stock". GREEN: on 409, patch or refetch only that vehicle in state instead of calling load(). Use the toast text "Just sold out" (update the README to match).
+5. Optional (only if 1-4 are green): an invalid-UUID test for restock (expect 400), a lock-in test if it already passes.
+6. Docs commit(s):
+   - Fix the README statement about literal % and _ so it's accurate after task 1.
+   - Add "Known limitations and provenance": early backend commits and some frontend commits mix tests and source; commits bae3c8c to 25d61ad were produced in an Antigravity session but carry an OpenCode trailer; earlier commits were made with Cursor; history was intentionally not rewritten; d453d21 and a136e0d are duplicate lock-in commits. Leave my own reflection under "My AI Usage" as a [TODO: my own words] placeholder.
+   - Update docs/SUBMISSION_CHECKLIST.md with the real current test counts and coverage (run the coverage commands and use the actual output).
+   - Update the README test report with fresh coverage output (real numbers only).
+7. Do not touch screenshots, the "My AI Usage" reflection, or the Cursor session in PROMPTS.md.
+
+FINAL REPORT (print it and write it to docs/CURSOR-FIX-REPORT.md, left uncommitted):
+1. Commits (hash, message) per task.
+2. Backend and frontend test counts and coverage.
+3. Tests that passed immediately; flakiness results for the concurrency test.
+4. What was BLOCKED or skipped, and assumptions.
+5. What I still have to do by hand. append all the prompts to PROMPTS.md
