@@ -61,7 +61,9 @@ describe("DashboardPage purchase flow", () => {
     });
 
     const purchaseButtons = screen.getAllByRole("button", { name: "Purchase" });
-    await user.click(purchaseButtons[0]);
+    const firstPurchase = purchaseButtons[0];
+    expect(firstPurchase).toBeDefined();
+    await user.click(firstPurchase!);
 
     await waitFor(() => {
       expect(screen.getByText("Just sold out")).toBeTruthy();

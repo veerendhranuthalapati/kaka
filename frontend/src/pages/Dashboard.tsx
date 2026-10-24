@@ -81,8 +81,12 @@ export function DashboardPage() {
       );
     } catch (caught) {
       if (caught instanceof ApiError && caught.code === "OUT_OF_STOCK") {
-        setToast("This vehicle just sold out.");
-        void load(filters);
+        setToast("Just sold out");
+        setVehicles((current) =>
+          current.map((item) =>
+            item.id === vehicle.id ? { ...item, quantity: 0 } : item,
+          ),
+        );
       } else if (caught instanceof ApiError) {
         setToast(caught.message);
       } else {
