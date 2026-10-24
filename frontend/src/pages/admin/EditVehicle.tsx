@@ -7,15 +7,18 @@ import {
   restockVehicle,
 } from "../../api/vehicles";
 import { ApiError } from "../../api/client";
+import { VehicleImage } from "../../components/VehicleImage";
 import { FieldError, ConfirmDialog } from "../../components/State";
 import { useAuth } from "../../auth/AuthContext";
 import type { Vehicle } from "../../types";
+import { validateImageUrl } from "../../utils/validation";
 
 type FormState = {
   make: string;
   model: string;
   category: string;
   price: string;
+  imageUrl: string;
 };
 
 export function EditVehiclePage() {
@@ -28,6 +31,7 @@ export function EditVehiclePage() {
     model: "",
     category: "",
     price: "",
+    imageUrl: "",
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -47,6 +51,7 @@ export function EditVehiclePage() {
           model: data.model,
           category: data.category,
           price: String(data.price),
+          imageUrl: data.imageUrl ?? "",
         });
       } catch (caught) {
         if (caught instanceof ApiError) {
@@ -85,12 +90,20 @@ export function EditVehiclePage() {
       return;
     }
 
+    const imageUrlError = validateImageUrl(form.imageUrl);
+    if (imageUrlError) {
+      setError(imageUrlError);
+      setSubmitting(false);
+      return;
+    }
+
     try {
       await updateVehicle(id, {
         make: form.make.trim(),
         model: form.model.trim(),
         category: form.category.trim(),
         price,
+        imageUrl: form.imageUrl.trim() ? form.imageUrl.trim() : null,
       });
       navigate("/", { replace: true });
     } catch (caught) {
@@ -215,6 +228,23 @@ export function EditVehiclePage() {
                   onChange={(event) => update("price", event.target.value)}
                   required
                 />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="label" htmlFor="imageUrl">
+                  Image URL
+                </label>
+                <input
+                  id="imageUrl"
+                  className="input"
+                  value={form.imageUrl}
+                  onChange={(event) => update("imageUrl", event.target.value)}
+                  maxLength={2048}
+                />
+                {form.imageUrl.trim() && (
+                  <div className="mt-3 overflow-hidden rounded-2xl border border-line">
+                    <VehicleImage src={form.imageUrl.trim()} alt="Image preview" />
+                  </div>
+                )}
               </div>
               <div className="sm:col-span-2">
                 <p className="text-sm text-muted">

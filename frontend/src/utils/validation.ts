@@ -47,3 +47,27 @@ export function validateCredentials(
 ): string | null {
   return validateEmail(email) ?? validatePassword(password);
 }
+
+export function validateImageUrl(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (trimmed.length > 2048) {
+    return "Image URL must be at most 2048 characters.";
+  }
+  if (/[\s\x00-\x1F\x7F]/.test(trimmed)) {
+    return "Image URL must not contain whitespace or control characters.";
+  }
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.startsWith("javascript:") ||
+    lower.startsWith("data:") ||
+    lower.startsWith("file:") ||
+    lower.startsWith("http:") ||
+    trimmed.startsWith("//")
+  ) {
+    return "Use an https:// URL or a path starting with /.";
+  }
+  if (lower.startsWith("https://")) return null;
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//")) return null;
+  return "Use an https:// URL or a path starting with /.";
+}

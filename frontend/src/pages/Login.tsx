@@ -56,7 +56,7 @@ export function LoginPage() {
           <p className="text-sm font-semibold uppercase tracking-widest text-muted">
             Auto Yard
           </p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink">
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">
             Sign in to your account
           </h1>
           <p className="mt-2 text-sm text-muted">
