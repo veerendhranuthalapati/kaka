@@ -283,3 +283,56 @@ Constraints:
 - Do NOT write PROMPTS.md contents beyond logging my raw prompts.
 - Add TESTPROMPTS.md reference in the README.
 - No new dependencies. No refactors.
+
+
+## Session 3: Antigravity
+
+### Prompt 1 - 2026-10-24T01:34:29Z
+
+you are overtaking this project and understand it and all the dependencies, Work autonomously for the next few hours. I am away at college and will not answer questions. Make reasonable assumptions, state them in the final report, and keep going. All previous rules still apply: TDD discipline, honest RED output, separate commits, co-author trailer "Co-authored-by: OpenCode AI <AI@users.noreply.github.com>" after two blank lines, never weaken a test to pass it, log my raw prompts to PROMPTS.md verbatim in separate "docs: update PROMPTS.md" commits.
+
+ENVIRONMENT: Windows + PowerShell. Use PowerShell-compatible commands (no bash-only syntax). Do not use git push, git reset --hard, rebase, amend, or --force of any kind. Do not deploy anything. Do not modify .env files with real secrets or commit them. Only add dependencies from this list, pinned to exact versions: react, react-dom, react-router-dom, tailwindcss (v3.4), postcss, autoprefixer, vite, @vitejs/plugin-react, vitest, jsdom, @testing-library/react, @testing-library/user-event, @testing-library/jest-dom, eslint plus its TypeScript/React plugins, and @types/*.
+
+PHASE 0 - ORIENT (read only, no edits)
+Run git status, git log --oneline -30, and read the frontend src tree, vite config, the API client, AuthContext, the Register page, backend app.ts (CORS, rate limit, error handler) and the .env.example files. Report in your transcript: whether the frontend uses VITE_API_URL or a relative path, whether vite.config has a dev proxy, and the backend port and CORS_ORIGIN. If the working tree is dirty, commit or stash only changes that are clearly mine from earlier work, and say what you did.
+
+PHASE 1 - FIX THE REGISTER BUG (my current blocker)
+Symptom: submitting the Register form shows "The server returned an unreadable response." with a valid email and a 15-character password.
+1. Reproduce it. Start the backend (local Postgres on localhost:5432; the DB name for dev must NOT be the _test one) and the Vite dev server. Use PowerShell Invoke-WebRequest or curl.exe against both the backend directly and through the frontend origin. Capture status code, Content-Type and body for POST /api/auth/register. Record the evidence in your transcript.
+2. Find the ROOT CAUSE. Check in order: (a) the request URL actually used by the client versus the one the backend serves; (b) a missing Vite proxy or VITE_API_URL; (c) an HTML or plain-text body from a proxy, the 404 handler, or the rate limiter; (d) an empty body on 201/204 being parsed as JSON; (e) CORS preflight failing; (f) the backend response shape differing from what the client expects (e.g. { user, token } vs something else); (g) the backend crashing or not running.
+3. TDD the fix. RED tests for the API client in frontend/tests: it must produce a typed ApiError with a distinct, user-meaningful message for each case: network failure ("Cannot reach the server. Check your connection."), non-JSON body such as HTML (include status in ApiError but not the raw body in the UI), empty body on success (treat 204 as success without parsing; a 2xx with an unexpected shape should be a clear error), 429 with plain text or JSON ("Too many attempts. Try again in a minute.", read Retry-After if present), 401 on a protected call (clear session, redirect to /login), and a well-formed backend error envelope (show the server's message; map VALIDATION_ERROR details to field-level messages). Each RED: paste the failing output. Each GREEN: minimum code.
+4. Fix the ROOT CAUSE itself separately (config, proxy, env, or backend response), with its own test where testable. If the cause is the backend returning non-JSON anywhere (rate limiter, body-size limit, malformed JSON, unknown route), add a RED backend test asserting the standard error envelope and fix it. Confirm Register works end-to-end for a new user, then Login works, then purchase works. Document the dev setup (ports, proxy or VITE_API_URL, CORS_ORIGIN) in the README.
+5. Also verify the register form's client-side validation matches the server: email format, 8-72 characters AND <= 72 UTF-8 bytes (use TextEncoder). Show field-level server errors under the right inputs.
+
+PHASE 2 - FINISH THE FRONTEND (only after Phase 1 is green)
+If a prior frontend phase already built some of this, audit what exists and only build what is missing; do not rewrite working code.
+- Auth: login and register pages; AuthContext; token in sessionStorage (document the XSS tradeoff in README); expired-token handling on load; ProtectedRoute and AdminRoute; logout.
+- Dashboard: vehicle grid with loading, empty and error states; debounced search (make, model, category, minPrice, maxPrice) against /api/vehicles/search; validate min <= max before sending; clear-filters button; Intl.NumberFormat prices.
+- Purchase: button disabled with an "Out of stock" label at quantity 0; loading state; no double-submit; on 409 show "Just sold out" and refresh that card; update quantity in place on success.
+- Admin only: add vehicle form, edit form (no quantity field), delete with a confirm dialog, restock with an integer 1-10000 amount. Hidden for USER (the server is the authority).
+- UX and accessibility: responsive down to 375px, sticky header, visible focus rings, labelled inputs, aria-live toasts, keyboard-operable dialogs with focus trapping and Escape to close, prefers-reduced-motion respected, good contrast. Keep the existing "Auto Yard" visual identity.
+- Frontend tests (RED/GREEN where logic-heavy): API client; AuthContext login/logout/expired token; ProtectedRoute and AdminRoute redirects; VehicleCard purchase button disabled at 0; admin controls hidden for USER and shown for ADMIN; SearchFilters rejects min > max; Register form shows field-level errors. Purely visual markup is committed as "feat(ui): ...".
+- No dangerouslySetInnerHTML, no secrets in the bundle, .env.example with VITE_API_URL only if it is used.
+
+PHASE 3 - PENDING BACKEND ITEMS (do before Phase 2 if not already done; check git log)
+TRUST_PROXY must reject boolean true (RED/GREEN); remove the duplicate app.use("/api/auth", authRouter) (refactor commit); add the table-driven authorization-matrix test; README notes on the in-memory rate-limit store, auth-only rate limiting and why prisma stays in dependencies. Skip any that are already done.
+
+PHASE 4 - DELIVERABLES
+- Root README.md: project explanation, stack, Mermaid architecture diagram, local setup for backend and frontend (Postgres, env files, migrate, seed admin, run), API table with auth requirements, error codes, design decisions (admin-only writes and why, 1-unit purchase, search semantics, sessionStorage tradeoff, single-instance rate limiter), a "Test report" section containing the REAL pasted output of backend and frontend coverage runs (never invent numbers), a screenshots section with placeholders at docs/screenshots/*.png, a TESTPROMPTS.md reference, and a "My AI Usage" section drafted for Cursor, OpenCode and Antigravity with a clearly marked [TODO: my own words] for the reflection.
+- Make sure exactly one of PROMPTS.md and one of TESTPROMPTS.md exists, with exact casing (check git ls-files).
+- Final verification: fresh-clone simulation in a temp directory (clone, npm ci for both packages, migrate against a throwaway _test database, run all tests, build the frontend), a secrets scan across the full git history for JWT_SECRET, ADMIN_PASSWORD and real DATABASE_URL values, and npm audit --omit=dev for both packages.
+
+HARD STOP CONDITIONS
+- The same test or step fails after 3 attempts: stop that task, write a "BLOCKED:" note (what you tried, evidence, your best hypothesis), then move on to the next independent task if one exists.
+- The suite goes red for something unrelated, or the DB is unreachable: stop and report.
+- Never run a destructive DB operation unless DATABASE_URL's database name ends in "_test".
+- If you are about to change an existing test, an authorization rule, or a security setting to make something pass, stop and report instead.
+- Run the full suites plus tsc --noEmit and the build before every GREEN and REFACTOR commit.
+
+FINAL REPORT (write it to docs/OVERNIGHT-REPORT.md AND print it, not committed with code):
+1. The ROOT CAUSE of the register error, with the evidence you captured and the fix commits.
+2. Commit list (hash, message) grouped by phase.
+3. Backend and frontend test counts and coverage numbers per package.
+4. Tests that passed immediately on first run.
+5. Anything BLOCKED or skipped, and assumptions made.
+6. A submission checklist of what is still missing, including what only I can do (screenshots, my own AI-usage reflection, pasting the Cursor export, deployment).
