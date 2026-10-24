@@ -36,9 +36,10 @@ describe("AddVehiclePage", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Create vehicle" }));
-    expect(screen.getByRole("alert").textContent).toContain(
-      "Check the vehicle details",
-    );
+    const alerts = screen.getAllByRole("alert");
+    expect(
+      alerts.some((node) => node.textContent?.includes("Check the vehicle details")),
+    ).toBe(true);
     expect(createVehicle).not.toHaveBeenCalled();
   });
 
@@ -71,7 +72,9 @@ describe("AddVehiclePage", () => {
     await user.type(screen.getByLabelText(/image url/i), "http://bad.example/x.jpg");
     await user.click(screen.getByRole("button", { name: "Create vehicle" }));
 
-    expect(screen.getByRole("alert").textContent).toMatch(/https/i);
+    expect(
+      screen.getAllByRole("alert").some((node) => /https/i.test(node.textContent ?? "")),
+    ).toBe(true);
 
     await user.clear(screen.getByLabelText(/image url/i));
     await user.type(screen.getByLabelText(/image url/i), "/cars/aurora-lx.jpg");

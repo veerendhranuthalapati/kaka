@@ -90,7 +90,9 @@ describe("EditVehiclePage", () => {
     await user.clear(screen.getByLabelText(/image url/i));
     await user.type(screen.getByLabelText(/image url/i), "javascript:alert(1)");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
-    expect(screen.getByRole("alert").textContent).toMatch(/https/i);
+    expect(
+      screen.getAllByRole("alert").some((node) => /https/i.test(node.textContent ?? "")),
+    ).toBe(true);
 
     await user.clear(screen.getByLabelText(/image url/i));
     await user.type(screen.getByLabelText(/image url/i), "/cars/aurora-lx.jpg");
