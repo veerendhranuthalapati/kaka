@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Vehicle placeholder">
+  <rect width="640" height="360" fill="#e8edf2"/>
+  <path d="M120 220h400l-40-80H160l-40 80z" fill="#94a3b8"/>
+  <circle cx="200" cy="220" r="36" fill="#64748b"/>
+  <circle cx="440" cy="220" r="36" fill="#64748b"/>
+</svg>
