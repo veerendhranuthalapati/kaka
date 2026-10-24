@@ -1,5 +1,13 @@
-import type { Prisma, Vehicle } from "@prisma/client";
+import { Prisma, type Vehicle } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
+
+/** Escape `\`, `%`, and `_` for use in ILIKE ... ESCAPE '\\' patterns. */
+export function escapeIlikeContainsPattern(value: string): string {
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll("%", "\\%")
+    .replaceAll("_", "\\_");
+}
 
 export type CreateVehicleInput = {
   make: string;
@@ -68,31 +76,39 @@ export class PrismaVehicleRepository implements VehicleRepository {
     });
   }
 
-  search(filters: VehicleSearchFilters): Promise<Vehicle[]> {
-    const where: Prisma.VehicleWhereInput = {};
+  async search(filters: VehicleSearchFilters): Promise<Vehicle[]> {
+    const conditions: Prisma.Sql[] = [];
 
     if (filters.make !== undefined) {
-      where.make = { contains: filters.make, mode: "insensitive" };
+      const pattern = `%${escapeIlikeContainsPattern(filters.make)}%`;
+      conditions.push(Prisma.sql`make ILIKE ${pattern} ESCAPE '\\'`);
     }
     if (filters.model !== undefined) {
-      where.model = { contains: filters.model, mode: "insensitive" };
+      const pattern = `%${escapeIlikeContainsPattern(filters.model)}%`;
+      conditions.push(Prisma.sql`model ILIKE ${pattern} ESCAPE '\\'`);
     }
     if (filters.category !== undefined) {
-      where.category = { equals: filters.category, mode: "insensitive" };
+      conditions.push(
+        Prisma.sql`LOWER(category) = LOWER(${filters.category})`,
+      );
     }
-    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
-      where.price = {};
-      if (filters.minPrice !== undefined) {
-        where.price.gte = filters.minPrice;
-      }
-      if (filters.maxPrice !== undefined) {
-        where.price.lte = filters.maxPrice;
-      }
+    if (filters.minPrice !== undefined) {
+      conditions.push(Prisma.sql`price >= ${filters.minPrice}`);
+    }
+    if (filters.maxPrice !== undefined) {
+      conditions.push(Prisma.sql`price <= ${filters.maxPrice}`);
     }
 
-    return prisma.vehicle.findMany({
-      where,
-      orderBy: { createdAt: "asc" },
-    });
+    const whereClause =
+      conditions.length === 0
+        ? Prisma.sql`TRUE`
+        : Prisma.join(conditions, " AND ");
+
+    return prisma.$queryRaw<Vehicle[]>`
+      SELECT id, make, model, category, price, quantity, "createdAt", "updatedAt"
+      FROM "Vehicle"
+      WHERE ${whereClause}
+      ORDER BY "createdAt" ASC
+    `;
   }
 }
