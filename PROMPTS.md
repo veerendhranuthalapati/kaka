@@ -532,3 +532,27 @@ PROBLEM: npm run dev in backend crashes with "Invalid environment configuration:
 (Full steps 1–8: create .env, Postgres, migrate/seed, start servers, setup:env script with TDD, API client gateway errors, run suites before commits.)
 
 FINAL REPORT (print only, do not commit): what was wrong, each step's result, ports used, the exact commands I run next time to start both servers, and anything I must do by hand (for example reading ADMIN_EMAIL and ADMIN_PASSWORD from backend/.env to log in as admin). No secret values in the report.
+
+### Prompt 12 - 2026-10-24T12:34:00+05:30
+
+TASK: final audit and cleanup of the whole repository. Work autonomously; I'm away and will not answer questions. Make reasonable assumptions and list them in the report.
+
+CORE RULE: cleanup must be BEHAVIOR-PRESERVING. No feature changes, no changed API contracts, no changed authorization or security rules, no changed database schema or existing migrations. If a change might alter behavior, don't make it; list it under "Recommended, not done".
+
+RULES
+- Never git push/rebase/amend/reset --hard, and never rewrite history. PowerShell syntax. Never weaken, skip or delete a test or an assertion. A test may be deleted only if it is an exact duplicate of another, and then it must be listed with proof.
+- No new dependencies. Removing a dependency is allowed only after proving it's unused (grep for imports and config references in both packages), and then running install, the full suites and the builds. Keep "prisma" in backend dependencies (needed for migrate deploy at deploy time). Don't touch prisma/migrations.
+- SECRETS: never print any secret or token value (JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL passwords). Never commit .env. Destructive DB operations only on a database whose name ends in "_test".
+- Every commit ends with two blank lines then exactly:
+  Co-authored-by: Cursor <AI@users.noreply.github.com>
+- Before EVERY commit: run backend and frontend test suites, tsc --noEmit, lint and builds; all must pass. One concern per commit (e.g. "chore: remove unused X", "refactor: extract Y"). Keep refactors and test changes in separate commits.
+- Append my raw prompt to PROMPTS.md in a separate "docs:" commit (append only; verify with git diff that no earlier lines were removed).
+- Stop conditions: the same item failing 3 times -> revert that one change, write "BLOCKED:" and continue. If the suite goes red for something unrelated, stop and report.
+
+PHASE 1 - BASELINE (read-only)
+PHASE 2 - AUDIT (read-only; write findings as you go)
+PHASE 3 - CLEANUP (behavior-preserving, in this order) a–g
+PHASE 4 - VERIFY
+FINAL REPORT (print AND write to docs/FINAL-AUDIT.md, uncommitted): baseline vs final, findings table, removals, commits, kata matrix, recommended/blocked/assumptions, submission checklist.
+
+(Full prompt text preserved in agent transcript for this session; sections above are the operative checklist the agent followed.)
