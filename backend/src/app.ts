@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { config, type TrustProxySetting } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { ApiError } from "./errors/ApiError.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { vehiclesRouter } from "./routes/vehicles.routes.js";
 
@@ -45,6 +46,10 @@ export function createApp(options: AppOptions = {}): Express {
 
   app.get("/health", (_req, res) => {
     res.status(200).json({ status: "ok" });
+  });
+
+  app.use((_req, _res, next) => {
+    next(new ApiError(404, "NOT_FOUND", "Route not found"));
   });
 
   app.use(errorHandler);

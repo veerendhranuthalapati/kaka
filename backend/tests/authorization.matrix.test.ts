@@ -2,7 +2,6 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
-import { signToken } from "../src/lib/jwt.js";
 import { truncateTables } from "./helpers/db.js";
 import { createTestUser } from "./helpers/auth.js";
 
