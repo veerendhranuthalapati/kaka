@@ -413,3 +413,30 @@ FINAL REPORT (print it and write it to docs/CURSOR-FIX-REPORT.md, left uncommitt
 3. Tests that passed immediately; flakiness results for the concurrency test.
 4. What was BLOCKED or skipped, and assumptions.
 5. What I still have to do by hand. append all the prompts to PROMPTS.md
+
+### Prompt 6 - 2026-10-24T11:07:00+05:30
+
+BUILD task. Work autonomously; I'm away. Same rules as before: keep every existing behavior and test passing, never weaken or delete an assertion, no new dependencies, separate commits, never git push/rebase/amend/reset --hard, Windows PowerShell syntax. Every commit ends with two blank lines then exactly:
+Co-authored-by: Cursor <AI@users.noreply.github.com>
+Append my raw prompt to PROMPTS.md in a separate "docs:" commit (append only). Stop after 3 failed attempts on the same item and write "BLOCKED:".
+
+GOAL: restyle the frontend in a clean, minimal, premium automotive-storefront style (large full-bleed image cards, big type, lots of whitespace) inspired by a reference screenshot of a car maker's homepage at docs/design/reference.png. That folder is git-ignored; make sure docs/design/ is in .gitignore and that the screenshot is never committed. Use the screenshot only for general composition and feel. Do NOT reproduce any brand's logo, name, wordmark, copy, icons or photos. Our brand is "Auto Yard". All imagery must be our own files in frontend/public/cars (listed from disk, never invented URLs) or the placeholder. The result must be original work, not a pixel clone.
+
+If the optional imageUrl feature does not exist yet in the repo (check git log and the Prisma schema), implement it first exactly as follows, with strict TDD: optional nullable imageUrl on Vehicle (max 2048, migration), zod accepting only an https:// URL or a single-slash site-relative path (reject http:, javascript:, data:, file:, "//host", whitespace and control characters), included in create, update, list, search (check the $queryRaw search selects it and still returns price as a number) and responses; tests for each; admin forms get an Image URL field with the same validation and a live preview; a VehicleImage component with alt text, lazy loading, fixed aspect ratio, referrerPolicy no-referrer and a placeholder fallback on error (tested). Add an idempotent "seed:demo" script that creates 8-10 demo vehicles using the files that actually exist in frontend/public/cars (mixed categories and prices, one with quantity 0), refusing to run in production.
+
+UI WORK (feat(ui): commits)
+1. Design tokens in tailwind.config.js: neutral palette, one accent blue for primary actions, radius, shadow and spacing scales; system font stack only (no external font requests). WCAG AA contrast. prefers-reduced-motion respected.
+2. Top bar: thin, white, sticky; brand "Auto Yard" at the left; centered text links (Inventory, category links that apply filters); right side icons/buttons for account menu (email, role badge, logout). Admin link only for ADMIN. On mobile collapse into a menu button with a keyboard-accessible drawer.
+3. Hero carousel on the dashboard: large rounded image cards (approx 16:9 on desktop, taller on mobile) showing featured vehicles (rule: in-stock vehicles sorted by newest, max 6; document the rule). Each card: category label top-left, large make+model title, price line, a primary "Purchase" button (disabled with an "Out of stock" label at 0, loading state, no double submit, same 409 handling: patch only that card, toast "Just sold out") and a secondary "Details" button that opens a details dialog (all fields, larger image). Horizontal scroll-snap carousel with arrow buttons and pagination dots, keyboard operable (arrow keys), aria-labels, no autoplay. Text over images must stay readable: add a gradient overlay, check contrast.
+4. Inventory section below: heading, search input (debounced), category chips, price range, then a responsive grid of cards (image, make/model, category badge, price, stock indicator green/amber/red, Purchase button). Skeleton loaders instead of full-page spinners, friendly empty state, error state with retry.
+5. Floating bottom action bar (fixed, centered, rounded, subtle shadow, hidden on routes where it doesn't make sense): a quick-search input and a "Browse inventory" button that scrolls to the grid and focuses the search. It must not cover content (add bottom padding) and must respect safe-area insets.
+6. Admin: add/edit in a drawer or modal reusing the same form components (no quantity on edit), delete confirm dialog, restock dialog (integer 1-10000). Focus trap, Escape to close, labelled inputs.
+7. Restyle Login and Register in the same language (clean centered card, large heading, blue primary button).
+8. Responsive at 375, 768 and 1280px; verify no horizontal scroll.
+9. Keep authentication, routing guards and API client behavior unchanged.
+
+TESTS: existing tests may change only where markup text or structure changed; list each changed test with the reason. Add tests for: carousel arrows/dots change the active slide and respect boundaries, details dialog opens and closes with Escape, featured-vehicle selection helper (pure function: in-stock only, newest first, max 6, empty list), bottom bar focuses the search input. Run backend and frontend suites, tsc --noEmit, lint and builds before every commit.
+
+DOCS: README "Vehicle images" (accepted formats, no upload and why, how to add local images, credits in CREDITS.md) and a design note: "Visual style inspired by contemporary automotive storefronts; implementation, branding and imagery are original". Update real test and coverage numbers. Leave the screenshots and "My AI Usage" TODOs untouched.
+
+FINAL REPORT (print and write to docs/UI-REPORT.md, uncommitted): commits, test counts and coverage before/after, every changed test file and why, BLOCKED or skipped items, assumptions, and what I still have to do by hand.
