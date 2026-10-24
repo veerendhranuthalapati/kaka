@@ -160,10 +160,8 @@ export function EditVehiclePage() {
       <header className="border-b border-line bg-canvas">
         <div className="shell flex items-center justify-between py-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-widest text-muted">
-              Admin
-            </p>
-            <h1 className="text-xl font-bold tracking-tight text-ink">
+            <p className="text-overline">Admin</p>
+            <h1 className="font-display text-card-title tracking-tight text-ink">
               Edit vehicle
             </h1>
           </div>

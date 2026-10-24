@@ -9,13 +9,25 @@ export function TopBar({
   onLogout,
   onCategorySelect,
   onInventoryClick,
+  activeCategory,
 }: {
   user: AuthUser | null;
   onLogout: () => void;
   onCategorySelect: (category: string) => void;
   onInventoryClick: () => void;
+  activeCategory?: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 8);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -27,27 +39,39 @@ export function TopBar({
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/80 bg-surface backdrop-blur-md">
+    <header
+      className={`sticky top-0 z-40 border-b transition-colors duration-ui ease-gentle motion-reduce:transition-none ${
+        scrolled
+          ? "border-line/90 bg-surface/85 shadow-resting backdrop-blur-md"
+          : "border-line/60 bg-surface/95 backdrop-blur-sm"
+      }`}
+    >
       <div className="shell grid h-[4.25rem] grid-cols-[1fr_auto_1fr] items-center gap-4">
         <Link
           to="/"
-          className="text-base font-bold tracking-tight text-ink sm:text-lg"
+          className="font-display text-card-title tracking-tight text-ink"
         >
           Auto Yard
         </Link>
 
         <nav
-          className="hidden items-center justify-center gap-5 md:flex"
+          className="hidden items-center justify-center gap-1 md:flex"
           aria-label="Primary"
         >
-          <button type="button" className="link text-sm" onClick={onInventoryClick}>
+          <button
+            type="button"
+            className={`nav-link ${!activeCategory ? "nav-link-active" : ""}`}
+            onClick={onInventoryClick}
+          >
             Inventory
           </button>
           {CATEGORIES.map((category) => (
             <button
               key={category}
               type="button"
-              className="text-sm font-medium text-muted hover:text-ink"
+              className={`nav-link ${
+                activeCategory === category ? "nav-link-active" : ""
+              }`}
               onClick={() => onCategorySelect(category)}
             >
               {category}
@@ -56,21 +80,23 @@ export function TopBar({
         </nav>
 
         <div className="hidden items-center justify-end gap-3 md:flex">
-          <span className="text-sm text-muted">{user?.email}</span>
+          <span className="max-w-[10rem] truncate font-sans text-body text-muted">
+            {user?.email}
+          </span>
           <span className="badge">{user?.role}</span>
           {user?.role === "ADMIN" && (
-            <Link className="link text-sm" to="/admin/vehicles/new">
+            <Link className="link text-body" to="/admin/vehicles/new">
               Admin
             </Link>
           )}
-          <button type="button" className="btn-secondary min-h-9 px-3" onClick={onLogout}>
+          <button type="button" className="btn-ghost min-h-11 px-3" onClick={onLogout}>
             Sign out
           </button>
         </div>
 
         <button
           type="button"
-          className="btn-secondary col-start-3 min-h-10 justify-self-end px-3 md:hidden"
+          className="btn-secondary col-start-3 justify-self-end px-3 md:hidden"
           aria-expanded={menuOpen}
           aria-controls="mobile-nav"
           onClick={() => setMenuOpen((open) => !open)}
@@ -86,15 +112,24 @@ export function TopBar({
           role="dialog"
           aria-label="Navigation menu"
         >
-          <div className="flex flex-col gap-3">
-            <button type="button" className="text-left font-medium" onClick={onInventoryClick}>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              className="nav-link text-left"
+              onClick={() => {
+                onInventoryClick();
+                setMenuOpen(false);
+              }}
+            >
               Inventory
             </button>
             {CATEGORIES.map((category) => (
               <button
                 key={category}
                 type="button"
-                className="text-left text-muted"
+                className={`nav-link text-left ${
+                  activeCategory === category ? "nav-link-active" : ""
+                }`}
                 onClick={() => {
                   onCategorySelect(category);
                   setMenuOpen(false);
@@ -104,11 +139,11 @@ export function TopBar({
               </button>
             ))}
             {user?.role === "ADMIN" && (
-              <Link to="/admin/vehicles/new" className="font-medium">
+              <Link to="/admin/vehicles/new" className="nav-link font-medium">
                 Admin
               </Link>
             )}
-            <button type="button" className="btn-secondary" onClick={onLogout}>
+            <button type="button" className="btn-secondary mt-2" onClick={onLogout}>
               Sign out
             </button>
           </div>

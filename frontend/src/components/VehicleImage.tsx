@@ -69,7 +69,7 @@ export function VehicleImage({
 
   const frameClass =
     display.mode === "illustration"
-      ? "bg-gradient-to-br from-slate-100 to-slate-200/80"
+      ? "bg-gradient-to-br from-raised to-canvas"
       : "bg-raised";
 
   const imageClass =

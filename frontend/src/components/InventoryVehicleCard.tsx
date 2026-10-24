@@ -2,10 +2,10 @@ import type { Vehicle } from "../types";
 import { formatPrice } from "../utils/format";
 import { VehicleImage } from "./VehicleImage";
 
-function stockTone(quantity: number): string {
-  if (quantity === 0) return "text-danger";
-  if (quantity <= 2) return "text-amber-600";
-  return "text-emerald-600";
+function stockClass(quantity: number): string {
+  if (quantity === 0) return "stock-out";
+  if (quantity <= 2) return "stock-low";
+  return "stock-ok";
 }
 
 export function InventoryVehicleCard({
@@ -31,10 +31,10 @@ export function InventoryVehicleCard({
   const title = `${vehicle.make} ${vehicle.model}`;
 
   return (
-    <article className="surface overflow-hidden">
+    <article className="surface-hover overflow-hidden">
       <button
         type="button"
-        className="block w-full text-left"
+        className="block w-full min-w-0 text-left"
         onClick={() => onDetails(vehicle)}
       >
         <VehicleImage
@@ -46,14 +46,16 @@ export function InventoryVehicleCard({
       </button>
       <div className="flex flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="text-xl font-bold tracking-tight">{title}</h3>
-            <p className="text-sm text-muted">{vehicle.category}</p>
+          <div className="min-w-0">
+            <h3 className="font-display text-card-title tracking-tight text-ink">
+              {title}
+            </h3>
+            <p className="font-sans text-body text-muted">{vehicle.category}</p>
           </div>
-          <span className="badge">{vehicle.category}</span>
+          <span className="badge-category shrink-0">{vehicle.category}</span>
         </div>
-        <p className="text-2xl font-bold">{formatPrice(vehicle.price)}</p>
-        <p className={`text-sm font-semibold ${stockTone(vehicle.quantity)}`}>
+        <p className="text-price">{formatPrice(vehicle.price)}</p>
+        <p className={stockClass(vehicle.quantity)}>
           {outOfStock ? "Out of stock" : `${vehicle.quantity} in stock`}
         </p>
         <button
@@ -67,13 +69,13 @@ export function InventoryVehicleCard({
         </button>
         {canManage && (
           <div className="flex flex-wrap gap-2 border-t border-line pt-3">
-            <button type="button" className="btn-secondary text-xs" onClick={() => onEdit?.(vehicle)}>
+            <button type="button" className="btn-ghost text-label normal-case" onClick={() => onEdit?.(vehicle)}>
               Edit
             </button>
-            <button type="button" className="btn-secondary text-xs" onClick={() => onRestock?.(vehicle)}>
+            <button type="button" className="btn-ghost text-label normal-case" onClick={() => onRestock?.(vehicle)}>
               Restock
             </button>
-            <button type="button" className="btn-danger text-xs" onClick={() => onDelete?.(vehicle)}>
+            <button type="button" className="btn-danger text-label normal-case" onClick={() => onDelete?.(vehicle)}>
               Delete
             </button>
           </div>

@@ -49,7 +49,7 @@ export function HeroCarousel({
 
   return (
     <section aria-label="Featured vehicles" className="relative">
-      <div className="relative overflow-hidden rounded-[2rem] shadow-card">
+      <div className="relative overflow-hidden rounded-card shadow-lift">
         {vehicles.map((vehicle, slideIndex) => {
           const outOfStock = vehicle.quantity === 0;
           const purchasing = purchasingId === vehicle.id;
@@ -116,13 +116,13 @@ export function HeroCarousel({
                     ))}
                   </div>
 
-                  <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/85">
+                  <span className="text-overline text-white/90">
                     {vehicle.category}
                   </span>
-                  <h2 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                  <h2 className="max-w-3xl font-display text-hero text-white">
                     {vehicle.make} {vehicle.model}
                   </h2>
-                  <p className="text-xl font-semibold sm:text-2xl">
+                  <p className="font-display text-2xl font-bold tabular-nums text-white">
                     {formatPrice(vehicle.price)}
                   </p>
                   <div className="flex flex-wrap gap-3 pt-1">

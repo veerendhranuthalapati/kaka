@@ -123,6 +123,7 @@ export function DashboardPage() {
         user={user}
         onLogout={logout}
         onInventoryClick={scrollToInventory}
+        activeCategory={filters.category}
         onCategorySelect={(category) => setFilters({ category })}
       />
 
@@ -154,8 +155,8 @@ export function DashboardPage() {
           className="grid gap-6"
         >
           <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-bold tracking-tight">Inventory</h2>
-            <p className="text-sm text-muted">
+            <h2 className="font-display text-section-title tracking-tight">Inventory</h2>
+            <p className="font-sans text-body text-muted">
               Search and filter without leaving the page.
             </p>
           </div>
@@ -266,10 +267,14 @@ export function DashboardPage() {
           )}
 
           {!error && !loading && vehicles.length > 0 && (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {vehicles.map((vehicle) => (
-                <InventoryVehicleCard
+            <div className="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {vehicles.map((vehicle, index) => (
+                <div
                   key={vehicle.id}
+                  className="inventory-enter min-w-0"
+                  style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
+                >
+                <InventoryVehicleCard
                   vehicle={vehicle}
                   canManage={canManage}
                   purchasing={purchasingId === vehicle.id}
@@ -281,6 +286,7 @@ export function DashboardPage() {
                   onRestock={setRestockingVehicle}
                   onDelete={setDeletingVehicle}
                 />
+                </div>
               ))}
             </div>
           )}

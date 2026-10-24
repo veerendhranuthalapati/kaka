@@ -60,13 +60,11 @@ export function RegisterPage() {
     <main className="shell flex min-h-screen items-center justify-center py-10">
       <section className="surface w-full max-w-md p-6 sm:p-8">
         <header className="mb-6">
-          <p className="text-sm font-semibold uppercase tracking-widest text-muted">
-            Auto Yard
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">
+          <p className="text-overline">Auto Yard</p>
+          <h1 className="mt-2 font-display text-section-title tracking-tight text-ink">
             Create an account
           </h1>
-          <p className="mt-2 text-sm text-muted">
+          <p className="mt-2 font-sans text-body text-muted">
             Register as a customer to browse and purchase vehicles.
           </p>
         </header>
