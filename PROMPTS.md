@@ -556,3 +556,11 @@ PHASE 4 - VERIFY
 FINAL REPORT (print AND write to docs/FINAL-AUDIT.md, uncommitted): baseline vs final, findings table, removals, commits, kata matrix, recommended/blocked/assumptions, submission checklist.
 
 (Full prompt text preserved in agent transcript for this session; sections above are the operative checklist the agent followed.)
+
+### RUN1 — Bug fixes, dashboard wiring, shared form — 2026-10-24T15:32:00+05:30
+
+SCOPE: bug fixes, dashboard wiring, shared form. No visual redesign, no fonts, no illustrations, no spec lookup.
+
+Tasks: (1) INVALID DATE BUG — createdAt/updatedAt ISO on list/search/GET/create/update; frontend "-" for invalid dates. (2) SEED CLEANUP — delete make exactly "demo-seed" before insert. (3) DASHBOARD CARDS — cardSpecChips, title/subtitle, View details link, memoize, remove details dialog if unused. (4) SHARED VehicleForm for Add/Edit with spec validation. (5) TOP BAR — nowrap, hide email/role below breakpoint in account menu.
+
+Rules: strict TDD, separate test/source commits, first commit append this prompt to PROMPTS.md, update docs/ai-reports/PROGRESS.md, FINAL REPORT docs/ai-reports/RUN1-REPORT.md, no push, Co-authored-by trailer, coverage floors 80%/90%.
