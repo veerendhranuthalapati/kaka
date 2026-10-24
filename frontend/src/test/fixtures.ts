@@ -27,6 +27,7 @@ export function makeVehicle(overrides: Partial<Vehicle> = {}): Vehicle {
     category: "Sedan",
     price: 24_500,
     quantity: 3,
+    imageUrl: null,
     createdAt: "2026-10-23T10:00:00.000Z",
     updatedAt: "2026-10-23T10:00:00.000Z",
     ...overrides,

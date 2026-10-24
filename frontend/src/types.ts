@@ -18,6 +18,7 @@ export type Vehicle = {
   category: string;
   price: number;
   quantity: number;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -28,6 +29,7 @@ export type VehicleInput = {
   category: string;
   price: number;
   quantity: number;
+  imageUrl?: string | null;
 };
 
 export type VehicleUpdateInput = Omit<VehicleInput, "quantity">;
