@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { createVehicle } from "../../api/vehicles";
+import { makeVehicle } from "../../test/fixtures";
 import { AddVehiclePage } from "./AddVehicle";
 
 const mockNavigate = vi.fn();
@@ -43,17 +44,18 @@ describe("AddVehiclePage", () => {
 
   it("validates imageUrl client-side and creates a vehicle on success", async () => {
     const user = userEvent.setup();
-    vi.mocked(createVehicle).mockResolvedValueOnce({
-      id: "v1",
-      make: "Aurora",
-      model: "LX",
-      category: "Sedan",
-      price: 1000,
-      quantity: 1,
-      imageUrl: "/cars/aurora-lx.jpg",
-      createdAt: "",
-      updatedAt: "",
-    });
+    vi.mocked(createVehicle).mockResolvedValueOnce(
+      makeVehicle({
+        id: "v1",
+        make: "Aurora",
+        model: "LX",
+        price: 1000,
+        quantity: 1,
+        imageUrl: "/cars/aurora-lx.jpg",
+        createdAt: "",
+        updatedAt: "",
+      }),
+    );
 
     render(
       <MemoryRouter>
@@ -83,17 +85,18 @@ describe("AddVehiclePage", () => {
 
   it("submits without imageUrl and previews the category illustration", async () => {
     const user = userEvent.setup();
-    vi.mocked(createVehicle).mockResolvedValueOnce({
-      id: "v2",
-      make: "Aurora",
-      model: "LX",
-      category: "Sedan",
-      price: 1000,
-      quantity: 1,
-      imageUrl: null,
-      createdAt: "",
-      updatedAt: "",
-    });
+    vi.mocked(createVehicle).mockResolvedValueOnce(
+      makeVehicle({
+        id: "v2",
+        make: "Aurora",
+        model: "LX",
+        price: 1000,
+        quantity: 1,
+        imageUrl: null,
+        createdAt: "",
+        updatedAt: "",
+      }),
+    );
 
     render(
       <MemoryRouter>

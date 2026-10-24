@@ -14,6 +14,11 @@ function searchQuery(params: VehicleSearchParams): string {
   if (params.category) query.set("category", params.category);
   if (params.minPrice !== undefined) query.set("minPrice", String(params.minPrice));
   if (params.maxPrice !== undefined) query.set("maxPrice", String(params.maxPrice));
+  if (params.fuelType) query.set("fuelType", params.fuelType);
+  if (params.minYear !== undefined) query.set("minYear", String(params.minYear));
+  if (params.maxOdometerKm !== undefined) {
+    query.set("maxOdometerKm", String(params.maxOdometerKm));
+  }
 
   const serialized = query.toString();
   return serialized ? `?${serialized}` : "";
@@ -23,15 +28,12 @@ export function listVehicles(): Promise<Vehicle[]> {
   return apiRequest<Vehicle[]>("/api/vehicles");
 }
 
-export function getVehicle(id: string): Promise<Vehicle> {
-  return apiRequest<Vehicle[]>(`/api/vehicles`).then((vehicles) => {
-    const vehicle = vehicles.find((v) => v.id === id);
-    if (!vehicle) {
-      throw new Error("Vehicle not found");
-    }
-    return vehicle;
-  });
+export function getVehicleById(id: string): Promise<Vehicle> {
+  return apiRequest<Vehicle>(`/api/vehicles/${id}`);
 }
+
+/** @deprecated Use getVehicleById — kept for existing admin edit imports. */
+export const getVehicle = getVehicleById;
 
 export function searchVehicles(params: VehicleSearchParams): Promise<Vehicle[]> {
   return apiRequest<Vehicle[]>(`/api/vehicles/search${searchQuery(params)}`);

@@ -30,6 +30,18 @@ export function makeVehicle(overrides: Partial<Vehicle> = {}): Vehicle {
     imageUrl: null,
     createdAt: "2026-10-23T10:00:00.000Z",
     updatedAt: "2026-10-23T10:00:00.000Z",
+    year: null,
+    odometerKm: null,
+    engineCc: null,
+    powerBhp: null,
+    torqueNm: null,
+    fuelType: null,
+    transmission: null,
+    drivetrain: null,
+    fuelEconomyKmpl: null,
+    color: null,
+    owners: null,
+    vin: null,
     ...overrides,
   };
 }
