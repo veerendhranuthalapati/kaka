@@ -507,3 +507,11 @@ TESTS: existing tests may change only where text/structure changed; list each ch
 DOCS: update CREDITS.md (Manrope and Inter, SIL OFL, self-hosted via Fontsource) and the README design note (type system, tokens, how to change them). Update real test/coverage numbers. Leave screenshots and "My AI Usage" TODOs untouched.
 
 FINAL REPORT (print and write to docs/UI-REPORT-4.md, uncommitted): what changed per area, commits, bundle sizes before/after, contrast failures found and fixed, coverage per package, changed tests with reasons, BLOCKED/skipped items.
+
+### Prompt 10 - 2026-10-24T12:10:00+05:30
+
+BUILD task. Same rules as before: strict RED/GREEN with pasted failing output, tests and source in separate commits, never weaken a test, no new dependencies, never git push/rebase/amend/reset --hard, PowerShell syntax. Every commit ends with two blank lines then exactly:
+Co-authored-by: Cursor <AI@users.noreply.github.com>
+Append my raw prompt to PROMPTS.md in a separate "docs:" commit (append only).
+
+In the frontend API client: responses with status 502, 503 or 504 (JSON or not) must produce an ApiError with the user message "The server is temporarily unavailable. Please try again in a moment." and keep the status on the error. A 500 with a valid error envelope keeps showing the server's message; a 500 with a non-JSON body shows "Something went wrong on the server. Please try again." The raw body is never shown. RED client tests for 502, 503, 504, a 500 non-JSON body and a 500 envelope, then GREEN. Make sure the Login, Register and Dashboard error states show these messages with a Retry button where one exists. Run both suites, tsc, lint and builds before each commit and keep frontend line coverage at or above 80%.
