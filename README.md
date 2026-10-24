@@ -112,6 +112,15 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 - **Rate limiting & scaling:** Auth routes are rate-limited only (`/api/auth`). The limiter uses `express-rate-limit`'s in-memory store and is a **single-instance assumption** (no shared store like Redis) - in multi-replica deployments, limits will be per instance; swap to a shared store (e.g., `rate-limit-redis`) if scaling horizontally.
 - **Prisma placement:** `prisma` is listed as a dependency (not only devDependency) because `prisma migrate deploy` is used at build/deploy time and the Prisma CLI/schema may be required in production containers/images without dev dependencies installed.
 - **Frontend UX:** Debounced search (300ms), min<=max validation before sending, out-of-stock buttons disabled with label, purchase shows loading and on 409 patches that card to quantity 0 (no full-page reload) with a "Just sold out" toast, admin quantity field omitted on edit, delete requires confirmation, restock integer 1-10000.
+- **Featured carousel:** In-stock vehicles only, sorted by `createdAt` descending, maximum six slides (documented on the dashboard).
+- **Visual design:** Visual style inspired by contemporary automotive storefronts; implementation, branding, and imagery are original (see design reference under `docs/design/`, git-ignored).
+
+## Vehicle images
+
+- **Formats:** Use `https://` URLs or site-relative paths such as `/cars/sedan-01.svg` (max 2048 characters). Dangerous schemes (`http:`, `javascript:`, `data:`, `file:`, protocol-relative `//`) are rejected server-side and in admin forms.
+- **No upload:** Images are referenced by URL only; the API does not accept file uploads to keep the backend stateless and avoid malware/storage concerns.
+- **Local assets:** Add files under `frontend/public/cars/` and set Image URL in admin to `/cars/<filename>`. Demo inventory: `cd backend && npm run seed:demo` (refuses `NODE_ENV=production`).
+- **Credits:** See [`CREDITS.md`](CREDITS.md).
 
 ## Test report
 
@@ -119,18 +128,17 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 **Command:** `npm test` (from `backend/`)  
 **Output (actual):**
 ```
- Test Files  12 passed (12)
-      Tests  63 passed (63)
-   Duration  35.36s (tests 88%, import 11%)
+ Test Files  15 passed (15)
+      Tests  70 passed (70)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 94.75% ( 235/248 )
-Branches     : 88.07% ( 96/109 )
-Functions    : 100% ( 59/59 )
-Lines        : 94.75% ( 235/248 )
+Statements   : 94.77% ( 254/268 )
+Branches     : 89.14% ( 115/129 )
+Functions    : 100% ( 66/66 )
+Lines        : 94.77% ( 254/268 )
 ================================================================================
 ```
 
@@ -138,18 +146,17 @@ Lines        : 94.75% ( 235/248 )
 **Command:** `npm test` (from `frontend/`)  
 **Output (actual):**
 ```
- Test Files  9 passed (9)
-      Tests  34 passed (34)
-   Duration  6.42s (environment 65%, tests 19%, setup 10%, import 4%, transform 1%, worker 1%)
+ Test Files  14 passed (14)
+      Tests  41 passed (41)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 72.93% ( 326/447 )
-Branches     : 64.33% ( 202/314 )
-Functions    : 74.77% ( 83/111 )
-Lines        : 73.79% ( 307/416 )
+Statements   : 69.51% ( 399/574 )
+Branches     : 60.91% ( 240/394 )
+Functions    : 66.66% ( 114/171 )
+Lines        : 71.15% ( 370/520 )
 ================================================================================
 ```
 
