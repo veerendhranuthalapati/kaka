@@ -8,6 +8,7 @@ import { RegisterPage } from "./pages/Register";
 import { NotFoundPage } from "./pages/NotFound";
 import { AddVehiclePage } from "./pages/admin/AddVehicle";
 import { EditVehiclePage } from "./pages/admin/EditVehicle";
+import { VehicleDetailsPage } from "./pages/VehicleDetails";
 
 export function App() {
   return (
@@ -17,6 +18,7 @@ export function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/vehicles/:id" element={<VehicleDetailsPage />} />
           <Route element={<AdminRoute />}>
             <Route path="/admin/vehicles/new" element={<AddVehiclePage />} />
             <Route path="/admin/vehicles/:id/edit" element={<EditVehiclePage />} />
