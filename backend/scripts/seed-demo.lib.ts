@@ -7,6 +7,17 @@ export function refuseProductionSeed(nodeEnv: string | undefined): void {
   }
 }
 
+export function refuseTestDatabase(databaseUrl: string | undefined): void {
+  if (!databaseUrl) {
+    return;
+  }
+  const match = databaseUrl.match(/\/([^/?]+)(?:\?|$)/);
+  const databaseName = match?.[1] ?? "";
+  if (databaseName.endsWith("_test")) {
+    throw new Error("seed:demo refuses to run against a _test database");
+  }
+}
+
 export function demoVehicleImageSlug(make: string, model: string): string {
   return `${make}-${model}`
     .toLowerCase()
@@ -39,13 +50,11 @@ export function listAllCarAssetFilenames(
     .sort();
 }
 
-export function resolveDemoVehicleImageUrl(
+export function resolveOptionalDemoImageUrl(
   make: string,
   model: string,
   repoRoot: string,
-  fallbackSvgPaths: string[],
-  index: number,
-): string {
+): string | null {
   const carsDir = join(repoRoot, "frontend", "public", "cars");
   const slug = demoVehicleImageSlug(make, model);
 
@@ -61,5 +70,5 @@ export function resolveDemoVehicleImageUrl(
     return `/cars/${svgMatch}`;
   }
 
-  return fallbackSvgPaths[index % fallbackSvgPaths.length];
+  return null;
 }
