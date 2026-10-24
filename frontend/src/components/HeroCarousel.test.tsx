@@ -1,5 +1,7 @@
+import type { ComponentProps } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { makeVehicle } from "../test/fixtures";
 import { HeroCarousel } from "./HeroCarousel";
@@ -10,16 +12,24 @@ describe("HeroCarousel", () => {
     makeVehicle({ id: "b", make: "Summit", model: "Two", quantity: 1 }),
   ];
 
+  function renderCarousel(
+    props: Partial<ComponentProps<typeof HeroCarousel>> = {},
+  ) {
+    return render(
+      <MemoryRouter>
+        <HeroCarousel
+          vehicles={vehicles}
+          purchasingId={null}
+          onPurchase={vi.fn()}
+          {...props}
+        />
+      </MemoryRouter>,
+    );
+  }
+
   it("moves between slides with arrows and respects boundaries", async () => {
     const user = userEvent.setup();
-    render(
-      <HeroCarousel
-        vehicles={vehicles}
-        purchasingId={null}
-        onPurchase={vi.fn()}
-        onDetails={vi.fn()}
-      />,
-    );
+    renderCarousel();
 
     expect(
       screen.getByRole("tab", { name: "Aurora One", selected: true }),
@@ -48,14 +58,7 @@ describe("HeroCarousel", () => {
 
   it("responds to arrow key presses", async () => {
     const user = userEvent.setup();
-    render(
-      <HeroCarousel
-        vehicles={vehicles}
-        purchasingId={null}
-        onPurchase={vi.fn()}
-        onDetails={vi.fn()}
-      />,
-    );
+    renderCarousel();
 
     await user.keyboard("{ArrowRight}");
     expect(
@@ -68,24 +71,16 @@ describe("HeroCarousel", () => {
     ).toBeTruthy();
   });
 
-  it("fires purchase and details callbacks from the hero actions", async () => {
+  it("fires purchase and links details to the vehicle page", async () => {
     const user = userEvent.setup();
     const onPurchase = vi.fn();
-    const onDetails = vi.fn();
 
-    render(
-      <HeroCarousel
-        vehicles={vehicles}
-        purchasingId={null}
-        onPurchase={onPurchase}
-        onDetails={onDetails}
-      />,
-    );
+    renderCarousel({ onPurchase });
 
     await user.click(screen.getByRole("button", { name: "Purchase" }));
     expect(onPurchase).toHaveBeenCalledWith(vehicles[0]);
 
-    await user.click(screen.getByRole("button", { name: "Details" }));
-    expect(onDetails).toHaveBeenCalledWith(vehicles[0]);
+    const details = screen.getByRole("link", { name: "Details" });
+    expect(details.getAttribute("href")).toBe("/vehicles/a");
   });
 });
