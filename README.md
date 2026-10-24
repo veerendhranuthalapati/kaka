@@ -129,16 +129,16 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 **Output (actual):**
 ```
  Test Files  15 passed (15)
-      Tests  70 passed (70)
+      Tests  72 passed (72)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 94.77% ( 254/268 )
-Branches     : 89.14% ( 115/129 )
-Functions    : 100% ( 66/66 )
-Lines        : 94.77% ( 254/268 )
+Statements   : 94.38% ( 269/285 )
+Branches     : 88.23% ( 120/136 )
+Functions    : 100% ( 70/70 )
+Lines        : 94.38% ( 269/285 )
 ================================================================================
 ```
 
@@ -146,17 +146,17 @@ Lines        : 94.77% ( 254/268 )
 **Command:** `npm test` (from `frontend/`)  
 **Output (actual):**
 ```
- Test Files  14 passed (14)
-      Tests  41 passed (41)
+ Test Files  20 passed (20)
+      Tests  61 passed (61)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 69.51% ( 399/574 )
-Branches     : 60.91% ( 240/394 )
-Functions    : 66.66% ( 114/171 )
-Lines        : 71.15% ( 370/520 )
+Statements   : 78.56% ( 546/695 )
+Branches     : 73.17% ( 341/466 )
+Functions    : 75.37% ( 150/199 )
+Lines        : 80% ( 508/635 )
 ================================================================================
 ```
 
