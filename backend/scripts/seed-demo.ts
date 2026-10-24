@@ -1,6 +1,12 @@
 import "dotenv/config";
+import { resolve } from "node:path";
 import { prisma } from "../src/lib/prisma.js";
-import { listDemoCarImagePaths, refuseProductionSeed } from "./seed-demo.lib.js";
+import {
+  listAllCarAssetFilenames,
+  listDemoCarImagePaths,
+  refuseProductionSeed,
+  resolveDemoVehicleImageUrl,
+} from "./seed-demo.lib.js";
 
 const DEMO_TAG = "demo-seed";
 
@@ -19,11 +25,16 @@ const catalog = [
 async function main(): Promise<void> {
   refuseProductionSeed(process.env.NODE_ENV);
 
-  const images = listDemoCarImagePaths(resolve(process.cwd(), ".."));
-  if (images.length < 8) {
+  const repoRoot = resolve(process.cwd(), "..");
+  const assets = listAllCarAssetFilenames(repoRoot);
+  const fallbackSvgs = listDemoCarImagePaths(repoRoot);
+  if (assets.length < 8) {
     throw new Error(
-      `seed:demo needs at least 8 SVG files in frontend/public/cars (found ${images.length})`,
+      `seed:demo needs at least 8 files in frontend/public/cars (found ${assets.length})`,
     );
+  }
+  if (fallbackSvgs.length === 0) {
+    throw new Error("seed:demo needs at least one fallback SVG in frontend/public/cars");
   }
 
   await prisma.vehicle.deleteMany({
@@ -31,7 +42,13 @@ async function main(): Promise<void> {
   });
 
   for (const [index, item] of catalog.entries()) {
-    const imageUrl = images[index % images.length];
+    const imageUrl = resolveDemoVehicleImageUrl(
+      item.make,
+      item.model,
+      repoRoot,
+      fallbackSvgs,
+      index,
+    );
     await prisma.vehicle.create({
       data: {
         make: `${DEMO_TAG} ${item.make}`,
