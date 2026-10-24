@@ -104,14 +104,14 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 
 - **Admin-only writes:** `POST/PUT/DELETE /api/vehicles` and `POST /:id/restock` require `ADMIN`. This prevents unauthorized inventory changes while allowing customers to purchase. The frontend hides admin controls for `USER`, but never relies on it for security.
 - **One-unit purchase:** `POST /:id/purchase` takes no body and decrements exactly 1 unit atomically with `quantity > 0` guard (409 `OUT_OF_STOCK` on failure). This prevents oversells without complex cart logic.
-- **Search semantics:** `/search` is registered before `/:id` to avoid route shadowing. make/model use case-insensitive contains; category uses case-insensitive exact match; price filters are inclusive; invalid ranges return 400. `%` and `_` are treated as literal characters (not wildcards) per Prisma parameterization.
+- **Search semantics:** `/search` is registered before `/:id` to avoid route shadowing. make/model use case-insensitive contains implemented with PostgreSQL `ILIKE ... ESCAPE '\'` so `%`, `_`, and `\` in user input match literally; category uses case-insensitive exact match; price filters are inclusive; invalid ranges return 400.
 - **Auth behavior:** Bcrypt cost 12, password 8-72 chars and <=72 UTF-8 bytes. On login, unknown emails still run bcrypt compare against a dummy hash to mitigate user enumeration/timing leaks; error messages are identical. JWT HS256 pinned on sign and verify, 15m expiry. Tokens stored in **sessionStorage** (cleared on tab close) as a tradeoff: reduces persistent XSS exposure vs localStorage, but is still vulnerable to XSS - treat it as non-httpOnly client storage and rely on CSP/sanitization.
 - **Trust proxy/rate limiting:** Auth endpoints are rate-limited per client IP. Behind reverse proxies, set `TRUST_PROXY` to the exact hop count (e.g., `1`); **never use `true`** (only `false`/unset, positive integer, or IP/subnet string). The limiter keys on `req.ip` and returns the standard error envelope on 429 (single-instance in-memory store; see below).
 - **Validation & safety:** Zod validates every endpoint with strict schemas (reject unknown fields). No stack traces in 500 responses. `passwordHash` never returned. PUT disallows quantity changes. CORS limited to `CORS_ORIGIN`.
 - **Error envelope:** All API errors follow the standardized envelope for consistent frontend parsing.
 - **Rate limiting & scaling:** Auth routes are rate-limited only (`/api/auth`). The limiter uses `express-rate-limit`'s in-memory store and is a **single-instance assumption** (no shared store like Redis) - in multi-replica deployments, limits will be per instance; swap to a shared store (e.g., `rate-limit-redis`) if scaling horizontally.
 - **Prisma placement:** `prisma` is listed as a dependency (not only devDependency) because `prisma migrate deploy` is used at build/deploy time and the Prisma CLI/schema may be required in production containers/images without dev dependencies installed.
-- **Frontend UX:** Debounced search (300ms), min<=max validation before sending, out-of-stock buttons disabled with label, purchase shows loading and on 409 refreshes that card without full reload with "just sold out" toast, admin quantity field omitted on edit, delete requires confirmation, restock integer 1-10000.
+- **Frontend UX:** Debounced search (300ms), min<=max validation before sending, out-of-stock buttons disabled with label, purchase shows loading and on 409 patches that card to quantity 0 (no full-page reload) with a "Just sold out" toast, admin quantity field omitted on edit, delete requires confirmation, restock integer 1-10000.
 
 ## Test report
 
@@ -120,99 +120,40 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 **Output (actual):**
 ```
  Test Files  12 passed (12)
-      Tests  58 passed (58)
-   Start at  07:44:01
-   Duration  31.76s (tests 86%, import 12%, worker 1%, setup 1%)
+      Tests  63 passed (63)
+   Duration  35.36s (tests 88%, import 11%)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
--------------------|---------|----------|---------|---------|-------------------
-File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
--------------------|---------|----------|---------|---------|-------------------
-All files          |    94.3 |    86.48 |     100 |    94.3 |                   
- src               |     100 |      100 |     100 |     100 |                   
-  app.ts           |     100 |      100 |     100 |     100 |                   
- src/config        |   82.75 |       80 |     100 |   82.75 |                   
-  env.ts           |   81.48 |       80 |     100 |   81.48 | 31,44,50,53,57    
-  jwt.ts           |     100 |      100 |     100 |     100 |                   
- src/controllers   |    92.3 |      100 |     100 |    92.3 |                   
-  ...controller.ts |     100 |      100 |     100 |     100 |                   
-  ...controller.ts |      90 |      100 |     100 |      90 | 18,31,45          
- src/errors        |     100 |      100 |     100 |     100 |                   
-  ApiError.ts      |     100 |      100 |     100 |     100 |                   
- src/lib           |     100 |      100 |     100 |     100 |                   
-  prisma.ts        |     100 |      100 |     100 |     100 |                   
- src/middleware    |   95.65 |    88.46 |     100 |   95.65 |                   
-  errorHandler.ts  |    87.5 |       80 |     100 |    87.5 | 31                
-  requireAuth.ts   |   91.66 |     87.5 |     100 |   91.66 | 30                
-  requireRole.ts   |     100 |      100 |     100 |     100 |                   
-  validateBody.ts  |     100 |      100 |     100 |     100 |                   
-  ...dateParams.ts |     100 |      100 |     100 |     100 |                   
-  validateQuery.ts |     100 |      100 |     100 |     100 |                   
- src/repositories  |   96.42 |    83.33 |     100 |   96.42 |                   
-  ...repository.ts |   83.33 |       75 |     100 |   83.33 | 27                
-  ...repository.ts |     100 |    85.71 |     100 |     100 | 85-88             
- src/routes        |     100 |      100 |     100 |     100 |                   
-  auth.routes.ts   |     100 |      100 |     100 |     100 |                   
-  ...les.routes.ts |     100 |      100 |     100 |     100 |                   
- src/services      |   95.74 |     90.9 |     100 |   95.74 |                   
-  auth.service.ts  |     100 |      100 |     100 |     100 |                   
-  ...le.service.ts |   94.11 |    86.66 |     100 |   94.11 | 81,86             
- src/validators    |     100 |      100 |     100 |     100 |                   
-  ...gin.schema.ts |     100 |      100 |     100 |     100 |                   
-  ...ter.schema.ts |     100 |      100 |     100 |     100 |                   
-  ...ate.schema.ts |     100 |      100 |     100 |     100 |                   
-  ...ams.schema.ts |     100 |      100 |     100 |     100 |                   
-  ...ock.schema.ts |     100 |      100 |     100 |     100 |                   
-  ...rch.schema.ts |     100 |      100 |     100 |     100 |                   
-  ...ate.schema.ts |     100 |      100 |     100 |     100 |                   
- tests/helpers     |      90 |       75 |     100 |      90 |                   
-  auth.ts          |     100 |      100 |     100 |     100 |                   
-  db.ts            |   83.33 |       50 |     100 |   83.33 | 11                
--------------------|---------|----------|---------|---------|-------------------
+=============================== Coverage summary ===============================
+Statements   : 94.75% ( 235/248 )
+Branches     : 88.07% ( 96/109 )
+Functions    : 100% ( 59/59 )
+Lines        : 94.75% ( 235/248 )
+================================================================================
 ```
 
 ### Frontend
 **Command:** `npm test` (from `frontend/`)  
 **Output (actual):**
 ```
- Test Files  8 passed (8)
-      Tests  33 passed (33)
-   Start at  07:44:42
-   Duration  6.22s (environment 60%, tests 23%, setup 11%, import 3%, worker 2%, transform 1%)
+ Test Files  9 passed (9)
+      Tests  34 passed (34)
+   Duration  6.42s (environment 65%, tests 19%, setup 10%, import 4%, transform 1%, worker 1%)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
--------------------|---------|----------|---------|---------|-------------------
-File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
--------------------|---------|----------|---------|---------|-------------------
-All files          |   83.79 |    73.27 |   86.25 |   84.46 |                   
- api               |   90.19 |    79.16 |      75 |   90.19 |                   
-  auth.ts          |       0 |      100 |       0 |       0 | 10-17             
-  client.ts        |   89.47 |    75.86 |     100 |   89.47 | 84-85,135         
- auth              |   87.09 |       88 |   94.44 |   86.44 |                   
-  AuthContext.tsx  |   82.85 |       75 |    90.9 |   81.81 | 36,64-67,93       
-  session.ts       |   92.59 |    94.11 |     100 |    92.3 | 33,51             
- components        |   75.67 |    63.26 |      80 |   77.08 |                   
-  AdminRoute.tsx   |   83.33 |       75 |     100 |   83.33 | 8                 
-  ...ctedRoute.tsx |     100 |      100 |     100 |     100 |                   
-  ...chFilters.tsx |   91.52 |    77.27 |   93.75 |      92 | 46,50,110-111     
-  State.tsx        |   44.11 |    16.66 |    62.5 |   46.42 | 4-41,83-98        
-  VehicleCard.tsx  |   71.42 |      100 |      50 |   71.42 | 97-105            
- pages             |   91.25 |    86.11 |     100 |   91.25 |                   
-  Login.tsx        |   94.11 |    92.85 |     100 |   94.11 | 37,42             
-  Register.tsx     |   89.13 |    81.81 |     100 |   89.13 | 36,41-47          
- test              |     100 |      100 |     100 |     100 |                   
-  fixtures.ts      |     100 |      100 |     100 |     100 |                   
- utils             |      70 |       50 |   71.42 |      70 |                   
-  format.ts        |     100 |      100 |     100 |     100 |                   
-  validation.ts    |   66.66 |       50 |   66.66 |   66.66 | 10-18,34,48       
--------------------|---------|----------|---------|---------|-------------------
+=============================== Coverage summary ===============================
+Statements   : 72.93% ( 326/447 )
+Branches     : 64.33% ( 202/314 )
+Functions    : 74.77% ( 83/111 )
+Lines        : 73.79% ( 307/416 )
+================================================================================
 ```
 
-Coverage is measured from files loaded by the test suite (V8); pages exercised only through the running app are not included. Logic-heavy slices requested for TDD are covered: API client, auth session lifecycle, route guards, vehicle card states, and search validation/debounce.
+Coverage is measured from files loaded by the test suite (V8); admin pages and dialogs with lighter test coverage are included in the summary above.
 
 ### Audits
 - Backend `npm audit --omit=dev`: **found 0 vulnerabilities**
@@ -267,6 +208,13 @@ npm test && npx tsc --noEmit && npm run build && npm run test:coverage && npm au
 cd frontend
 npm test && npm run test:coverage && npx tsc --noEmit && npm run lint && npm run build && npm audit --omit=dev
 ```
+
+## Known limitations and provenance
+
+- **Commit hygiene:** Some early backend commits and several frontend commits combine test and source changes in a single commit, which diverges from the strict RED/GREEN commit plan used later in the project.
+- **Co-author trailers:** Commits from `bae3c8c` through `25d61ad` were produced in an Antigravity session but carry an OpenCode `Co-authored-by` trailer; earlier commits were made with Cursor. History was intentionally not rewritten.
+- **Duplicate commits:** `d453d21` and `a136e0d` are duplicate authorization-matrix lock-in commits.
+- **Rate limiting:** Auth rate limits use an in-memory store (single-instance assumption); horizontal scaling would need a shared store.
 
 ## Additional references
 - Prompt history (raw): [`PROMPTS.md`](PROMPTS.md)
