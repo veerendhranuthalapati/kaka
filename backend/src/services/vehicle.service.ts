@@ -28,7 +28,14 @@ export type VehicleDto = {
   color: string | null;
   owners: number | null;
   vin: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
+
+function serializeVehicleTimestamp(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  return date.toISOString();
+}
 
 export function toVehicleDto(vehicle: Vehicle): VehicleDto {
   return {
@@ -54,6 +61,8 @@ export function toVehicleDto(vehicle: Vehicle): VehicleDto {
     color: vehicle.color ?? null,
     owners: vehicle.owners ?? null,
     vin: vehicle.vin ?? null,
+    createdAt: serializeVehicleTimestamp(vehicle.createdAt),
+    updatedAt: serializeVehicleTimestamp(vehicle.updatedAt),
   };
 }
 
