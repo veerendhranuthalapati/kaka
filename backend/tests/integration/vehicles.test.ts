@@ -597,6 +597,38 @@ describe("POST /api/vehicles/:id/purchase", () => {
 
     expect(res.status).toBe(400);
   });
+
+  it("allows only two successful purchases when five run in parallel on stock of 2", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    const created = await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({ ...vehicle, quantity: 2 });
+
+    const vehicleId = created.body.id as string;
+
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        request(app)
+          .post(`/api/vehicles/${vehicleId}/purchase`)
+          .set("Authorization", user.auth),
+      ),
+    );
+
+    const statuses = results.map((res) => res.status).sort();
+    expect(statuses).toEqual([200, 200, 409, 409, 409]);
+
+    const list = await request(app)
+      .get("/api/vehicles")
+      .set("Authorization", admin.auth);
+    const updated = list.body.find(
+      (entry: { id: string }) => entry.id === vehicleId,
+    );
+    expect(updated).toMatchObject({ quantity: 0 });
+  });
 });
 
 describe("POST /api/vehicles/:id/restock", () => {
