@@ -306,6 +306,84 @@ describe("GET /api/vehicles/search", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
+
+  it("treats underscore in make as a literal character, not a SQL wildcard", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    await createVehicle(app, admin.auth, {
+      make: "Ford_F150",
+      model: "Base",
+      category: "Truck",
+    });
+    await createVehicle(app, admin.auth, {
+      make: "FordXF150",
+      model: "Base",
+      category: "Truck",
+    });
+
+    const res = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ make: "Ford_" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({ make: "Ford_F150" });
+  });
+
+  it("treats percent in make as a literal character, not a SQL wildcard", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    await createVehicle(app, admin.auth, {
+      make: "100%Hybrid",
+      model: "Eco",
+      category: "Sedan",
+    });
+    await createVehicle(app, admin.auth, {
+      make: "100XHybrid",
+      model: "Eco",
+      category: "Sedan",
+    });
+
+    const res = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ make: "100%" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({ make: "100%Hybrid" });
+  });
+
+  it("treats underscore in model as a literal character, not a SQL wildcard", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    await createVehicle(app, admin.auth, {
+      make: "Chevy",
+      model: "Pro_500",
+      category: "Truck",
+    });
+    await createVehicle(app, admin.auth, {
+      make: "Chevy",
+      model: "ProX500",
+      category: "Truck",
+    });
+
+    const res = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ model: "Pro_" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({ model: "Pro_500" });
+  });
 });
 
 describe("PUT /api/vehicles/:id", () => {
