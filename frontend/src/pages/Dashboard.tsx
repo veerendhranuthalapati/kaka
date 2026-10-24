@@ -246,7 +246,7 @@ export function DashboardPage() {
               <p className="font-semibold">Could not load inventory</p>
               <p className="text-sm text-muted">{error}</p>
               <button type="button" className="btn-secondary" onClick={() => void load(filters)}>
-                Try again
+                Retry
               </button>
             </div>
           )}

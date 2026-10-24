@@ -109,7 +109,18 @@ export function LoginPage() {
             <FieldError testId="password-error" message={activePasswordError} />
           </div>
 
-          <FieldError message={serverError} />
+          {serverError && (
+            <div className="flex flex-col gap-2">
+              <FieldError message={serverError} />
+              <button
+                type="button"
+                className="btn-secondary w-full"
+                onClick={() => setServerError(null)}
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
           <button
             type="submit"
