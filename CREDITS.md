@@ -24,7 +24,9 @@ Font files are bundled at build time; the app does not request Google Fonts or o
 
 ## Photographs
 
-No photograph files are bundled in this repository. Optional admin image URLs may point to external `https://` assets or files you add under `frontend/public/cars/`.
+Demo vehicle JPEGs live in `frontend/public/cars/` and are listed with authors and licences in `frontend/src/data/car-photos.json`. The in-app **Photo credits** page (`/credits`) renders the same manifest. Images are from **Wikimedia Commons**, resized for web display; they may show a different model year or trim than the sample specifications.
+
+Category fallback photos (no make/model in the manifest) are used only when an admin vehicle has no `imageUrl`.
 
 ## Adding assets
 

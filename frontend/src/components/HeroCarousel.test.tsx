@@ -71,6 +71,29 @@ describe("HeroCarousel", () => {
     ).toBeTruthy();
   });
 
+  it("renders visible chevron controls with 44px targets", () => {
+    renderCarousel();
+    const prev = screen.getByRole("button", { name: "Previous featured vehicle" });
+    const next = screen.getByRole("button", { name: "Next featured vehicle" });
+    expect(prev.querySelector("svg")).toBeTruthy();
+    expect(next.querySelector("svg")).toBeTruthy();
+    expect(prev.className).toMatch(/min-h-11/);
+    expect(next.className).toMatch(/min-w-11/);
+  });
+
+  it("keeps arrow controls outside the text zone and uses fixed scrim values", () => {
+    const { container } = renderCarousel();
+    const textZone = container.querySelector("[data-hero-text-zone]");
+    const controlZone = container.querySelector("[data-hero-control-zone]");
+    expect(textZone).toBeTruthy();
+    expect(controlZone).toBeTruthy();
+    expect(textZone?.contains(controlZone)).toBe(false);
+
+    const bottom = container.querySelector('[data-hero-scrim="bottom"]');
+    expect(bottom?.getAttribute("style")).toContain("rgba(8, 10, 14");
+    expect(bottom?.getAttribute("style")).not.toMatch(/ink|var\(--/);
+  });
+
   it("fires purchase and links details to the vehicle page", async () => {
     const user = userEvent.setup();
     const onPurchase = vi.fn();
