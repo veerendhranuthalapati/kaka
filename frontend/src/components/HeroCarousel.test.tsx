@@ -45,4 +45,47 @@ describe("HeroCarousel", () => {
       screen.getByRole("tab", { name: "Aurora One", selected: true }),
     ).toBeTruthy();
   });
+
+  it("responds to arrow key presses", async () => {
+    const user = userEvent.setup();
+    render(
+      <HeroCarousel
+        vehicles={vehicles}
+        purchasingId={null}
+        onPurchase={vi.fn()}
+        onDetails={vi.fn()}
+      />,
+    );
+
+    await user.keyboard("{ArrowRight}");
+    expect(
+      screen.getByRole("tab", { name: "Summit Two", selected: true }),
+    ).toBeTruthy();
+
+    await user.keyboard("{ArrowLeft}");
+    expect(
+      screen.getByRole("tab", { name: "Aurora One", selected: true }),
+    ).toBeTruthy();
+  });
+
+  it("fires purchase and details callbacks from the hero actions", async () => {
+    const user = userEvent.setup();
+    const onPurchase = vi.fn();
+    const onDetails = vi.fn();
+
+    render(
+      <HeroCarousel
+        vehicles={vehicles}
+        purchasingId={null}
+        onPurchase={onPurchase}
+        onDetails={onDetails}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Purchase" }));
+    expect(onPurchase).toHaveBeenCalledWith(vehicles[0]);
+
+    await user.click(screen.getByRole("button", { name: "Details" }));
+    expect(onDetails).toHaveBeenCalledWith(vehicles[0]);
+  });
 });

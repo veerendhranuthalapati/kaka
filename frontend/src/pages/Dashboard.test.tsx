@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -80,5 +80,25 @@ describe("DashboardPage purchase flow", () => {
     expect(screen.getByRole("button", { name: "Out of stock" })).toBeTruthy();
     expect(screen.queryByText("Loading")).toBeNull();
     expect(mockedSearch).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows skeleton placeholders while inventory is loading", async () => {
+    vi.useFakeTimers();
+    mockedSearch.mockImplementation(
+      () => new Promise(() => {
+        /* pending until test ends */
+      }),
+    );
+
+    renderDashboard();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+    const inventory = screen.getByRole("region", { name: "Inventory" });
+    expect(inventory.querySelectorAll(".animate-pulse").length).toBe(6);
+
+    vi.useRealTimers();
   });
 });

@@ -8,6 +8,11 @@ describe("VehicleImage", () => {
 
     const image = screen.getByRole("img", { name: "Aurora LX" });
     expect(image.getAttribute("loading")).toBe("lazy");
+
+    render(<VehicleImage src="/cars/sedan-01.svg" alt="Hero" loading="eager" />);
+    expect(screen.getByRole("img", { name: "Hero" }).getAttribute("loading")).toBe(
+      "eager",
+    );
     expect(image.getAttribute("referrerpolicy")).toBe("no-referrer");
     expect(image.getAttribute("src")).toContain("/cars/sedan-01.svg");
 
