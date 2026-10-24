@@ -515,3 +515,20 @@ Co-authored-by: Cursor <AI@users.noreply.github.com>
 Append my raw prompt to PROMPTS.md in a separate "docs:" commit (append only).
 
 In the frontend API client: responses with status 502, 503 or 504 (JSON or not) must produce an ApiError with the user message "The server is temporarily unavailable. Please try again in a moment." and keep the status on the error. A 500 with a valid error envelope keeps showing the server's message; a 500 with a non-JSON body shows "Something went wrong on the server. Please try again." The raw body is never shown. RED client tests for 502, 503, 504, a 500 non-JSON body and a 500 envelope, then GREEN. Make sure the Login, Register and Dashboard error states show these messages with a Retry button where one exists. Run both suites, tsc, lint and builds before each commit and keep frontend line coverage at or above 80%.
+
+### Prompt 11 - 2026-10-24T12:26:00+05:30
+
+TASK: get the app running locally from a clean state. Work autonomously and report at the end. Same rules as before: never git push/rebase/amend/reset --hard, PowerShell syntax, no new dependencies, never weaken or delete a test, tests and source in separate commits. Every commit ends with two blank lines then exactly:
+Co-authored-by: Cursor <AI@users.noreply.github.com>
+Append my raw prompt to PROMPTS.md in a separate "docs:" commit (append only).
+
+SECRETS RULES (strict)
+- NEVER print, echo, log or paste any secret value (JWT_SECRET, ADMIN_PASSWORD, database passwords) in your output, commit messages, docs or reports. When you must confirm a value exists, print only its name and length.
+- backend/.env and any other .env file must never be committed. Before every commit run git status and confirm no .env is staged; confirm git check-ignore backend/.env prints the path.
+- Destructive database operations only on a database whose name ends in "_test".
+
+PROBLEM: npm run dev in backend crashes with "Invalid environment configuration: JWT_SECRET: expected string, received undefined". backend/.env does not exist (only .env.example). The browser then shows 502 through the Vite proxy because nothing is listening.
+
+(Full steps 1–8: create .env, Postgres, migrate/seed, start servers, setup:env script with TDD, API client gateway errors, run suites before commits.)
+
+FINAL REPORT (print only, do not commit): what was wrong, each step's result, ports used, the exact commands I run next time to start both servers, and anything I must do by hand (for example reading ADMIN_EMAIL and ADMIN_PASSWORD from backend/.env to log in as admin). No secret values in the report.

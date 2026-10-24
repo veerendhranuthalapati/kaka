@@ -52,25 +52,54 @@ graph TD
 
 ### Prerequisites
 - Node.js 20+
-- PostgreSQL 15+ running locally (or via Docker)
+- PostgreSQL 15+ on `localhost:5432` (Windows service `postgresql-x64-*` or Docker)
 
-### Backend
-1. `cd backend`
-2. `cp .env.example .env` - set `JWT_SECRET` (>=32 chars), DB URLs, admin creds
-3. Create databases: `dealership_dev` and `dealership_test` (test DB name must end with `_test`)
-4. `npm install`
-5. `npx prisma migrate deploy` (dev: `npx prisma migrate dev --name <change>`)
-6. `npx prisma db seed` (requires `ADMIN_EMAIL` and `ADMIN_PASSWORD`)
-7. `npm run dev` (defaults to port 3000)
+**Ports:** backend **3000** (`PORT` in `backend/.env`); frontend **5173** with `/api` proxied to `http://localhost:3000` (`frontend/vite.config.ts`).
 
-See [`backend/README.md`](backend/README.md) for details including trust proxy configuration.
+### First-time setup (PowerShell)
 
-### Frontend
+1. **Postgres:** confirm `Test-NetConnection localhost -Port 5432` succeeds. Start the PostgreSQL Windows service if needed (may require admin).
+2. **Databases:** create `dealership_dev` and `dealership_test` (name must end with `_test` for Vitest). Use `psql` or pgAdmin if installed; Prisma `migrate deploy` also expects `dealership_dev` to exist.
+3. **Backend env (never committed):**
+   ```powershell
+   cd backend
+   npm install
+   npm run setup:env
+   ```
+   Creates `backend/.env` from `.env.example` only when missing; generates `JWT_SECRET` (48 random bytes, base64) and `ADMIN_PASSWORD` without printing them. Open `backend/.env` locally for `ADMIN_EMAIL` (`admin@autoyard.local`) and `ADMIN_PASSWORD`.
+4. **Schema & seed:**
+   ```powershell
+   npx prisma migrate deploy
+   npx prisma generate
+   npx prisma db seed
+   npm run seed:demo
+   ```
+5. **Run servers (two terminals):**
+   ```powershell
+   cd backend; npm run dev
+   cd frontend; npm install; npm run dev
+   ```
+6. **Smoke check:** `curl.exe http://localhost:3000/health` → 200; `curl.exe http://localhost:5173/api/vehicles` → 401 (proxy to backend).
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `JWT_SECRET: expected string, received undefined` | No `backend/.env` | `npm run setup:env` in `backend/` |
+| `ECONNREFUSED` / Prisma can't reach DB | Postgres stopped or wrong `DATABASE_URL` | Start PostgreSQL; match user/password/host in `.env.example` (`postgres`/`postgres`@`localhost:5432`) |
+| Missing `imageUrl` column | Migrations not applied on dev DB | `npx prisma migrate deploy` in `backend/` |
+| `TRUST_PROXY` validation error | Invalid value in `.env` | Use `false` locally, or a numeric hop count behind a proxy — not `true` |
+| Browser `502` on `/api/*` | Backend not listening on port 3000 | Start `npm run dev` in `backend/`; confirm `PORT` matches Vite proxy target |
+
+`.env` files are git-ignored — never commit them. Before commits, run `git check-ignore backend/.env` and ensure `git status` shows no `.env` staged.
+
+### Frontend (daily dev)
 1. `cd frontend`
-2. `cp .env.example .env` - set `VITE_API_URL` (optional in dev; Vite proxies `/api` to `http://localhost:3000` automatically)
-3. `npm install`
-4. `npm run dev` (Vite dev server)
-5. `npm run build && npx tsc --noEmit && npm run lint && npm test`
+2. `npm install` (first time)
+3. `npm run dev` — optional `frontend/.env` with `VITE_API_URL`; dev proxy handles `/api` without it
+4. Quality gate: `npm run build && npx tsc --noEmit && npm run lint && npm test`
+
+See [`backend/README.md`](backend/README.md) for trust proxy details.
 
 ## API table
 
@@ -130,7 +159,7 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 **Output (actual):**
 ```
  Test Files  15 passed (15)
-      Tests  73 passed (73)
+      Tests  77 passed (77)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
@@ -148,7 +177,7 @@ Lines        : 94.15% ( 274/291 )
 **Output (actual):**
 ```
  Test Files  22 passed (22)
-      Tests  72 passed (72)
+      Tests  82 passed (82)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
