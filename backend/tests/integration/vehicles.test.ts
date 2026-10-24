@@ -702,4 +702,16 @@ describe("POST /api/vehicles/:id/restock", () => {
 
     expect(res.status).toBe(404);
   });
+
+  it("returns 400 for an invalid UUID", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+
+    const res = await request(app)
+      .post("/api/vehicles/not-a-uuid/restock")
+      .set("Authorization", admin.auth)
+      .send({ amount: 1 });
+
+    expect(res.status).toBe(400);
+  });
 });
