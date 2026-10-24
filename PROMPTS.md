@@ -471,3 +471,39 @@ CONTEXT: I have no vehicle photos, so ignore any earlier instruction to stop whe
 6. README "Vehicle images": explain optional URL, category illustrations, why file upload was not implemented, and how to add local images. CREDITS.md stays accurate (SVGs are original work). Run backend and frontend suites, tsc, lint and builds before each commit, keep frontend line coverage at or above 80%, and update README numbers with real output.
 
 FINAL REPORT (print and write to docs/UI-REPORT-3.md, uncommitted): commits, tests added, coverage per package, BLOCKED or skipped items, assumptions.
+
+### Prompt 9 - 2026-10-24T12:01:00+05:30
+
+BUILD task. Same rules as before: keep every existing behavior and test passing, never weaken or delete an assertion, tests and source in separate commits (feat(ui): for visual work), never git push/rebase/amend/reset --hard, PowerShell syntax. Every commit ends with two blank lines then exactly:
+Co-authored-by: Cursor <AI@users.noreply.github.com>
+Append my raw prompt to PROMPTS.md in a separate "docs:" commit (append only). Stop after 3 failed attempts on an item and write "BLOCKED:".
+
+DEPENDENCY EXCEPTION (overrides "no new dependencies"): you may add exactly these two packages to the FRONTEND, pinned to exact versions: @fontsource-variable/manrope and @fontsource-variable/inter. First run npm view on each to confirm it exists; if one doesn't, report it and use the other for everything. Run npm audit --omit=dev afterwards and report. No other new dependencies.
+
+GOAL: a polished, distinctive "Auto Yard" automotive showroom look. Not a generic template. Apply the system below consistently everywhere (top bar, hero carousel, inventory grid, cards, forms, dialogs, toasts, login, register, admin pages, empty/error/skeleton states).
+
+TYPOGRAPHY
+- Manrope for headings, big model names, prices and stat numbers; Inter for body, labels, inputs, buttons. Import only the latin subset files from the Fontsource packages in main.tsx (no Google Fonts, no external requests). Configure tailwind fontFamily: display and sans with proper system fallbacks.
+- Type scale (define as Tailwind tokens, don't use ad-hoc sizes): hero title clamp(2rem, 5vw, 3.5rem) weight 700 tracking -0.02em; section title 1.5-2rem weight 700; card title 1.125rem weight 650; body 0.9375rem weight 400 line-height 1.6; label/overline 0.75rem weight 600 uppercase tracking 0.08em; prices use Manrope with font-variant-numeric: tabular-nums.
+- Use font-display: swap (Fontsource default), no layout shift beyond the swap.
+
+VISUAL SYSTEM (tokens in tailwind.config.js, CSS variables for colors)
+- Neutral warm-grey surface scale (page #f6f6f4, card #ffffff, subtle border #e7e6e2), near-black text (#111214) and secondary text with AA contrast, ONE accent (electric blue, e.g. #2f5bff with hover/active shades), semantic colors for stock: green, amber, red, each with a soft background and AA-contrast text.
+- Radius: cards 20px, buttons 12px (pill for chips), inputs 12px. Shadows: two levels only (resting subtle, hover lifted). 8px spacing grid. Container max-width 1280px with generous section spacing.
+- Buttons: primary (accent fill, white text), secondary (white with border), ghost; visible focus ring (2px accent with 2px offset), min tap target 44px, loading and disabled states that look intentional (not just opacity).
+- Cards: image area with soft tinted background, object-cover for photos and object-contain with padding for illustrations, category badge, stock pill, price in display font, hover lift with a short transition. Hero cards: large rounded, gradient overlay for text legibility, big model name, price line, primary + white secondary buttons, arrows and dots as in the existing carousel.
+- Inputs: floating or top labels, clear error text with an icon and aria-describedby, consistent heights.
+- Top bar: thin, blurred translucent white when scrolled, active-link indicator, account menu with role badge.
+- Motion: short (150-250ms) ease-out transitions; a subtle staggered fade-up on the first render of the grid; all of it disabled under prefers-reduced-motion.
+- Optional LAST, only if everything else is green: dark theme via prefers-color-scheme using the same tokens with tested contrast.
+
+ACCESSIBILITY AND QUALITY
+- WCAG AA contrast for every text/background pair (write a small test or script that checks the token pairs and report failures), visible focus on every interactive element, labelled inputs, semantic headings in order, aria-live toasts.
+- No horizontal scroll at 375, 768 and 1280px (find the cause of any overflow; don't hide it).
+- Keep bundle sensible: report the built CSS/JS sizes before and after.
+
+TESTS: existing tests may change only where text/structure changed; list each changed test and why. Add tests for any new logic (e.g. contrast-token check, font fallback config sanity). Keep frontend line coverage at or above 80%. Run backend and frontend suites, tsc --noEmit, lint and builds before every commit.
+
+DOCS: update CREDITS.md (Manrope and Inter, SIL OFL, self-hosted via Fontsource) and the README design note (type system, tokens, how to change them). Update real test/coverage numbers. Leave screenshots and "My AI Usage" TODOs untouched.
+
+FINAL REPORT (print and write to docs/UI-REPORT-4.md, uncommitted): what changed per area, commits, bundle sizes before/after, contrast failures found and fixed, coverage per package, changed tests with reasons, BLOCKED/skipped items.
