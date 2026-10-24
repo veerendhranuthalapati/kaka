@@ -158,17 +158,17 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 **Command:** `npm test` (from `backend/`)  
 **Output (actual):**
 ```
- Test Files  15 passed (15)
+ Test Files  16 passed (16)
       Tests  77 passed (77)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 94.15% ( 274/291 )
-Branches     : 87.32% ( 124/142 )
+Statements   : 93.8% ( 303/323 )
+Branches     : 86.95% ( 140/161 )
 Functions    : 100% ( 71/71 )
-Lines        : 94.15% ( 274/291 )
+Lines        : 93.78% ( 302/322 )
 ================================================================================
 ```
 
@@ -183,10 +183,10 @@ Lines        : 94.15% ( 274/291 )
 **Coverage (actual):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 79.83% ( 598/749 )
-Branches     : 73.9% ( 371/502 )
-Functions    : 76.74% ( 165/215 )
-Lines        : 81.25% ( 559/688 )
+Statements   : 79.97% ( 611/764 )
+Branches     : 74.95% ( 376/502 )
+Functions    : 76.25% ( 165/216 )
+Lines        : 81.36% ( 572/703 )
 ================================================================================
 ```
 
@@ -257,6 +257,7 @@ npm test && npm run test:coverage && npx tsc --noEmit && npm run lint && npm run
 - Prompt history (raw): [`PROMPTS.md`](PROMPTS.md)
 - Auditor prompts (raw): [`TESTPROMPTS.md`](TESTPROMPTS.md)
 - Backend details: [`backend/README.md`](backend/README.md)
+- Cursor agent session reports (build/fix/UI passes): [`docs/ai-reports/`](docs/ai-reports/)
 
 ## My AI Usage
 
