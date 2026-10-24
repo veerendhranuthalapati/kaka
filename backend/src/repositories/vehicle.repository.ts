@@ -15,6 +15,7 @@ export type CreateVehicleInput = {
   category: string;
   price: number;
   quantity: number;
+  imageUrl?: string | null;
 };
 
 export type VehicleSearchFilters = {
@@ -26,7 +27,7 @@ export type VehicleSearchFilters = {
 };
 
 export type UpdateVehicleInput = Partial<
-  Pick<Vehicle, "make" | "model" | "category"> & { price: number }
+  Pick<Vehicle, "make" | "model" | "category" | "imageUrl"> & { price: number }
 >;
 
 export interface VehicleRepository {
@@ -105,7 +106,7 @@ export class PrismaVehicleRepository implements VehicleRepository {
         : Prisma.join(conditions, " AND ");
 
     return prisma.$queryRaw<Vehicle[]>`
-      SELECT id, make, model, category, price, quantity, "createdAt", "updatedAt"
+      SELECT id, make, model, category, price, quantity, "imageUrl", "createdAt", "updatedAt"
       FROM "Vehicle"
       WHERE ${whereClause}
       ORDER BY "createdAt" ASC

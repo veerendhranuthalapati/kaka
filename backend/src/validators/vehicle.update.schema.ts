@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionalNullableVehicleImageUrlSchema } from "./vehicle.imageUrl.schema.js";
 
 export const updateVehicleBodySchema = z
   .object({
@@ -6,6 +7,7 @@ export const updateVehicleBodySchema = z
     model: z.string().min(1).max(100).optional(),
     category: z.string().min(1).max(100).optional(),
     price: z.number().nonnegative().optional(),
+    imageUrl: optionalNullableVehicleImageUrlSchema,
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {

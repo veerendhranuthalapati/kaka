@@ -14,6 +14,7 @@ export type VehicleDto = {
   category: string;
   price: number;
   quantity: number;
+  imageUrl: string | null;
 };
 
 export function toVehicleDto(vehicle: Vehicle): VehicleDto {
@@ -24,6 +25,7 @@ export function toVehicleDto(vehicle: Vehicle): VehicleDto {
     category: vehicle.category,
     price: Number(vehicle.price),
     quantity: vehicle.quantity,
+    imageUrl: vehicle.imageUrl ?? null,
   };
 }
 
@@ -49,7 +51,9 @@ export class VehicleService {
 
   async update(
     id: string,
-    data: Partial<Pick<VehicleDto, "make" | "model" | "category" | "price">>,
+    data: Partial<
+      Pick<VehicleDto, "make" | "model" | "category" | "price" | "imageUrl">
+    >,
   ): Promise<VehicleDto> {
     const existing = await this.vehicles.findById(id);
     if (!existing) {
