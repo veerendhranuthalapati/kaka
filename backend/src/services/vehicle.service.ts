@@ -5,6 +5,7 @@ import {
   type CreateVehicleInput,
   type VehicleRepository,
   type VehicleSearchFilters,
+  type UpdateVehicleInput,
 } from "../repositories/vehicle.repository.js";
 
 export type VehicleDto = {
@@ -15,6 +16,18 @@ export type VehicleDto = {
   price: number;
   quantity: number;
   imageUrl: string | null;
+  year: number | null;
+  odometerKm: number | null;
+  engineCc: number | null;
+  powerBhp: number | null;
+  torqueNm: number | null;
+  fuelType: string | null;
+  transmission: string | null;
+  drivetrain: string | null;
+  fuelEconomyKmpl: number | null;
+  color: string | null;
+  owners: number | null;
+  vin: string | null;
 };
 
 export function toVehicleDto(vehicle: Vehicle): VehicleDto {
@@ -26,6 +39,21 @@ export function toVehicleDto(vehicle: Vehicle): VehicleDto {
     price: Number(vehicle.price),
     quantity: vehicle.quantity,
     imageUrl: vehicle.imageUrl ?? null,
+    year: vehicle.year ?? null,
+    odometerKm: vehicle.odometerKm ?? null,
+    engineCc: vehicle.engineCc ?? null,
+    powerBhp: vehicle.powerBhp ?? null,
+    torqueNm: vehicle.torqueNm ?? null,
+    fuelType: vehicle.fuelType ?? null,
+    transmission: vehicle.transmission ?? null,
+    drivetrain: vehicle.drivetrain ?? null,
+    fuelEconomyKmpl:
+      vehicle.fuelEconomyKmpl === null || vehicle.fuelEconomyKmpl === undefined
+        ? null
+        : Number(vehicle.fuelEconomyKmpl),
+    color: vehicle.color ?? null,
+    owners: vehicle.owners ?? null,
+    vin: vehicle.vin ?? null,
   };
 }
 
@@ -49,17 +77,20 @@ export class VehicleService {
     return vehicles.map(toVehicleDto);
   }
 
-  async update(
-    id: string,
-    data: Partial<
-      Pick<VehicleDto, "make" | "model" | "category" | "price" | "imageUrl">
-    >,
-  ): Promise<VehicleDto> {
+  async getById(id: string): Promise<VehicleDto> {
+    const vehicle = await this.vehicles.findById(id);
+    if (!vehicle) {
+      throw new ApiError(404, "NOT_FOUND", "Vehicle not found");
+    }
+    return toVehicleDto(vehicle);
+  }
+
+  async update(id: string, data: UpdateVehicleInput): Promise<VehicleDto> {
     const existing = await this.vehicles.findById(id);
     if (!existing) {
       throw new ApiError(404, "NOT_FOUND", "Vehicle not found");
     }
-    const vehicle = await this.vehicles.update(id, data as never);
+    const vehicle = await this.vehicles.update(id, data);
     return toVehicleDto(vehicle);
   }
 

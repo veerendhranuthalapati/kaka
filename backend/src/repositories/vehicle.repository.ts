@@ -1,5 +1,6 @@
 import { Prisma, type Vehicle } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
+import type { OptionalVehicleSpecFields } from "../validators/vehicle.specs.schema.js";
 
 /** Escape `\`, `%`, and `_` for use in ILIKE ... ESCAPE '\\' patterns. */
 export function escapeIlikeContainsPattern(value: string): string {
@@ -9,6 +10,13 @@ export function escapeIlikeContainsPattern(value: string): string {
     .replaceAll("_", "\\_");
 }
 
+const VEHICLE_SELECT_COLUMNS = Prisma.sql`
+  id, make, model, category, price, quantity, "imageUrl",
+  year, "odometerKm", "engineCc", "powerBhp", "torqueNm",
+  "fuelType", transmission, drivetrain, "fuelEconomyKmpl",
+  color, owners, vin, "createdAt", "updatedAt"
+`;
+
 export type CreateVehicleInput = {
   make: string;
   model: string;
@@ -16,7 +24,7 @@ export type CreateVehicleInput = {
   price: number;
   quantity: number;
   imageUrl?: string | null;
-};
+} & OptionalVehicleSpecFields;
 
 export type VehicleSearchFilters = {
   make?: string;
@@ -24,11 +32,15 @@ export type VehicleSearchFilters = {
   category?: string;
   minPrice?: number;
   maxPrice?: number;
+  fuelType?: string;
+  minYear?: number;
+  maxOdometerKm?: number;
 };
 
 export type UpdateVehicleInput = Partial<
   Pick<Vehicle, "make" | "model" | "category" | "imageUrl"> & { price: number }
->;
+> &
+  OptionalVehicleSpecFields;
 
 export interface VehicleRepository {
   create(data: CreateVehicleInput): Promise<Vehicle>;
@@ -41,9 +53,33 @@ export interface VehicleRepository {
   restock(id: string, amount: number): Promise<Vehicle>;
 }
 
+function toPrismaCreateData(
+  data: CreateVehicleInput,
+): Prisma.VehicleCreateInput {
+  const { fuelEconomyKmpl, ...rest } = data;
+  return {
+    ...rest,
+    ...(fuelEconomyKmpl === undefined
+      ? {}
+      : { fuelEconomyKmpl: fuelEconomyKmpl ?? null }),
+  };
+}
+
+function toPrismaUpdateData(
+  data: UpdateVehicleInput,
+): Prisma.VehicleUpdateInput {
+  const { fuelEconomyKmpl, ...rest } = data;
+  return {
+    ...rest,
+    ...(fuelEconomyKmpl === undefined
+      ? {}
+      : { fuelEconomyKmpl: fuelEconomyKmpl ?? null }),
+  };
+}
+
 export class PrismaVehicleRepository implements VehicleRepository {
   create(data: CreateVehicleInput): Promise<Vehicle> {
-    return prisma.vehicle.create({ data });
+    return prisma.vehicle.create({ data: toPrismaCreateData(data) });
   }
 
   findAll(): Promise<Vehicle[]> {
@@ -55,7 +91,10 @@ export class PrismaVehicleRepository implements VehicleRepository {
   }
 
   update(id: string, data: UpdateVehicleInput): Promise<Vehicle> {
-    return prisma.vehicle.update({ where: { id }, data });
+    return prisma.vehicle.update({
+      where: { id },
+      data: toPrismaUpdateData(data),
+    });
   }
 
   delete(id: string): Promise<Vehicle> {
@@ -99,6 +138,15 @@ export class PrismaVehicleRepository implements VehicleRepository {
     if (filters.maxPrice !== undefined) {
       conditions.push(Prisma.sql`price <= ${filters.maxPrice}`);
     }
+    if (filters.fuelType !== undefined) {
+      conditions.push(Prisma.sql`"fuelType" = ${filters.fuelType}`);
+    }
+    if (filters.minYear !== undefined) {
+      conditions.push(Prisma.sql`year >= ${filters.minYear}`);
+    }
+    if (filters.maxOdometerKm !== undefined) {
+      conditions.push(Prisma.sql`"odometerKm" <= ${filters.maxOdometerKm}`);
+    }
 
     const whereClause =
       conditions.length === 0
@@ -106,7 +154,7 @@ export class PrismaVehicleRepository implements VehicleRepository {
         : Prisma.join(conditions, " AND ");
 
     return prisma.$queryRaw<Vehicle[]>`
-      SELECT id, make, model, category, price, quantity, "imageUrl", "createdAt", "updatedAt"
+      SELECT ${VEHICLE_SELECT_COLUMNS}
       FROM "Vehicle"
       WHERE ${whereClause}
       ORDER BY "createdAt" ASC

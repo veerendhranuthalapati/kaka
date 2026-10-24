@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { optionalNullableVehicleImageUrlSchema } from "./vehicle.imageUrl.schema.js";
+import { optionalVehicleSpecFieldsSchema } from "./vehicle.specs.schema.js";
 
 export const createVehicleBodySchema = z
   .object({
@@ -10,6 +11,7 @@ export const createVehicleBodySchema = z
     quantity: z.number().int().nonnegative(),
     imageUrl: optionalNullableVehicleImageUrlSchema,
   })
+  .merge(optionalVehicleSpecFieldsSchema)
   .strict();
 
 export type CreateVehicleBody = z.infer<typeof createVehicleBodySchema>;

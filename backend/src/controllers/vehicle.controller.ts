@@ -32,6 +32,19 @@ export async function listVehicles(
   }
 }
 
+export async function getVehicle(
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const vehicle = await vehicleService.getById(req.params.id);
+    res.status(200).json(vehicle);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function searchVehicles(
   _req: Request,
   res: Response,

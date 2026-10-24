@@ -230,4 +230,53 @@ describe("vehicle optional specs — list, search, get one", () => {
       .set("Authorization", user.auth);
     expect(missing.status).toBe(404);
   });
+
+  it("filters search by fuelType, minYear, and maxOdometerKm", async () => {
+    const app = createApp();
+    const admin = await createTestUser("ADMIN");
+    const user = await createTestUser("USER");
+
+    await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({
+        ...baseVehicle,
+        make: "Honda",
+        fuelType: "PETROL",
+        year: 2019,
+        odometerKm: 50000,
+      });
+    await request(app)
+      .post("/api/vehicles")
+      .set("Authorization", admin.auth)
+      .send({
+        ...baseVehicle,
+        make: "Tesla",
+        model: "Model 3",
+        category: "EV",
+        fuelType: "ELECTRIC",
+        year: 2023,
+        odometerKm: 5000,
+      });
+
+    const byFuel = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ fuelType: "ELECTRIC" });
+    expect(byFuel.body).toHaveLength(1);
+    expect(byFuel.body[0].make).toBe("Tesla");
+
+    const byYear = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ minYear: 2020 });
+    expect(byYear.body).toHaveLength(1);
+
+    const byOdometer = await request(app)
+      .get("/api/vehicles/search")
+      .set("Authorization", user.auth)
+      .query({ maxOdometerKm: 10000 });
+    expect(byOdometer.body).toHaveLength(1);
+    expect(byOdometer.body[0].make).toBe("Tesla");
+  });
 });

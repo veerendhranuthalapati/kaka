@@ -62,6 +62,17 @@ describe("authorization matrix", () => {
       .set("Authorization", `Bearer ${userToken}`);
     expect(searchU.status).toBe(200);
 
+    const getOneNo = await request(app).get(`/api/vehicles/${vId}`);
+    expect(getOneNo.status).toBe(401);
+    const getOneU = await request(app)
+      .get(`/api/vehicles/${vId}`)
+      .set("Authorization", `Bearer ${userToken}`);
+    expect(getOneU.status).toBe(200);
+    const getOneA = await request(app)
+      .get(`/api/vehicles/${vId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(getOneA.status).toBe(200);
+
     const purchNo = await request(app).post(`/api/vehicles/${vId}/purchase`);
     expect(purchNo.status).toBe(401);
 

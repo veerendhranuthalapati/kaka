@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createVehicle,
   deleteVehicle,
+  getVehicle,
   listVehicles,
   purchaseVehicle,
   restockVehicle,
@@ -28,6 +29,13 @@ vehiclesRouter.get(
   requireAuth,
   validateQuery(searchVehiclesQuerySchema),
   searchVehicles,
+);
+
+vehiclesRouter.get(
+  "/:id",
+  requireAuth,
+  validateParams(vehicleIdParamsSchema),
+  getVehicle,
 );
 
 vehiclesRouter.post(

@@ -90,7 +90,7 @@ describe("POST /api/vehicles", () => {
     const unknownField = await request(app)
       .post("/api/vehicles")
       .set("Authorization", admin.auth)
-      .send({ ...vehicle, color: "red" });
+      .send({ ...vehicle, unexpectedField: "x" });
     const overlongMake = await request(app)
       .post("/api/vehicles")
       .set("Authorization", admin.auth)

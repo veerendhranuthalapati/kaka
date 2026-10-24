@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { optionalNullableVehicleImageUrlSchema } from "./vehicle.imageUrl.schema.js";
+import { optionalVehicleSpecFieldsSchema } from "./vehicle.specs.schema.js";
 
 export const updateVehicleBodySchema = z
   .object({
@@ -9,6 +10,7 @@ export const updateVehicleBodySchema = z
     price: z.number().nonnegative().optional(),
     imageUrl: optionalNullableVehicleImageUrlSchema,
   })
+  .merge(optionalVehicleSpecFieldsSchema)
   .strict()
   .refine((data) => Object.keys(data).length > 0, {
     message: "No updates provided",
