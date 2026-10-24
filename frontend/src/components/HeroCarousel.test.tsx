@@ -21,18 +21,28 @@ describe("HeroCarousel", () => {
       />,
     );
 
-    expect(screen.getByRole("tab", { selected: true })).toHaveTextContent("Aurora One");
+    expect(
+      screen.getByRole("tab", { name: "Aurora One", selected: true }),
+    ).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Next featured vehicle" }));
-    expect(screen.getByRole("tab", { selected: true })).toHaveTextContent("Summit Two");
+    expect(
+      screen.getByRole("tab", { name: "Summit Two", selected: true }),
+    ).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Next featured vehicle" }));
-    expect(screen.getByRole("tab", { selected: true })).toHaveTextContent("Summit Two");
+    expect(
+      screen.getByRole("tab", { name: "Summit Two", selected: true }),
+    ).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Previous featured vehicle" }));
-    expect(screen.getByRole("tab", { selected: true })).toHaveTextContent("Aurora One");
+    expect(
+      screen.getByRole("tab", { name: "Aurora One", selected: true }),
+    ).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Previous featured vehicle" }));
-    expect(screen.getByRole("tab", { selected: true })).toHaveTextContent("Aurora One");
+    expect(
+      screen.getByRole("tab", { name: "Aurora One", selected: true }),
+    ).toBeTruthy();
   });
 });

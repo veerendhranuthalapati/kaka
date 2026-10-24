@@ -35,15 +35,21 @@ describe("vehicle imageUrl", () => {
       .get("/api/vehicles")
       .set("Authorization", user.auth);
     expect(list.status).toBe(200);
-    expect(list.body[0].imageUrl).toBe(imageUrl);
+    const listed = list.body.find(
+      (vehicle: { id: string }) => vehicle.id === created.body.id,
+    );
+    expect(listed?.imageUrl).toBe(imageUrl);
 
     const search = await request(app)
       .get("/api/vehicles/search")
       .set("Authorization", user.auth)
       .query({ category: "Sedan" });
     expect(search.status).toBe(200);
-    expect(search.body[0].imageUrl).toBe(imageUrl);
-    expect(typeof search.body[0].price).toBe("number");
+    const found = search.body.find(
+      (vehicle: { id: string }) => vehicle.id === created.body.id,
+    );
+    expect(found?.imageUrl).toBe(imageUrl);
+    expect(typeof found?.price).toBe("number");
   });
 
   it("allows partial update of imageUrl and rejects invalid values", async () => {

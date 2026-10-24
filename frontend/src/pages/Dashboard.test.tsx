@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -56,11 +56,17 @@ describe("DashboardPage purchase flow", () => {
 
     renderDashboard();
 
+    const inventory = await screen.findByRole("region", { name: "Inventory" });
+
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Ford F-150" })).toBeTruthy();
+      expect(
+        within(inventory).getAllByRole("button", { name: "Purchase" }).length,
+      ).toBeGreaterThan(0);
     });
 
-    const purchaseButtons = screen.getAllByRole("button", { name: "Purchase" });
+    const purchaseButtons = within(inventory).getAllByRole("button", {
+      name: "Purchase",
+    });
     const firstPurchase = purchaseButtons[0];
     expect(firstPurchase).toBeDefined();
     await user.click(firstPurchase!);
@@ -69,8 +75,8 @@ describe("DashboardPage purchase flow", () => {
       expect(screen.getByText("Just sold out")).toBeTruthy();
     });
 
-    expect(screen.getByRole("heading", { name: "Honda Civic" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Purchase" })).toBeTruthy();
+    expect(within(inventory).getByRole("heading", { name: "Honda Civic" })).toBeTruthy();
+    expect(within(inventory).getByRole("button", { name: "Purchase" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Out of stock" })).toBeTruthy();
     expect(screen.queryByText("Loading")).toBeNull();
     expect(mockedSearch).toHaveBeenCalledTimes(1);
