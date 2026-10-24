@@ -66,18 +66,77 @@ describe("AddVehiclePage", () => {
     await user.type(screen.getByLabelText("Category"), "Sedan");
     await user.type(screen.getByLabelText("Price"), "1000");
     await user.type(screen.getByLabelText("Quantity"), "1");
-    await user.type(screen.getByLabelText("Image URL"), "http://bad.example/x.jpg");
+    await user.type(screen.getByLabelText(/image url/i), "http://bad.example/x.jpg");
     await user.click(screen.getByRole("button", { name: "Create vehicle" }));
 
     expect(screen.getByRole("alert").textContent).toMatch(/https/i);
 
-    await user.clear(screen.getByLabelText("Image URL"));
-    await user.type(screen.getByLabelText("Image URL"), "/cars/aurora-lx.jpg");
+    await user.clear(screen.getByLabelText(/image url/i));
+    await user.type(screen.getByLabelText(/image url/i), "/cars/aurora-lx.jpg");
     await user.click(screen.getByRole("button", { name: "Create vehicle" }));
 
     await waitFor(() => {
       expect(createVehicle).toHaveBeenCalledOnce();
     });
     expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+  });
+
+  it("submits without imageUrl and previews the category illustration", async () => {
+    const user = userEvent.setup();
+    vi.mocked(createVehicle).mockResolvedValueOnce({
+      id: "v2",
+      make: "Aurora",
+      model: "LX",
+      category: "Sedan",
+      price: 1000,
+      quantity: 1,
+      imageUrl: null,
+      createdAt: "",
+      updatedAt: "",
+    });
+
+    render(
+      <MemoryRouter>
+        <AddVehiclePage />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText("Category"), "SUV");
+    const preview = screen.getByTestId("vehicle-image-preview").querySelector("img");
+    expect(preview?.getAttribute("src")).toContain("/cars/suv-01.svg");
+
+    await user.type(screen.getByLabelText("Make"), "Aurora");
+    await user.type(screen.getByLabelText("Model"), "LX");
+    await user.type(screen.getByLabelText("Price"), "1000");
+    await user.type(screen.getByLabelText("Quantity"), "1");
+    await user.click(screen.getByRole("button", { name: "Create vehicle" }));
+
+    await waitFor(() => {
+      expect(createVehicle).toHaveBeenCalledWith({
+        make: "Aurora",
+        model: "LX",
+        category: "SUV",
+        price: 1000,
+        quantity: 1,
+        imageUrl: null,
+      });
+    });
+  });
+
+  it("clears the image URL and switches the preview to the category illustration", async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <AddVehiclePage />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText("Category"), "Sedan");
+    await user.type(screen.getByLabelText(/image url/i), "/cars/suv-01.svg");
+    const preview = screen.getByTestId("vehicle-image-preview").querySelector("img");
+    expect(preview?.getAttribute("src")).toContain("/cars/suv-01.svg");
+
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    expect(preview?.getAttribute("src")).toContain("/cars/sedan-01.svg");
   });
 });

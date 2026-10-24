@@ -87,13 +87,13 @@ describe("EditVehiclePage", () => {
       expect(screen.getByDisplayValue("Aurora")).toBeTruthy();
     });
 
-    await user.clear(screen.getByLabelText("Image URL"));
-    await user.type(screen.getByLabelText("Image URL"), "javascript:alert(1)");
+    await user.clear(screen.getByLabelText(/image url/i));
+    await user.type(screen.getByLabelText(/image url/i), "javascript:alert(1)");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
     expect(screen.getByRole("alert").textContent).toMatch(/https/i);
 
-    await user.clear(screen.getByLabelText("Image URL"));
-    await user.type(screen.getByLabelText("Image URL"), "/cars/aurora-lx.jpg");
+    await user.clear(screen.getByLabelText(/image url/i));
+    await user.type(screen.getByLabelText(/image url/i), "/cars/aurora-lx.jpg");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => {
