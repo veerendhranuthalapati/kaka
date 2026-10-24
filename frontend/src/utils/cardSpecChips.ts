@@ -2,10 +2,13 @@ import type { Vehicle } from "../types";
 import { formatKm, labelFuelType, labelTransmission } from "./vehicleSpecsFormat";
 
 /** Up to four short labels for inventory cards (null specs omitted). */
-export function cardSpecChips(vehicle: Vehicle): string[] {
+export function cardSpecChips(
+  vehicle: Vehicle,
+  options?: { omitYear?: boolean },
+): string[] {
   const chips: string[] = [];
 
-  if (vehicle.year != null) {
+  if (!options?.omitYear && vehicle.year != null) {
     chips.push(String(vehicle.year));
   }
 

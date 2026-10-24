@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import type { Vehicle } from "../types";
 import { formatPrice } from "../utils/format";
 import { VehicleImage } from "./VehicleImage";
@@ -7,14 +8,12 @@ export type HeroCarouselProps = {
   vehicles: Vehicle[];
   purchasingId: string | null;
   onPurchase: (vehicle: Vehicle) => void;
-  onDetails: (vehicle: Vehicle) => void;
 };
 
 export function HeroCarousel({
   vehicles,
   purchasingId,
   onPurchase,
-  onDetails,
 }: HeroCarouselProps) {
   const [index, setIndex] = useState(0);
   const count = vehicles.length;
@@ -139,13 +138,12 @@ export function HeroCarousel({
                           ? "Out of stock"
                           : "Purchase"}
                     </button>
-                    <button
-                      type="button"
-                      className="btn-hero-secondary min-w-[10rem] rounded-full px-6"
-                      onClick={() => onDetails(vehicle)}
+                    <Link
+                      className="btn-hero-secondary min-w-[10rem] rounded-full px-6 text-center whitespace-nowrap"
+                      to={`/vehicles/${vehicle.id}`}
                     >
                       Details
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>

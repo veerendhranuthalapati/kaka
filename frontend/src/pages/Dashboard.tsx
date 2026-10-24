@@ -16,7 +16,6 @@ import {
 import { RestockDialog } from "../components/RestockDialog";
 import { ConfirmDialog, EmptyState, Toast } from "../components/State";
 import { TopBar } from "../components/TopBar";
-import { VehicleDetailsDialog } from "../components/VehicleDetailsDialog";
 import type { Vehicle, VehicleSearchParams } from "../types";
 import { selectFeaturedVehicles } from "../utils/featuredVehicles";
 
@@ -33,7 +32,6 @@ export function DashboardPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [deletingVehicle, setDeletingVehicle] = useState<Vehicle | null>(null);
   const [restockingVehicle, setRestockingVehicle] = useState<Vehicle | null>(null);
-  const [detailsVehicle, setDetailsVehicle] = useState<Vehicle | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const inventoryRef = useRef<HTMLElement>(null);
 
@@ -143,7 +141,6 @@ export function DashboardPage() {
               vehicles={featured}
               purchasingId={purchasingId}
               onPurchase={handlePurchase}
-              onDetails={setDetailsVehicle}
             />
           )}
         </section>
@@ -267,7 +264,7 @@ export function DashboardPage() {
           )}
 
           {!error && !loading && vehicles.length > 0 && (
-            <div className="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
               {vehicles.map((vehicle, index) => (
                 <div
                   key={vehicle.id}
@@ -279,7 +276,6 @@ export function DashboardPage() {
                   canManage={canManage}
                   purchasing={purchasingId === vehicle.id}
                   onPurchase={handlePurchase}
-                  onDetails={setDetailsVehicle}
                   onEdit={(item) => {
                     window.location.assign(`/admin/vehicles/${item.id}/edit`);
                   }}
@@ -297,12 +293,6 @@ export function DashboardPage() {
         searchInputRef={searchInputRef}
         onBrowseInventory={scrollToInventory}
         onQuickSearch={applyQuickSearch}
-      />
-
-      <VehicleDetailsDialog
-        vehicle={detailsVehicle}
-        open={Boolean(detailsVehicle)}
-        onClose={() => setDetailsVehicle(null)}
       />
 
       <ConfirmDialog

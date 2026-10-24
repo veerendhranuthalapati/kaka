@@ -1,4 +1,7 @@
+import { memo } from "react";
+import { Link } from "react-router-dom";
 import type { Vehicle } from "../types";
+import { cardSpecChips } from "../utils/cardSpecChips";
 import { formatPrice } from "../utils/format";
 import { VehicleImage } from "./VehicleImage";
 
@@ -8,12 +11,11 @@ function stockClass(quantity: number): string {
   return "stock-ok";
 }
 
-export function InventoryVehicleCard({
+export const InventoryVehicleCard = memo(function InventoryVehicleCard({
   vehicle,
   purchasing,
   canManage,
   onPurchase,
-  onDetails,
   onEdit,
   onRestock,
   onDelete,
@@ -22,60 +24,72 @@ export function InventoryVehicleCard({
   purchasing: boolean;
   canManage: boolean;
   onPurchase: (vehicle: Vehicle) => void;
-  onDetails: (vehicle: Vehicle) => void;
   onEdit?: (vehicle: Vehicle) => void;
   onRestock?: (vehicle: Vehicle) => void;
   onDelete?: (vehicle: Vehicle) => void;
 }) {
   const outOfStock = vehicle.quantity === 0;
   const title = `${vehicle.make} ${vehicle.model}`;
+  const yearLabel = vehicle.year != null ? String(vehicle.year) : null;
+  const chips = cardSpecChips(vehicle, { omitYear: yearLabel != null });
 
   return (
     <article className="surface-hover overflow-hidden">
-      <button
-        type="button"
-        className="block w-full min-w-0 text-left"
-        onClick={() => onDetails(vehicle)}
-      >
-        <VehicleImage
-          src={vehicle.imageUrl}
-          category={vehicle.category}
-          alt={title}
-          className="rounded-none"
-        />
-      </button>
-      <div className="flex flex-col gap-4 p-5">
+      <VehicleImage
+        src={vehicle.imageUrl}
+        category={vehicle.category}
+        alt={title}
+        className="rounded-none"
+      />
+      <div className="flex flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h3 className="font-display text-card-title tracking-tight text-ink">
               {title}
             </h3>
-            <p className="font-sans text-body text-muted">{vehicle.category}</p>
+            {yearLabel && (
+              <p className="font-sans text-body text-muted">{yearLabel}</p>
+            )}
           </div>
           <span className="badge-category shrink-0">{vehicle.category}</span>
         </div>
+        {chips.length > 0 && (
+          <ul className="flex flex-wrap gap-2" aria-label="Key specifications">
+            {chips.map((chip) => (
+              <li key={chip} className="rounded-full bg-raised px-2.5 py-0.5 text-label text-muted">
+                {chip}
+              </li>
+            ))}
+          </ul>
+        )}
         <p className="text-price">{formatPrice(vehicle.price)}</p>
         <p className={stockClass(vehicle.quantity)}>
           {outOfStock ? "Out of stock" : `${vehicle.quantity} in stock`}
         </p>
         <button
           type="button"
-          className="btn-primary w-full"
+          className="btn-primary w-full whitespace-nowrap"
           disabled={outOfStock || purchasing}
           aria-busy={purchasing}
           onClick={() => onPurchase(vehicle)}
         >
           {purchasing ? "Purchasing..." : outOfStock ? "Out of stock" : "Purchase"}
         </button>
+        <Link
+          className="link text-center text-body whitespace-nowrap"
+          to={`/vehicles/${vehicle.id}`}
+        >
+          View details
+        </Link>
         {canManage && (
           <div className="flex flex-wrap gap-2 border-t border-line pt-3">
-            <button type="button" className="btn-ghost text-label normal-case" onClick={() => onEdit?.(vehicle)}>
+            <button type="button" className="btn-ghost text-label normal-case whitespace-nowrap" onClick={() => onEdit?.(vehicle)}>
               Edit
             </button>
-            <button type="button" className="btn-ghost text-label normal-case" onClick={() => onRestock?.(vehicle)}>
+            <button type="button" className="btn-ghost text-label normal-case whitespace-nowrap" onClick={() => onRestock?.(vehicle)}>
               Restock
             </button>
-            <button type="button" className="btn-danger text-label normal-case" onClick={() => onDelete?.(vehicle)}>
+            <button type="button" className="btn-danger text-label normal-case whitespace-nowrap" onClick={() => onDelete?.(vehicle)}>
               Delete
             </button>
           </div>
@@ -83,7 +97,7 @@ export function InventoryVehicleCard({
       </div>
     </article>
   );
-}
+});
 
 export function InventorySkeletonCard() {
   return (
