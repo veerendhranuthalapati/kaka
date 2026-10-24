@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { planSetupEnv } from "./setup-env.lib.mjs";
+import { planSetupEnv } from "./setup-env.lib.js";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const backendRoot = join(scriptDir, "..");

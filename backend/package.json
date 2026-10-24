@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "seed:demo": "tsx scripts/seed-demo.ts",
-    "setup:env": "node scripts/setup-env.mjs",
+    "setup:env": "tsx scripts/setup-env.ts",
     "postinstall": "prisma generate"
   },
   "engines": {

@@ -7,7 +7,7 @@ import {
   generateSecret,
   isValidGeneratedSecret,
   planSetupEnv,
-} from "../../scripts/setup-env.lib.mjs";
+} from "../../scripts/setup-env.lib.js";
 
 describe("generateSecret", () => {
   it("returns base64 of the requested byte length with valid charset", () => {
