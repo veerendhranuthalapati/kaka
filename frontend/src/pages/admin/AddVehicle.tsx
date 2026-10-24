@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { createVehicle } from "../../api/vehicles";
 import { ApiError } from "../../api/client";
-import { VehicleImage } from "../../components/VehicleImage";
+import { AdminVehicleImageField } from "../../components/AdminVehicleImageField";
 import { FieldError } from "../../components/State";
 import { useAuth } from "../../auth/AuthContext";
 import { validateImageUrl } from "../../utils/validation";
@@ -181,30 +181,11 @@ export function AddVehiclePage() {
                 required
               />
             </div>
-            <div className="sm:col-span-2">
-              <label className="label" htmlFor="imageUrl">
-                Image URL
-              </label>
-              <input
-                id="imageUrl"
-                className="input"
-                placeholder="/cars/sedan-01.svg"
-                value={form.imageUrl}
-                onChange={(event) => update("imageUrl", event.target.value)}
-                maxLength={2048}
-              />
-              <p className="mt-1 text-xs text-muted">
-                https:// or a site path such as /cars/sedan-01.svg
-              </p>
-              {form.imageUrl.trim() && (
-                <div className="mt-3 overflow-hidden rounded-2xl border border-line">
-                  <VehicleImage
-                    src={form.imageUrl.trim()}
-                    alt="Image preview"
-                  />
-                </div>
-              )}
-            </div>
+            <AdminVehicleImageField
+              imageUrl={form.imageUrl}
+              category={form.category}
+              onImageUrlChange={(value) => update("imageUrl", value)}
+            />
             <div className="sm:col-span-2">
               <FieldError message={error} />
             </div>

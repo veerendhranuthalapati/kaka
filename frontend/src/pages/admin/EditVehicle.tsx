@@ -7,7 +7,7 @@ import {
   restockVehicle,
 } from "../../api/vehicles";
 import { ApiError } from "../../api/client";
-import { VehicleImage } from "../../components/VehicleImage";
+import { AdminVehicleImageField } from "../../components/AdminVehicleImageField";
 import { FieldError, ConfirmDialog } from "../../components/State";
 import { useAuth } from "../../auth/AuthContext";
 import type { Vehicle } from "../../types";
@@ -229,23 +229,11 @@ export function EditVehiclePage() {
                   required
                 />
               </div>
-              <div className="sm:col-span-2">
-                <label className="label" htmlFor="imageUrl">
-                  Image URL
-                </label>
-                <input
-                  id="imageUrl"
-                  className="input"
-                  value={form.imageUrl}
-                  onChange={(event) => update("imageUrl", event.target.value)}
-                  maxLength={2048}
-                />
-                {form.imageUrl.trim() && (
-                  <div className="mt-3 overflow-hidden rounded-2xl border border-line">
-                    <VehicleImage src={form.imageUrl.trim()} alt="Image preview" />
-                  </div>
-                )}
-              </div>
+              <AdminVehicleImageField
+                imageUrl={form.imageUrl}
+                category={form.category}
+                onImageUrlChange={(value) => update("imageUrl", value)}
+              />
               <div className="sm:col-span-2">
                 <p className="text-sm text-muted">
                   Quantity: {vehicle.quantity} (managed via restock/purchase)
