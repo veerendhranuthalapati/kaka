@@ -72,4 +72,32 @@ describe("LoginPage", () => {
 
     expect(await screen.findByText("Invalid email or password")).toBeTruthy();
   });
+
+  it("shows the gateway unavailable message and a retry control", async () => {
+    const user = userEvent.setup();
+    mockLogin.mockRejectedValueOnce(
+      new ApiError(
+        503,
+        "SERVICE_UNAVAILABLE",
+        "The server is temporarily unavailable. Please try again in a moment.",
+      ),
+    );
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText("Email"), "user@example.com");
+    await user.type(screen.getByLabelText("Password"), "password1234");
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+    expect(
+      await screen.findByText(
+        "The server is temporarily unavailable. Please try again in a moment.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
+  });
 });

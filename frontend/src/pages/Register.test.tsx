@@ -86,4 +86,32 @@ describe("RegisterPage", () => {
       "Password is too weak",
     );
   });
+
+  it("shows the generic server error message and a retry control", async () => {
+    const user = userEvent.setup();
+    mockRegister.mockRejectedValueOnce(
+      new ApiError(
+        500,
+        "INTERNAL_ERROR",
+        "Something went wrong on the server. Please try again.",
+      ),
+    );
+
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText("Email"), "test@example.com");
+    await user.type(screen.getByLabelText("Password"), "validPassword123");
+    await user.click(screen.getByRole("button", { name: /create account/i }));
+
+    expect(
+      await screen.findByText(
+        "Something went wrong on the server. Please try again.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
+  });
 });
