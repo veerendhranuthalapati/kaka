@@ -138,6 +138,9 @@ export function LoginPage() {
             Create one
           </Link>
         </p>
+        <p className="mt-3 text-center text-sm">
+          <Link className="link" to="/credits">Photo credits</Link>
+        </p>
       </section>
     </main>
   );

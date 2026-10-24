@@ -1,9 +1,6 @@
-import "dotenv/config";
-import { createApp } from "./app.js";
-import { config } from "./config/env.js";
+import { startServer } from "./server.js";
 
-const app = createApp();
-
-app.listen(config.port, () => {
-  console.log(`API listening on port ${config.port}`);
+startServer().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
 });

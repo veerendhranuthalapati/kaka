@@ -2,6 +2,7 @@ import "dotenv/config";
 import { resolve } from "node:path";
 import { prisma } from "../src/lib/prisma.js";
 import {
+  buildDemoSeedUpdatePatch,
   cleanupLegacyDemoSeedVehicles,
   DEMO_VEHICLE_CATALOG,
   listAllCarAssetFilenames,
@@ -24,31 +25,42 @@ async function main(): Promise<void> {
 
   await cleanupLegacyDemoSeedVehicles(prisma);
 
-  await prisma.vehicle.deleteMany({
-    where: {
-      OR: DEMO_VEHICLE_CATALOG.map((item) => ({
-        make: item.make,
-        model: item.model,
-      })),
-    },
-  });
+  let created = 0;
+  let updated = 0;
 
   for (const item of DEMO_VEHICLE_CATALOG) {
-    const imageUrl =
-      item.imageUrl ??
-      resolveOptionalDemoImageUrl(item.make, item.model, repoRoot) ??
-      null;
+    const resolvedImage =
+      resolveOptionalDemoImageUrl(item.make, item.model, repoRoot) ?? null;
+    const imageUrl = resolvedImage ?? item.imageUrl ?? null;
 
-    const { imageUrl: _ignored, ...rest } = item;
-    await prisma.vehicle.create({
-      data: {
-        ...rest,
-        imageUrl,
-      },
+    const { imageUrl: _catalogImage, ...rest } = item;
+    const existing = await prisma.vehicle.findFirst({
+      where: { make: item.make, model: item.model },
     });
+
+    if (existing) {
+      const patch = buildDemoSeedUpdatePatch(existing, item, resolvedImage);
+      if (Object.keys(patch).length > 0) {
+        await prisma.vehicle.update({
+          where: { id: existing.id },
+          data: patch,
+        });
+      }
+      updated += 1;
+    } else {
+      await prisma.vehicle.create({
+        data: {
+          ...rest,
+          imageUrl,
+        },
+      });
+      created += 1;
+    }
   }
 
-  console.log(`seed:demo created ${DEMO_VEHICLE_CATALOG.length} vehicles`);
+  console.log(
+    `seed:demo upserted ${DEMO_VEHICLE_CATALOG.length} vehicles (${created} created, ${updated} updated)`,
+  );
 }
 
 main()

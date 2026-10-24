@@ -1,5 +1,7 @@
 import { memo } from "react";
 import { Link } from "react-router-dom";
+import { useVehicleData } from "../data/VehicleDataProvider";
+import { prefetchVehicleDetails } from "../utils/prefetchRoute";
 import type { Vehicle } from "../types";
 import { cardSpecChips } from "../utils/cardSpecChips";
 import { formatPrice } from "../utils/format";
@@ -30,6 +32,7 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
   onRestock?: (vehicle: Vehicle) => void;
   onDelete?: (vehicle: Vehicle) => void;
 }) {
+  const { loadVehicle } = useVehicleData();
   const outOfStock = vehicle.quantity === 0;
   const title = `${vehicle.make} ${vehicle.model}`;
   const yearLabel = vehicle.year != null ? String(vehicle.year) : null;
@@ -40,8 +43,10 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
       <VehicleImage
         src={vehicle.imageUrl}
         category={vehicle.category}
+        vehicleId={vehicle.id}
         alt={title}
         className="rounded-none"
+        layout="card"
       />
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
@@ -82,6 +87,24 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
         <Link
           className="link text-center text-body whitespace-nowrap"
           to={`/vehicles/${vehicle.id}`}
+          onMouseEnter={() =>
+            prefetchVehicleDetails(vehicle.id, {
+              route: () => import("../pages/VehicleDetails"),
+              data: (id) => loadVehicle(id),
+            })
+          }
+          onFocus={() =>
+            prefetchVehicleDetails(vehicle.id, {
+              route: () => import("../pages/VehicleDetails"),
+              data: (id) => loadVehicle(id),
+            })
+          }
+          onTouchStart={() =>
+            prefetchVehicleDetails(vehicle.id, {
+              route: () => import("../pages/VehicleDetails"),
+              data: (id) => loadVehicle(id),
+            })
+          }
         >
           View details
         </Link>

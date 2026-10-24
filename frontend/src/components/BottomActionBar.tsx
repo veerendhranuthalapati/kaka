@@ -1,4 +1,5 @@
 import type { RefObject } from "react";
+import { Link } from "react-router-dom";
 
 export function BottomActionBar({
   searchInputRef,
@@ -11,9 +12,10 @@ export function BottomActionBar({
 }) {
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2"
+      className="fixed inset-x-0 bottom-0 z-30 flex flex-col items-center gap-2 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2"
       aria-label="Quick actions"
     >
+      <Link className="link text-xs" to="/credits">Photo credits</Link>
       <div className="flex w-full max-w-2xl items-center gap-2 rounded-full border border-line/60 bg-surface/75 px-4 py-2.5 shadow-float backdrop-blur-xl">
         <input
           type="search"

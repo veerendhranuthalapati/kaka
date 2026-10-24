@@ -172,7 +172,8 @@ All create/update bodies use **strict** Zod schemas (unknown keys → 400). Spec
 - **Error envelope:** All API errors follow the standardized envelope for consistent frontend parsing.
 - **Rate limiting & scaling:** Auth routes are rate-limited only (`/api/auth`). The limiter uses `express-rate-limit`'s in-memory store and is a **single-instance assumption** (no shared store like Redis) - in multi-replica deployments, limits will be per instance; swap to a shared store (e.g., `rate-limit-redis`) if scaling horizontally.
 - **Prisma placement:** `prisma` is listed as a dependency (not only devDependency) because `prisma migrate deploy` is used at build/deploy time and the Prisma CLI/schema may be required in production containers/images without dev dependencies installed.
-- **Frontend UX:** Debounced search (300ms), min<=max validation before sending, out-of-stock buttons disabled with label, purchase shows loading and on success updates stock in place with a success toast; on 409 patches that card to quantity 0 (no full-page reload) with a "Just sold out" toast, admin quantity field omitted on edit, delete requires confirmation, restock integer 1-10000. **Vehicle details** at `/vehicles/:id` shows a large image panel, sticky purchase panel (desktop), and a spec grid (missing values shown as `-`).
+- **Frontend UX:** Debounced search (300ms), min<=max validation before sending, out-of-stock buttons disabled with label, purchase shows loading and on success updates stock in place with a success toast; on 409 patches that card to quantity 0 (no full-page reload) with a "Just sold out" toast, admin quantity field omitted on edit, delete requires confirmation, restock integer 1-10000. **Vehicle details** at `/vehicles/:id` shows a large image panel, sticky purchase panel (desktop), optional overview text and feature chips, and a spec grid (rows with no value hidden; EV/hybrid range and battery rules).
+- **Optional specs (API + admin):** `seats`, `rangeKm`, `batteryKwh`, `description` (plain text, max 600), `features` (max 12 strings). All optional on create/update; `features` defaults to `[]`.
 - **Featured carousel:** In-stock vehicles only, sorted by `createdAt` descending, maximum six slides (documented on the dashboard).
 - **Visual design:** Dark premium showroom UI; implementation, branding, and imagery are original. **Typography:** Sora (display — titles, prices) and Inter (body, forms, tabular spec values), self-hosted via Fontsource (`@fontsource-variable/sora` / `inter` @ 5.3.0, latin subset in `src/fonts/latin-fonts.css`). **Tokens:** near-black surfaces, electric-blue accent, 20px card radius, glass top bar, `max-w-shell` (1280px). Customize in `tailwind.config.js`, `src/index.css` (`:root` CSS variables), and `src/utils/designTokens.ts` (WCAG contrast pairs).
 
@@ -182,16 +183,39 @@ All create/update bodies use **strict** Zod schemas (unknown keys → 400). Spec
 - **Formats:** `https://` URLs or site-relative paths such as `/cars/sedan-01.svg` (max 2048 characters). Dangerous schemes (`http:`, `javascript:`, `data:`, `file:`, protocol-relative `//`) are rejected server-side and in admin forms.
 - **No upload:** File upload is not implemented so the API stays stateless and we avoid storage, virus scanning, and size-limit concerns. Images are referenced by URL only; host files under `frontend/public/cars/` or on an HTTPS CDN.
 - **Local assets:** Add files under `frontend/public/cars/` and reference `/cars/<filename>` in admin, or rely on category illustrations with an empty URL. Demo inventory: `cd backend && npm run seed:demo` (refuses `NODE_ENV=production` and databases whose name ends with `_test`).
+- **Demo photographs:** Wikimedia Commons JPEGs (when fetched) with credits in [`CREDITS.md`](CREDITS.md) and `/credits`. Human review: `cd backend && npm run generate:photo-review` (writes git-ignored `docs/design/photo-review.html`; populate `.cache/car-photo-candidates.json` via `fetch:car-photos` when wired).
+- **Illustrative sample data:** Demo vehicles use approximate figures for a typical trim, not an official specification sheet; photos show real models but may differ by model year or trim.
 - **Credits:** See [`CREDITS.md`](CREDITS.md) for the bundled SVG illustrations.
 
+## Performance
+
+Measure before optimizing; keep before/after tables in `docs/ai-reports/P1-REPORT.md`, `P2-REPORT.md`, and `P3-REPORT.md`.
+
+| Budget | Limit | Check |
+| --- | ---: | --- |
+| Total JS (gzip, `dist/assets/*.js`) | 110 kB | `cd frontend && npm run build && npm run check:bundle-size` |
+| CSS (gzip) | 10 kB | same script |
+
+**Lighthouse (public pages):** build + `npx vite preview --port 4173`, then `npx lighthouse http://127.0.0.1:4173/login --chrome-flags="--headless=new" --only-categories=performance` (and `/credits`). Authenticated dashboard/details need a logged-in session and are not headless-audited the same way.
+
+**API latency:** `cd backend && npm run build && npm start`, then `npx tsx scripts/measure-api-latency.ts` (200 sequential requests per endpoint).
+
+**Deployment caching:** Vite emits hashed filenames under `dist/assets/` — configure the static host with long `Cache-Control` for `/assets/*`. Files in `frontend/public/cars/` are **not** content-hashed; set a sensible TTL (or versioned paths) on the host. API responses use `Cache-Control: private, no-cache` with ETags for conditional GETs. Enable **gzip/brotli** at the reverse proxy (not in Express).
+
+**Prisma:** one `PrismaClient` in `src/lib/prisma.ts`; the server calls `$connect()` before listening and `$disconnect()` on shutdown. Tune pool size via `DATABASE_URL` / provider docs.
+
 ## Test report
+
+### Database hygiene for tests and smoke checks
+- **Automated tests** always use the Postgres database whose name ends with `_test` (see `backend/tests/setup.ts`). Never point Vitest at `dealership_dev`.
+- **Verification or smoke scripts** that insert rows must either run against `_test` or **delete every row they create** when finished. Do not leave `RUN*`, `E2E*`, `Test*`, or `demo-seed` inventory in `dealership_dev`. To clean dev: `cd backend && npx tsx scripts/cleanup-dev-verification-rows.ts` (lists matching rows, then deletes them; refuses `_test` and production).
 
 ### Backend
 **Command:** `npm test` (from `backend/`, requires Postgres DB whose name ends with `_test`; migrations run automatically)  
 **Output (actual, RUN3):**
 ```
- Test Files  19 passed (19)
-      Tests  92 passed (92)
+ Test Files  25 passed (25)
+      Tests  114 passed (114)
 ```
 
 **Coverage (actual, RUN3):** `npm run test:coverage`
@@ -208,8 +232,8 @@ Lines        : 94.39% ( 337/357 )
 **Command:** `npm test` (from `frontend/`)  
 **Output (actual, RUN3):**
 ```
- Test Files  28 passed (28)
-      Tests  97 passed (97)
+ Test Files  36 passed (36)
+      Tests  122 passed (122)
 ```
 
 **Coverage (actual, RUN3):** `npm run test:coverage`

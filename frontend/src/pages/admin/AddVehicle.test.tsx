@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+import { pickCategoryPhoto } from "../../utils/carPhotos";
 import { createVehicle } from "../../api/vehicles";
 import { makeVehicle } from "../../test/fixtures";
 import { AddVehiclePage } from "./AddVehicle";
@@ -109,7 +110,9 @@ describe("AddVehiclePage", () => {
 
     await user.type(screen.getByLabelText("Category"), "SUV");
     const preview = screen.getByTestId("vehicle-image-preview").querySelector("img");
-    expect(preview?.getAttribute("src")).toContain("/cars/suv-01.svg");
+    expect(preview?.getAttribute("src")).toBe(
+      pickCategoryPhoto("SUV", "admin-preview"),
+    );
 
     await user.type(screen.getByLabelText("Make"), "Aurora");
     await user.type(screen.getByLabelText("Model"), "LX");
@@ -143,6 +146,13 @@ describe("AddVehiclePage", () => {
     expect(preview?.getAttribute("src")).toContain("/cars/suv-01.svg");
 
     await user.click(screen.getByRole("button", { name: "Clear" }));
-    expect(preview?.getAttribute("src")).toContain("/cars/sedan-01.svg");
+    await waitFor(() => {
+      const cleared = screen
+        .getByTestId("vehicle-image-preview")
+        .querySelector("img");
+      expect(cleared?.getAttribute("src")).toBe(
+        pickCategoryPhoto("Sedan", "admin-preview"),
+      );
+    });
   });
 });

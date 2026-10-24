@@ -46,6 +46,7 @@ export function AdminVehicleImageField({
         <VehicleImage
           src={imageUrl.trim() ? imageUrl.trim() : null}
           category={category}
+          vehicleId="admin-preview"
           alt="Image preview"
         />
       </div>

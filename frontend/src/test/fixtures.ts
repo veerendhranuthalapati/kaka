@@ -42,6 +42,11 @@ export function makeVehicle(overrides: Partial<Vehicle> = {}): Vehicle {
     color: null,
     owners: null,
     vin: null,
+    seats: null,
+    rangeKm: null,
+    batteryKwh: null,
+    description: null,
+    features: [],
     ...overrides,
   };
 }

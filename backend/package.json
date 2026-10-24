@@ -11,6 +11,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "seed:demo": "tsx scripts/seed-demo.ts",
+    "fetch:car-photos": "tsx scripts/fetch-car-photos.ts",
+    "generate:photo-review": "tsx scripts/generate-photo-review.ts",
     "setup:env": "tsx scripts/setup-env.ts",
     "postinstall": "prisma generate"
   },

@@ -24,6 +24,11 @@ const base: Vehicle = {
   color: null,
   owners: null,
   vin: null,
+  seats: null,
+  rangeKm: null,
+  batteryKwh: null,
+  description: null,
+  features: [],
 };
 
 describe("cardSpecChips", () => {

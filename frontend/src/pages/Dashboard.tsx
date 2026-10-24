@@ -1,11 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
-import {
-  deleteVehicle,
-  purchaseVehicle,
-  restockVehicle,
-  searchVehicles,
-} from "../api/vehicles";
 import { ApiError } from "../api/client";
 import { BottomActionBar } from "../components/BottomActionBar";
 import { HeroCarousel } from "../components/HeroCarousel";
@@ -16,18 +10,25 @@ import {
 import { RestockDialog } from "../components/RestockDialog";
 import { ConfirmDialog, EmptyState, Toast } from "../components/State";
 import { TopBar } from "../components/TopBar";
+import {
+  SCROLL_RESTORE_KEY,
+  useVehicleData,
+  useVehicleSearch,
+} from "../data/VehicleDataProvider";
 import type { Vehicle, VehicleSearchParams } from "../types";
 import { selectFeaturedVehicles } from "../utils/featuredVehicles";
 
-const DEBOUNCE_MS = 300;
-
 export function DashboardPage() {
   const { user, logout } = useAuth();
+  const {
+    purchaseWithOptimistic,
+    deleteVehicleFromCache,
+    restockVehicleInCache,
+  } = useVehicleData();
   const [filters, setFilters] = useState<VehicleSearchParams>({});
+  const deferredFilters = useDeferredValue(filters);
+  const { vehicles, loading, isRevalidating, error } = useVehicleSearch(deferredFilters);
   const [draftSearch, setDraftSearch] = useState("");
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: "success" | "danger" } | null>(
     null,
@@ -40,29 +41,22 @@ export function DashboardPage() {
 
   const canManage = user?.role === "ADMIN";
 
-  const load = useCallback(async (nextFilters: VehicleSearchParams) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await searchVehicles(nextFilters);
-      setVehicles(data);
-    } catch (caught) {
-      if (caught instanceof ApiError) {
-        setError(caught.message);
-      } else {
-        setError("Failed to load vehicles.");
+  useEffect(() => {
+    const saved = sessionStorage.getItem(SCROLL_RESTORE_KEY);
+    if (saved) {
+      const y = Number(saved);
+      sessionStorage.removeItem(SCROLL_RESTORE_KEY);
+      if (Number.isFinite(y)) {
+        window.requestAnimationFrame(() => window.scrollTo(0, y));
       }
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      void load(filters);
-    }, DEBOUNCE_MS);
-    return () => window.clearTimeout(timeout);
-  }, [filters, load]);
+    return () => {
+      sessionStorage.setItem(SCROLL_RESTORE_KEY, String(window.scrollY));
+    };
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -84,32 +78,19 @@ export function DashboardPage() {
     setToast(null);
     setStockHighlightId(null);
 
-    try {
-      const updated = await purchaseVehicle(vehicle.id);
-      setVehicles((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item)),
-      );
-      setStockHighlightId(updated.id);
+    const result = await purchaseWithOptimistic(vehicle);
+    if (result.ok) {
+      setStockHighlightId(result.vehicle.id);
       setToast({
-        message: `Purchased 1 x ${updated.make} ${updated.model} - ${updated.quantity} left`,
+        message: `Purchased 1 x ${result.vehicle.make} ${result.vehicle.model} - ${result.vehicle.quantity} left`,
         tone: "success",
       });
-    } catch (caught) {
-      if (caught instanceof ApiError && caught.code === "OUT_OF_STOCK") {
-        setToast({ message: "Just sold out", tone: "danger" });
-        setVehicles((current) =>
-          current.map((item) =>
-            item.id === vehicle.id ? { ...item, quantity: 0 } : item,
-          ),
-        );
-      } else if (caught instanceof ApiError) {
-        setToast({ message: caught.message, tone: "danger" });
-      } else {
-        setToast({ message: "Purchase failed. Try again.", tone: "danger" });
-      }
-    } finally {
-      setPurchasingId(null);
+    } else if (result.code === "OUT_OF_STOCK") {
+      setToast({ message: "Just sold out", tone: "danger" });
+    } else {
+      setToast({ message: result.message, tone: "danger" });
     }
+    setPurchasingId(null);
   }
 
   function scrollToInventory() {
@@ -135,7 +116,7 @@ export function DashboardPage() {
       />
 
       <main className="shell grid gap-12 py-8 lg:py-12">
-        <section className="grid gap-4">
+        <section className="grid gap-4 content-auto-section">
           <div>
             <h1 className="font-display text-hero tracking-tight text-ink">
               Find your next drive
@@ -158,7 +139,7 @@ export function DashboardPage() {
           ref={inventoryRef}
           id="inventory"
           aria-label="Inventory"
-          className="grid gap-6"
+          className="grid gap-6 content-auto-section"
         >
           <div className="flex flex-col gap-2">
             <h2 className="font-display text-section-title tracking-tight">Inventory</h2>
@@ -251,9 +232,6 @@ export function DashboardPage() {
             <div className="surface flex flex-col items-center gap-3 p-8 text-center">
               <p className="font-semibold">Could not load inventory</p>
               <p className="text-sm text-muted">{error}</p>
-              <button type="button" className="btn-secondary" onClick={() => void load(filters)}>
-                Retry
-              </button>
             </div>
           )}
 
@@ -273,25 +251,27 @@ export function DashboardPage() {
           )}
 
           {!error && !loading && vehicles.length > 0 && (
-            <div className="inventory-grid">
+            <div
+              className={`inventory-grid transition-opacity duration-ui ${isRevalidating ? "opacity-70" : "opacity-100"}`}
+            >
               {vehicles.map((vehicle, index) => (
                 <div
                   key={vehicle.id}
-                  className="inventory-enter min-w-0"
-                  style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
+                  className="inventory-card-contain"
+                  style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
                 >
-                <InventoryVehicleCard
-                  vehicle={vehicle}
-                  canManage={canManage}
-                  purchasing={purchasingId === vehicle.id}
-                  stockHighlight={stockHighlightId === vehicle.id}
-                  onPurchase={handlePurchase}
-                  onEdit={(item) => {
-                    window.location.assign(`/admin/vehicles/${item.id}/edit`);
-                  }}
-                  onRestock={setRestockingVehicle}
-                  onDelete={setDeletingVehicle}
-                />
+                  <InventoryVehicleCard
+                    vehicle={vehicle}
+                    purchasing={purchasingId === vehicle.id}
+                    canManage={canManage}
+                    stockHighlight={stockHighlightId === vehicle.id}
+                    onPurchase={handlePurchase}
+                    onEdit={(item) => {
+                      window.location.assign(`/admin/vehicles/${item.id}/edit`);
+                    }}
+                    onRestock={(item) => setRestockingVehicle(item)}
+                    onDelete={(item) => setDeletingVehicle(item)}
+                  />
                 </div>
               ))}
             </div>
@@ -307,33 +287,39 @@ export function DashboardPage() {
 
       <ConfirmDialog
         open={Boolean(deletingVehicle)}
-        title={
+        title="Delete vehicle?"
+        description={
           deletingVehicle
-            ? `Delete ${deletingVehicle.make} ${deletingVehicle.model}?`
-            : "Delete vehicle?"
+            ? `Remove ${deletingVehicle.make} ${deletingVehicle.model} from inventory.`
+            : ""
         }
-        description="This action removes the vehicle permanently from inventory."
         confirmLabel="Delete"
-        onConfirm={async () => {
-          if (!deletingVehicle) return;
-          await deleteVehicle(deletingVehicle.id);
-          setVehicles((current) =>
-            current.filter((item) => item.id !== deletingVehicle.id),
-          );
-          setDeletingVehicle(null);
-        }}
         onCancel={() => setDeletingVehicle(null)}
+        onConfirm={() => {
+          if (!deletingVehicle) return;
+          void deleteVehicleFromCache(deletingVehicle.id)
+            .then(() => setDeletingVehicle(null))
+            .catch((caught) => {
+              const message =
+                caught instanceof ApiError ? caught.message : "Delete failed.";
+              setToast({ message, tone: "danger" });
+            });
+        }}
       />
 
       <RestockDialog
         vehicle={restockingVehicle}
-        onRestock={async (vehicle, amount) => {
-          const updated = await restockVehicle(vehicle.id, amount);
-          setVehicles((current) =>
-            current.map((item) => (item.id === updated.id ? updated : item)),
-          );
-        }}
         onClose={() => setRestockingVehicle(null)}
+        onRestock={async (vehicle, amount) => {
+          try {
+            await restockVehicleInCache(vehicle.id, amount);
+            setRestockingVehicle(null);
+          } catch (caught) {
+            const message =
+              caught instanceof ApiError ? caught.message : "Restock failed.";
+            setToast({ message, tone: "danger" });
+          }
+        }}
       />
     </div>
   );

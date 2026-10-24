@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+import { VehicleDataProvider } from "../data/VehicleDataProvider";
 import { makeVehicle } from "../test/fixtures";
 import { InventoryVehicleCard } from "./InventoryVehicleCard";
 
@@ -8,6 +9,7 @@ describe("InventoryVehicleCard", () => {
   it("shows title, year subtitle, spec chips, and view details link", () => {
     render(
       <MemoryRouter>
+        <VehicleDataProvider>
         <InventoryVehicleCard
           vehicle={makeVehicle({
             id: "card-1",
@@ -23,6 +25,7 @@ describe("InventoryVehicleCard", () => {
           canManage={false}
           onPurchase={vi.fn()}
         />
+        </VehicleDataProvider>
       </MemoryRouter>,
     );
 

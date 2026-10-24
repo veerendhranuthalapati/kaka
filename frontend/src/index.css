@@ -56,7 +56,30 @@
   }
 
   .surface-hover {
-    @apply surface motion-safe:hover:-translate-y-1 motion-safe:hover:border-line motion-safe:hover:shadow-lift motion-reduce:transform-none;
+    @apply surface relative motion-safe:hover:-translate-y-1 motion-safe:hover:border-line motion-reduce:transform-none;
+  }
+
+  .surface-hover::after {
+    content: "";
+    @apply pointer-events-none absolute inset-0 rounded-card opacity-0 transition-opacity duration-ui ease-gentle motion-reduce:transition-none;
+    box-shadow: 0 24px 48px -16px rgb(0 0 0 / 0.65);
+  }
+
+  .surface-hover:hover::after {
+    @apply motion-safe:opacity-100;
+  }
+
+  .content-auto-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 720px;
+  }
+
+  .inventory-card-contain {
+    contain: layout paint;
+  }
+
+  .inventory-grid-dimmed {
+    @apply opacity-70 transition-opacity duration-ui motion-reduce:transition-none;
   }
 
   .glass-bar {
@@ -105,7 +128,7 @@
   }
 
   .btn-hero-secondary {
-    @apply btn border border-white/25 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20;
+    @apply btn border border-white/40 bg-ink/80 text-white shadow-sm hover:bg-ink/90;
   }
 
   .btn-danger {

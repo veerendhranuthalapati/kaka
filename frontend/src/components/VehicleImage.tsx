@@ -1,63 +1,84 @@
-import { useEffect, useState } from "react";
-import { fallbackImageForCategory } from "../utils/fallbackImageForCategory";
-import { isSvgVehicleImageUrl } from "../utils/vehicleImageDisplay";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  findManifestEntryByPublicPath,
+  imageSizesForLayout,
+  resolveVehicleImageChain,
+  responsiveSrcSetForEntry,
+  type VehicleImageChainLevel,
+} from "../utils/carPhotos";
 
 const PLACEHOLDER_SRC = "/cars/placeholder.svg";
 
 export type VehicleImageProps = {
   src?: string | null;
   category?: string;
+  vehicleId?: string;
   alt: string;
   className?: string;
   loading?: "lazy" | "eager";
   fixedAspect?: boolean;
+  layout?: "card" | "detail" | "hero";
+  onDisplayChange?: (info: {
+    path: string;
+    level: VehicleImageChainLevel;
+    manifestEntry: ReturnType<typeof findManifestEntryByPublicPath>;
+  }) => void;
 };
-
-type DisplayMode = "cover" | "illustration";
-
-function resolveDisplay(
-  src: string | null | undefined,
-  category: string,
-  primaryFailed: boolean,
-  categoryFailed: boolean,
-): { url: string; mode: DisplayMode; level: "primary" | "category" | "placeholder" } {
-  const trimmed = src?.trim() ?? "";
-  const categoryUrl = fallbackImageForCategory(category);
-
-  if (trimmed && !primaryFailed) {
-    return {
-      url: trimmed,
-      mode: isSvgVehicleImageUrl(trimmed) ? "illustration" : "cover",
-      level: "primary",
-    };
-  }
-
-  if (!categoryFailed) {
-    return { url: categoryUrl, mode: "illustration", level: "category" };
-  }
-
-  return { url: PLACEHOLDER_SRC, mode: "illustration", level: "placeholder" };
-}
 
 export function VehicleImage({
   src,
   category = "",
+  vehicleId = "",
   alt,
   className = "",
   loading = "lazy",
   fixedAspect = true,
+  layout = "detail",
+  onDisplayChange,
 }: VehicleImageProps) {
   const [primaryFailed, setPrimaryFailed] = useState(false);
-  const [categoryFailed, setCategoryFailed] = useState(false);
+  const [categoryPhotoFailed, setCategoryPhotoFailed] = useState(false);
+  const [categorySvgFailed, setCategorySvgFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+
+  useLayoutEffect(() => {
+    setPrimaryFailed(false);
+    setCategoryPhotoFailed(false);
+    setCategorySvgFailed(false);
+    setLoaded(false);
+  }, [src, category, vehicleId]);
+
+  const display = resolveVehicleImageChain({
+    imageUrl: src,
+    category,
+    vehicleId,
+    primaryFailed,
+    categoryPhotoFailed,
+    categorySvgFailed,
+  });
 
   useEffect(() => {
-    setPrimaryFailed(false);
-    setCategoryFailed(false);
-    setLoaded(false);
-  }, [src, category]);
+    onDisplayChange?.({
+      path: display.url,
+      level: display.level,
+      manifestEntry: findManifestEntryByPublicPath(display.url),
+    });
+  }, [display.url, display.level, onDisplayChange]);
 
-  const display = resolveDisplay(src, category, primaryFailed, categoryFailed);
+  useLayoutEffect(() => {
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }, [display.url, primaryFailed, categoryPhotoFailed, categorySvgFailed]);
+
+  function attachImageRef(node: HTMLImageElement | null) {
+    imgRef.current = node;
+    if (node?.complete && node.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }
 
   function handleError() {
     setLoaded(false);
@@ -65,18 +86,27 @@ export function VehicleImage({
       setPrimaryFailed(true);
       return;
     }
-    if (display.level === "category") {
-      setCategoryFailed(true);
+    if (display.level === "category-photo") {
+      setCategoryPhotoFailed(true);
+      return;
+    }
+    if (display.level === "category-svg") {
+      setCategorySvgFailed(true);
     }
   }
 
-  const frameClass =
-    display.mode === "illustration" ? "image-panel text-muted" : "bg-raised";
+  const manifestEntry = findManifestEntryByPublicPath(display.url);
+  const width = manifestEntry?.width;
+  const height = manifestEntry?.height;
+  const srcSet = display.isPhoto ? responsiveSrcSetForEntry(manifestEntry) : undefined;
+  const sizes = srcSet ? imageSizesForLayout(layout) : undefined;
 
-  const imageClass =
-    display.mode === "illustration"
-      ? "h-full w-full object-contain p-6 sm:p-10"
-      : "h-full w-full object-cover";
+  const frameClass =
+    display.isPhoto ? "bg-raised" : "image-panel text-muted";
+
+  const imageClass = display.isPhoto
+    ? "h-full w-full object-cover"
+    : "h-full w-full object-contain p-6 sm:p-10";
 
   const aspectClass = fixedAspect ? "aspect-[16/9]" : "h-full min-h-0";
 
@@ -91,8 +121,13 @@ export function VehicleImage({
         />
       )}
       <img
+        ref={attachImageRef}
         src={display.url}
+        srcSet={srcSet}
+        sizes={sizes}
         alt={alt}
+        width={width}
+        height={height}
         loading={loading}
         decoding="async"
         fetchPriority={loading === "eager" ? "high" : undefined}
@@ -104,3 +139,5 @@ export function VehicleImage({
     </div>
   );
 }
+
+export { PLACEHOLDER_SRC };

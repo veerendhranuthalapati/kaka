@@ -28,6 +28,11 @@ export type VehicleDto = {
   color: string | null;
   owners: number | null;
   vin: string | null;
+  seats: number | null;
+  rangeKm: number | null;
+  batteryKwh: number | null;
+  description: string | null;
+  features: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -61,6 +66,14 @@ export function toVehicleDto(vehicle: Vehicle): VehicleDto {
     color: vehicle.color ?? null,
     owners: vehicle.owners ?? null,
     vin: vehicle.vin ?? null,
+    seats: vehicle.seats ?? null,
+    rangeKm: vehicle.rangeKm ?? null,
+    batteryKwh:
+      vehicle.batteryKwh === null || vehicle.batteryKwh === undefined
+        ? null
+        : Number(vehicle.batteryKwh),
+    description: vehicle.description ?? null,
+    features: vehicle.features ?? [],
     createdAt: serializeVehicleTimestamp(vehicle.createdAt),
     updatedAt: serializeVehicleTimestamp(vehicle.updatedAt),
   };

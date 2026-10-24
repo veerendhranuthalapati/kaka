@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import type { VehicleInput, VehicleUpdateInput } from "../types";
 import { AdminVehicleImageField } from "./AdminVehicleImageField";
 import { FieldError } from "./State";
@@ -50,6 +50,44 @@ export function VehicleForm({
 
   function fieldError(field: keyof VehicleFormValues): string | undefined {
     return serverFieldErrors[field] ?? clientErrors[field];
+  }
+
+  const showEvFields =
+    values.fuelType === "ELECTRIC" ||
+    values.fuelType === "HYBRID" ||
+    values.fuelType === "PLUG_IN_HYBRID";
+
+  const [featureDraft, setFeatureDraft] = useState("");
+
+  function addFeatureFromDraft() {
+    const next = featureDraft.trim();
+    if (!next) return;
+    setValues((current) => ({
+      ...current,
+      features: current.features.includes(next)
+        ? current.features
+        : [...current.features, next],
+    }));
+    setFeatureDraft("");
+    setClientErrors((current) => {
+      const copy = { ...current };
+      delete copy.features;
+      return copy;
+    });
+  }
+
+  function removeFeature(feature: string) {
+    setValues((current) => ({
+      ...current,
+      features: current.features.filter((item) => item !== feature),
+    }));
+  }
+
+  function handleFeatureKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addFeatureFromDraft();
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -185,6 +223,72 @@ export function VehicleForm({
           <input id="vehicle-vin" className="input" value={values.vin} onChange={(e) => update("vin", e.target.value)} maxLength={17} />
           <FieldError message={fieldError("vin")} />
         </label>
+        <label className="field">
+          <span>Seats</span>
+          <input inputMode="numeric" value={values.seats} onChange={(e) => update("seats", e.target.value)} />
+          <FieldError message={fieldError("seats")} />
+        </label>
+        {showEvFields && (
+          <>
+            <label className="field">
+              <span>Range (km)</span>
+              <input inputMode="numeric" value={values.rangeKm} onChange={(e) => update("rangeKm", e.target.value)} />
+              <FieldError message={fieldError("rangeKm")} />
+            </label>
+            <label className="field">
+              <span>Battery (kWh)</span>
+              <input inputMode="decimal" value={values.batteryKwh} onChange={(e) => update("batteryKwh", e.target.value)} />
+              <FieldError message={fieldError("batteryKwh")} />
+            </label>
+          </>
+        )}
+      </section>
+
+      <section className="grid gap-4">
+        <h2 className="font-display text-lg">Description &amp; features</h2>
+        <label className="label" htmlFor="vehicle-description">
+          Description
+          <textarea
+            id="vehicle-description"
+            className="input min-h-[6rem]"
+            maxLength={600}
+            value={values.description}
+            onChange={(e) => update("description", e.target.value)}
+          />
+          <p className="text-sm text-muted">{values.description.length}/600</p>
+          <FieldError message={fieldError("description")} />
+        </label>
+        <div>
+          <label className="label" htmlFor="vehicle-feature-draft">
+            Features
+            <input
+              id="vehicle-feature-draft"
+              className="input"
+              value={featureDraft}
+              placeholder="Type a feature and press Enter"
+              onChange={(e) => setFeatureDraft(e.target.value)}
+              onKeyDown={handleFeatureKeyDown}
+            />
+          </label>
+          {values.features.length > 0 && (
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {values.features.map((feature) => (
+                <li key={feature} className="spec-chip flex items-center gap-1">
+                  <span>{feature}</span>
+                  <button
+                    type="button"
+                    className="text-muted hover:text-ink"
+                    aria-label={`Remove ${feature}`}
+                    onClick={() => removeFeature(feature)}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <FieldError message={fieldError("features")} />
+        </div>
       </section>
 
       <section className="grid gap-4">

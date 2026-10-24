@@ -38,6 +38,17 @@ const colorSchema = z
   .max(32)
   .regex(/^[A-Za-z][A-Za-z\s-]*$/, "Color may only contain letters, spaces, and hyphens");
 
+const plainTextNoAngles = z
+  .string()
+  .trim()
+  .refine((value) => !value.includes("<") && !value.includes(">"), {
+    message: "Plain text only; angle brackets are not allowed",
+  });
+
+const featureItemSchema = plainTextNoAngles
+  .min(2)
+  .max(40);
+
 export const optionalVehicleSpecFieldsSchema = z
   .object({
     year: z
@@ -58,6 +69,18 @@ export const optionalVehicleSpecFieldsSchema = z
     color: colorSchema.nullable().optional(),
     owners: z.number().int().min(1).max(10).nullable().optional(),
     vin: vinSchema.nullable().optional(),
+    seats: z.number().int().min(1).max(9).nullable().optional(),
+    rangeKm: z.number().int().min(20).max(1500).nullable().optional(),
+    batteryKwh: z.number().min(5).max(250).nullable().optional(),
+    description: plainTextNoAngles.max(600).nullable().optional(),
+    features: z
+      .array(featureItemSchema)
+      .max(12)
+      .optional()
+      .transform((items) => {
+        if (!items) return items;
+        return [...new Set(items.map((item) => item.trim()).filter(Boolean))];
+      }),
   })
   .strict();
 

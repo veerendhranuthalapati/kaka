@@ -1,37 +1,219 @@
+import { lazy, Suspense, type ReactNode } from "react";
+
 import { Route, Routes } from "react-router-dom";
+
 import { AuthProvider } from "./auth/AuthContext";
+
 import { AdminRoute } from "./components/AdminRoute";
+
 import { ProtectedRoute } from "./components/ProtectedRoute";
+
 import { RouteFade } from "./components/RouteFade";
+
+import { VehicleDataProvider } from "./data/VehicleDataProvider";
+
 import { DashboardPage } from "./pages/Dashboard";
-import { LoginPage } from "./pages/Login";
-import { RegisterPage } from "./pages/Register";
-import { NotFoundPage } from "./pages/NotFound";
-import { AddVehiclePage } from "./pages/admin/AddVehicle";
-import { EditVehiclePage } from "./pages/admin/EditVehicle";
-import { VehicleDetailsPage } from "./pages/VehicleDetails";
+
+import { PageRouteSkeleton } from "./components/PageRouteSkeleton";
+
+
+
+const LoginPage = lazy(() =>
+
+  import("./pages/Login").then((m) => ({ default: m.LoginPage })),
+
+);
+
+const RegisterPage = lazy(() =>
+
+  import("./pages/Register").then((m) => ({ default: m.RegisterPage })),
+
+);
+
+const PhotoCreditsPage = lazy(() =>
+
+  import("./pages/PhotoCredits").then((m) => ({ default: m.PhotoCreditsPage })),
+
+);
+
+const VehicleDetailsPage = lazy(() =>
+
+  import("./pages/VehicleDetails").then((m) => ({ default: m.VehicleDetailsPage })),
+
+);
+
+const AddVehiclePage = lazy(() =>
+
+  import("./pages/admin/AddVehicle").then((m) => ({ default: m.AddVehiclePage })),
+
+);
+
+const EditVehiclePage = lazy(() =>
+
+  import("./pages/admin/EditVehicle").then((m) => ({ default: m.EditVehiclePage })),
+
+);
+
+const NotFoundPage = lazy(() =>
+
+  import("./pages/NotFound").then((m) => ({ default: m.NotFoundPage })),
+
+);
+
+
+
+function Lazy({ children }: { children: ReactNode }) {
+
+  return <Suspense fallback={<PageRouteSkeleton />}>{children}</Suspense>;
+
+}
+
+
 
 export function App() {
+
   return (
+
     <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route element={<RouteFade />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/vehicles/:id" element={<VehicleDetailsPage />} />
-            <Route element={<AdminRoute />}>
-              <Route path="/admin/vehicles/new" element={<AddVehiclePage />} />
+
+      <VehicleDataProvider>
+
+        <Routes>
+
+          <Route
+
+            path="/login"
+
+            element={
+
+              <Lazy>
+
+                <LoginPage />
+
+              </Lazy>
+
+            }
+
+          />
+
+          <Route
+
+            path="/register"
+
+            element={
+
+              <Lazy>
+
+                <RegisterPage />
+
+              </Lazy>
+
+            }
+
+          />
+
+          <Route
+
+            path="/credits"
+
+            element={
+
+              <Lazy>
+
+                <PhotoCreditsPage />
+
+              </Lazy>
+
+            }
+
+          />
+
+          <Route element={<ProtectedRoute />}>
+
+            <Route element={<RouteFade />}>
+
+              <Route path="/" element={<DashboardPage />} />
+
               <Route
-                path="/admin/vehicles/:id/edit"
-                element={<EditVehiclePage />}
+
+                path="/vehicles/:id"
+
+                element={
+
+                  <Lazy>
+
+                    <VehicleDetailsPage />
+
+                  </Lazy>
+
+                }
+
               />
+
+              <Route element={<AdminRoute />}>
+
+                <Route
+
+                  path="/admin/vehicles/new"
+
+                  element={
+
+                    <Lazy>
+
+                      <AddVehiclePage />
+
+                    </Lazy>
+
+                  }
+
+                />
+
+                <Route
+
+                  path="/admin/vehicles/:id/edit"
+
+                  element={
+
+                    <Lazy>
+
+                      <EditVehiclePage />
+
+                    </Lazy>
+
+                  }
+
+                />
+
+              </Route>
+
             </Route>
+
           </Route>
-        </Route>
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+
+          <Route
+
+            path="*"
+
+            element={
+
+              <Lazy>
+
+                <NotFoundPage />
+
+              </Lazy>
+
+            }
+
+          />
+
+        </Routes>
+
+      </VehicleDataProvider>
+
     </AuthProvider>
+
   );
+
 }
+
+

@@ -38,6 +38,7 @@ export class ApiError extends Error {
 export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
+  signal?: AbortSignal;
 };
 
 export type UnauthorizedHandler = () => void;
@@ -152,6 +153,7 @@ export async function apiRequest<T>(
     response = await fetch(`${getBaseUrl()}${path}`, {
       method: options.method ?? "GET",
       headers,
+      signal: options.signal,
       body:
         options.body === undefined ? undefined : JSON.stringify(options.body),
     });

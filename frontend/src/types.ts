@@ -37,6 +37,11 @@ export type VehicleSpecFields = {
   color: string | null;
   owners: number | null;
   vin: string | null;
+  seats: number | null;
+  rangeKm: number | null;
+  batteryKwh: number | null;
+  description: string | null;
+  features: string[];
 };
 
 export type Vehicle = {
@@ -64,6 +69,11 @@ export type VehicleSpecInput = {
   color?: string | null;
   owners?: number | null;
   vin?: string | null;
+  seats?: number | null;
+  rangeKm?: number | null;
+  batteryKwh?: number | null;
+  description?: string | null;
+  features?: string[];
 };
 
 export type VehicleInput = {

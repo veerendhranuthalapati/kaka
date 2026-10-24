@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, TOKEN_STORAGE_KEY } from "../api/client";
 import * as vehiclesApi from "../api/vehicles";
 import { AuthProvider } from "../auth/AuthContext";
+import { VehicleDataProvider } from "../data/VehicleDataProvider";
+import { resetVehicleDataCacheForTests } from "../data/vehicleDataCache";
 import { makeToken, makeVehicle } from "../test/fixtures";
 import { DashboardPage } from "./Dashboard";
 
@@ -22,7 +24,9 @@ function renderDashboard() {
   return render(
     <MemoryRouter>
       <AuthProvider>
-        <DashboardPage />
+        <VehicleDataProvider>
+          <DashboardPage />
+        </VehicleDataProvider>
       </AuthProvider>
     </MemoryRouter>,
   );
@@ -31,6 +35,7 @@ function renderDashboard() {
 describe("DashboardPage purchase flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetVehicleDataCacheForTests();
     sessionStorage.setItem(TOKEN_STORAGE_KEY, makeToken("USER"));
     mockedSearch.mockResolvedValue([
       makeVehicle({
@@ -83,6 +88,7 @@ describe("DashboardPage purchase flow", () => {
   });
 
   it("shows skeleton placeholders while inventory is loading", async () => {
+    resetVehicleDataCacheForTests();
     vi.useFakeTimers();
     mockedSearch.mockImplementation(
       () => new Promise(() => {

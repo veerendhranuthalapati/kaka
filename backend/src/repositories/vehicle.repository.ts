@@ -14,7 +14,8 @@ const VEHICLE_SELECT_COLUMNS = Prisma.sql`
   id, make, model, category, price, quantity, "imageUrl",
   year, "odometerKm", "engineCc", "powerBhp", "torqueNm",
   "fuelType", transmission, drivetrain, "fuelEconomyKmpl",
-  color, owners, vin, "createdAt", "updatedAt"
+  color, owners, vin, seats, "rangeKm", "batteryKwh", description, features,
+  "createdAt", "updatedAt"
 `;
 
 export type CreateVehicleInput = {
@@ -56,24 +57,32 @@ export interface VehicleRepository {
 function toPrismaCreateData(
   data: CreateVehicleInput,
 ): Prisma.VehicleCreateInput {
-  const { fuelEconomyKmpl, ...rest } = data;
+  const { fuelEconomyKmpl, batteryKwh, features, ...rest } = data;
   return {
     ...rest,
+    features: features ?? [],
     ...(fuelEconomyKmpl === undefined
       ? {}
       : { fuelEconomyKmpl: fuelEconomyKmpl ?? null }),
+    ...(batteryKwh === undefined
+      ? {}
+      : { batteryKwh: batteryKwh ?? null }),
   };
 }
 
 function toPrismaUpdateData(
   data: UpdateVehicleInput,
 ): Prisma.VehicleUpdateInput {
-  const { fuelEconomyKmpl, ...rest } = data;
+  const { fuelEconomyKmpl, batteryKwh, features, ...rest } = data;
   return {
     ...rest,
+    ...(features === undefined ? {} : { features }),
     ...(fuelEconomyKmpl === undefined
       ? {}
       : { fuelEconomyKmpl: fuelEconomyKmpl ?? null }),
+    ...(batteryKwh === undefined
+      ? {}
+      : { batteryKwh: batteryKwh ?? null }),
   };
 }
 

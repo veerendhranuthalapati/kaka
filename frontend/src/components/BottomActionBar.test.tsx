@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { BottomActionBar } from "./BottomActionBar";
 
@@ -11,11 +12,13 @@ describe("BottomActionBar", () => {
     const focusSpy = vi.spyOn(searchRef.current, "focus");
 
     render(
-      <BottomActionBar
-        searchInputRef={searchRef}
-        onBrowseInventory={onBrowse}
-        onQuickSearch={vi.fn()}
-      />,
+      <MemoryRouter>
+        <BottomActionBar
+          searchInputRef={searchRef}
+          onBrowseInventory={onBrowse}
+          onQuickSearch={vi.fn()}
+        />
+      </MemoryRouter>,
     );
 
     await user.click(screen.getByRole("button", { name: "Browse inventory" }));

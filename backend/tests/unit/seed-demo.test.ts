@@ -56,9 +56,8 @@ describe("seed:demo helpers", () => {
     rmSync(root, { recursive: true, force: true });
   });
 
-  it("uses real make names and 10-12 illustrative catalog entries", () => {
-    expect(DEMO_VEHICLE_CATALOG.length).toBeGreaterThanOrEqual(10);
-    expect(DEMO_VEHICLE_CATALOG.length).toBeLessThanOrEqual(12);
+  it("uses real make names and at least 24 illustrative catalog entries", () => {
+    expect(DEMO_VEHICLE_CATALOG.length).toBeGreaterThanOrEqual(24);
     for (const entry of DEMO_VEHICLE_CATALOG) {
       expect(entry.make).not.toMatch(/demo-seed/i);
       expect(entry.make.length).toBeGreaterThan(0);

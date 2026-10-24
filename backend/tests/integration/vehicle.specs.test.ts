@@ -40,12 +40,17 @@ const nullSpecKeys = [
   "color",
   "owners",
   "vin",
+  "seats",
+  "rangeKm",
+  "batteryKwh",
+  "description",
 ] as const;
 
 function expectNullSpecs(body: Record<string, unknown>): void {
   for (const key of nullSpecKeys) {
     expect(body[key]).toBeNull();
   }
+  expect(body.features).toEqual([]);
 }
 
 describe("vehicle optional specs — create", () => {

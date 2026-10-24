@@ -16,8 +16,9 @@ describe("SearchFilters", () => {
     expect(
       screen.getByText("Minimum price cannot exceed maximum price."),
     ).toBeTruthy();
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    expect(onApply).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(onApply).not.toHaveBeenCalled();
+    }, { timeout: 500 });
   });
 
   it("applies trimmed filters after the debounce", async () => {

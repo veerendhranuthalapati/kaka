@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "Vehicle" ADD COLUMN "seats" INTEGER,
+ADD COLUMN "rangeKm" INTEGER,
+ADD COLUMN "batteryKwh" DECIMAL(5,1),
+ADD COLUMN "description" VARCHAR(600),
+ADD COLUMN "features" TEXT[] DEFAULT ARRAY[]::TEXT[];

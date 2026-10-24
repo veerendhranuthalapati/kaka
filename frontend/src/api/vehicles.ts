@@ -28,15 +28,20 @@ export function listVehicles(): Promise<Vehicle[]> {
   return apiRequest<Vehicle[]>("/api/vehicles");
 }
 
-export function getVehicleById(id: string): Promise<Vehicle> {
-  return apiRequest<Vehicle>(`/api/vehicles/${id}`);
+export function getVehicleById(id: string, signal?: AbortSignal): Promise<Vehicle> {
+  return apiRequest<Vehicle>(`/api/vehicles/${id}`, { signal });
 }
 
 /** @deprecated Use getVehicleById — kept for existing admin edit imports. */
 export const getVehicle = getVehicleById;
 
-export function searchVehicles(params: VehicleSearchParams): Promise<Vehicle[]> {
-  return apiRequest<Vehicle[]>(`/api/vehicles/search${searchQuery(params)}`);
+export function searchVehicles(
+  params: VehicleSearchParams,
+  signal?: AbortSignal,
+): Promise<Vehicle[]> {
+  return apiRequest<Vehicle[]>(`/api/vehicles/search${searchQuery(params)}`, {
+    signal,
+  });
 }
 
 export function createVehicle(input: VehicleInput): Promise<Vehicle> {

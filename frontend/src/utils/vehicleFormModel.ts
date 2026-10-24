@@ -27,6 +27,11 @@ export type VehicleFormValues = {
   color: string;
   owners: string;
   vin: string;
+  seats: string;
+  rangeKm: string;
+  batteryKwh: string;
+  description: string;
+  features: string[];
 };
 
 const FUEL_TYPES: FuelType[] = [
@@ -71,6 +76,11 @@ export function vehicleToFormValues(vehicle: Vehicle): VehicleFormValues {
     color: vehicle.color ?? "",
     owners: vehicle.owners == null ? "" : String(vehicle.owners),
     vin: vehicle.vin ?? "",
+    seats: vehicle.seats == null ? "" : String(vehicle.seats),
+    rangeKm: vehicle.rangeKm == null ? "" : String(vehicle.rangeKm),
+    batteryKwh: vehicle.batteryKwh == null ? "" : String(vehicle.batteryKwh),
+    description: vehicle.description ?? "",
+    features: [...vehicle.features],
   };
 }
 
@@ -94,7 +104,65 @@ export function emptyVehicleFormValues(): VehicleFormValues {
     color: "",
     owners: "",
     vin: "",
+    seats: "",
+    rangeKm: "",
+    batteryKwh: "",
+    description: "",
+    features: [],
   };
+}
+
+function isElectrifiedFuel(fuelType: string): boolean {
+  return (
+    fuelType === "ELECTRIC" ||
+    fuelType === "HYBRID" ||
+    fuelType === "PLUG_IN_HYBRID"
+  );
+}
+
+function validatePlainTextNoAngles(
+  value: string,
+  field: string,
+  errors: Record<string, string>,
+  maxLength: number,
+): void {
+  const trimmed = value.trim();
+  if (!trimmed) return;
+  if (trimmed.includes("<") || trimmed.includes(">")) {
+    errors[field] = "Plain text only; angle brackets are not allowed.";
+    return;
+  }
+  if (trimmed.length > maxLength) {
+    errors[field] = `Maximum ${maxLength} characters.`;
+  }
+}
+
+function validateFeaturesList(
+  features: string[],
+  errors: Record<string, string>,
+): void {
+  if (features.length > 12) {
+    errors.features = "At most 12 features.";
+    return;
+  }
+  const seen = new Set<string>();
+  for (const raw of features) {
+    const item = raw.trim();
+    if (item.includes("<") || item.includes(">")) {
+      errors.features = "Plain text only; angle brackets are not allowed.";
+      return;
+    }
+    if (item.length < 2 || item.length > 40) {
+      errors.features = "Each feature must be 2–40 characters.";
+      return;
+    }
+    const key = item.toLowerCase();
+    if (seen.has(key)) {
+      errors.features = "Duplicate features are not allowed.";
+      return;
+    }
+    seen.add(key);
+  }
 }
 
 function parseOptionalInt(
@@ -215,6 +283,17 @@ export function validateVehicleFormValues(
     }
   }
 
+  parseOptionalInt(values.seats, "seats", errors, { min: 1, max: 9 });
+  if (isElectrifiedFuel(values.fuelType.trim())) {
+    parseOptionalInt(values.rangeKm, "rangeKm", errors, { min: 20, max: 1500 });
+    parseOptionalFloat(values.batteryKwh, "batteryKwh", errors, {
+      min: 5,
+      max: 250,
+    });
+  }
+  validatePlainTextNoAngles(values.description, "description", errors, 600);
+  validateFeaturesList(values.features, errors);
+
   return Object.keys(errors).length > 0 ? errors : null;
 }
 
@@ -285,6 +364,39 @@ export function buildVehicleSubmitPayload(
   const owners = parseOptionalInt(values.owners, "owners", {}, { min: 1, max: 10 });
   if (owners !== undefined) payload.owners = owners;
   if (values.vin.trim()) payload.vin = values.vin.trim().toUpperCase();
+
+  const seats = parseOptionalInt(values.seats, "seats", {}, { min: 1, max: 9 });
+  if (seats !== undefined) payload.seats = seats;
+
+  if (isElectrifiedFuel(values.fuelType.trim())) {
+    const rangeKm = parseOptionalInt(values.rangeKm, "rangeKm", {}, {
+      min: 20,
+      max: 1500,
+    });
+    if (rangeKm !== undefined) payload.rangeKm = rangeKm;
+    const batteryKwh = parseOptionalFloat(values.batteryKwh, "batteryKwh", {}, {
+      min: 5,
+      max: 250,
+    });
+    if (batteryKwh !== undefined) payload.batteryKwh = batteryKwh;
+  }
+
+  if (values.description.trim()) {
+    payload.description = values.description.trim();
+  }
+
+  if (values.features.length > 0) {
+    const deduped: string[] = [];
+    const seen = new Set<string>();
+    for (const raw of values.features) {
+      const item = raw.trim();
+      const key = item.toLowerCase();
+      if (!item || seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(item);
+    }
+    payload.features = deduped;
+  }
 
   if (options.requireQuantity) {
     return {

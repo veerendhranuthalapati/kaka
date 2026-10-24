@@ -19,28 +19,28 @@ import { searchVehiclesQuerySchema } from "../validators/vehicle.search.schema.j
 import { vehicleIdParamsSchema } from "../validators/vehicle.params.schema.js";
 import { updateVehicleBodySchema } from "../validators/vehicle.update.schema.js";
 import { restockVehicleBodySchema } from "../validators/vehicle.restock.schema.js";
+import { privateNoCache } from "../middleware/privateCache.js";
 
 export const vehiclesRouter = Router();
 
-vehiclesRouter.get("/", requireAuth, listVehicles);
+vehiclesRouter.use(requireAuth, privateNoCache);
+
+vehiclesRouter.get("/", listVehicles);
 
 vehiclesRouter.get(
   "/search",
-  requireAuth,
   validateQuery(searchVehiclesQuerySchema),
   searchVehicles,
 );
 
 vehiclesRouter.get(
   "/:id",
-  requireAuth,
   validateParams(vehicleIdParamsSchema),
   getVehicle,
 );
 
 vehiclesRouter.post(
   "/",
-  requireAuth,
   requireRole("ADMIN"),
   validateBody(createVehicleBodySchema),
   createVehicle,
@@ -48,7 +48,6 @@ vehiclesRouter.post(
 
 vehiclesRouter.put(
   "/:id",
-  requireAuth,
   requireRole("ADMIN"),
   validateParams(vehicleIdParamsSchema),
   validateBody(updateVehicleBodySchema),
@@ -57,7 +56,6 @@ vehiclesRouter.put(
 
 vehiclesRouter.delete(
   "/:id",
-  requireAuth,
   requireRole("ADMIN"),
   validateParams(vehicleIdParamsSchema),
   deleteVehicle,
@@ -65,14 +63,12 @@ vehiclesRouter.delete(
 
 vehiclesRouter.post(
   "/:id/purchase",
-  requireAuth,
   validateParams(vehicleIdParamsSchema),
   purchaseVehicle,
 );
 
 vehiclesRouter.post(
   "/:id/restock",
-  requireAuth,
   requireRole("ADMIN"),
   validateParams(vehicleIdParamsSchema),
   validateBody(restockVehicleBodySchema),

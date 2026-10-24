@@ -26,6 +26,21 @@ export function formatEconomy(value: number | null | undefined): string {
   return `${value.toFixed(1)} km/l`;
 }
 
+export function formatSeats(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "-";
+  return String(value);
+}
+
+export function formatRange(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "-";
+  return `${value} km`;
+}
+
+export function formatBattery(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "-";
+  return `${value} kWh`;
+}
+
 export function formatYear(value: number | null | undefined): string {
   if (value === null || value === undefined) return "-";
   return String(value);
