@@ -24,8 +24,18 @@ export default {
           "sans-serif",
         ],
       },
+      borderRadius: {
+        xl: "1rem",
+        "2xl": "1.25rem",
+        "3xl": "1.75rem",
+      },
+      spacing: {
+        18: "4.5rem",
+        22: "5.5rem",
+      },
       boxShadow: {
-        card: "0 18px 40px -28px rgb(15 23 42 / 0.55)",
+        card: "0 24px 48px -32px rgb(15 23 42 / 0.18)",
+        float: "0 12px 32px -16px rgb(15 23 42 / 0.22)",
       },
       transitionTimingFunction: {
         gentle: "cubic-bezier(0.22, 1, 0.36, 1)",
