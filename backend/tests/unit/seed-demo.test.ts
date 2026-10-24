@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  DEMO_VEHICLE_CATALOG,
   demoVehicleImageSlug,
   listAllCarAssetFilenames,
   listDemoCarImagePaths,
@@ -53,6 +54,15 @@ describe("seed:demo helpers", () => {
     expect(resolveOptionalDemoImageUrl("Summit", "Tour", root)).toBeNull();
 
     rmSync(root, { recursive: true, force: true });
+  });
+
+  it("uses real make names and 10-12 illustrative catalog entries", () => {
+    expect(DEMO_VEHICLE_CATALOG.length).toBeGreaterThanOrEqual(10);
+    expect(DEMO_VEHICLE_CATALOG.length).toBeLessThanOrEqual(12);
+    for (const entry of DEMO_VEHICLE_CATALOG) {
+      expect(entry.make).not.toMatch(/demo-seed/i);
+      expect(entry.make.length).toBeGreaterThan(0);
+    }
   });
 
   it("lists all car asset filenames from disk", () => {
