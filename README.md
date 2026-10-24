@@ -67,7 +67,7 @@ See [`backend/README.md`](backend/README.md) for details including trust proxy c
 
 ### Frontend
 1. `cd frontend`
-2. `cp .env.example .env` - set `VITE_API_URL` (must match backend origin, e.g. `http://localhost:3000`)
+2. `cp .env.example .env` - set `VITE_API_URL` (optional in dev; Vite proxies `/api` to `http://localhost:3000` automatically)
 3. `npm install`
 4. `npm run dev` (Vite dev server)
 5. `npm run build && npx tsc --noEmit && npm run lint && npm test`
@@ -119,10 +119,10 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 **Command:** `npm test` (from `backend/`)  
 **Output (actual):**
 ```
- Test Files  9 passed (9)
-      Tests  52 passed (52)
-   Start at  00:02:03
-   Duration  30.72s (tests 87%, import 11%, worker 1%, transform 1%, setup 1%)
+ Test Files  12 passed (12)
+      Tests  58 passed (58)
+   Start at  07:44:01
+   Duration  31.76s (tests 86%, import 12%, worker 1%, setup 1%)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
@@ -130,11 +130,11 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   93.91 |    83.14 |     100 |   93.91 |                   
+All files          |    94.3 |    86.48 |     100 |    94.3 |                   
  src               |     100 |      100 |     100 |     100 |                   
   app.ts           |     100 |      100 |     100 |     100 |                   
- src/config        |   70.58 |    57.14 |     100 |   70.58 |                   
-  env.ts           |   66.66 |    57.14 |     100 |   66.66 | 33-39              
+ src/config        |   82.75 |       80 |     100 |   82.75 |                   
+  env.ts           |   81.48 |       80 |     100 |   81.48 | 31,44,50,53,57    
   jwt.ts           |     100 |      100 |     100 |     100 |                   
  src/controllers   |    92.3 |      100 |     100 |    92.3 |                   
   ...controller.ts |     100 |      100 |     100 |     100 |                   
@@ -143,8 +143,8 @@ All files          |   93.91 |    83.14 |     100 |   93.91 |
   ApiError.ts      |     100 |      100 |     100 |     100 |                   
  src/lib           |     100 |      100 |     100 |     100 |                   
   prisma.ts        |     100 |      100 |     100 |     100 |                   
- src/middleware    |   95.34 |       85 |     100 |   95.34 |                   
-  errorHandler.ts  |      80 |       50 |     100 |      80 | 16                
+ src/middleware    |   95.65 |    88.46 |     100 |   95.65 |                   
+  errorHandler.ts  |    87.5 |       80 |     100 |    87.5 | 31                
   requireAuth.ts   |   91.66 |     87.5 |     100 |   91.66 | 30                
   requireRole.ts   |     100 |      100 |     100 |     100 |                   
   validateBody.ts  |     100 |      100 |     100 |     100 |                   
@@ -152,13 +152,13 @@ All files          |   93.91 |    83.14 |     100 |   93.91 |
   validateQuery.ts |     100 |      100 |     100 |     100 |                   
  src/repositories  |   96.42 |    83.33 |     100 |   96.42 |                   
   ...repository.ts |   83.33 |       75 |     100 |   83.33 | 27                
-  ...repository.ts |     100 |    85.71 |     100 |     100 | 85-88              
+  ...repository.ts |     100 |    85.71 |     100 |     100 | 85-88             
  src/routes        |     100 |      100 |     100 |     100 |                   
   auth.routes.ts   |     100 |      100 |     100 |     100 |                   
   ...les.routes.ts |     100 |      100 |     100 |     100 |                   
  src/services      |   95.74 |     90.9 |     100 |   95.74 |                   
   auth.service.ts  |     100 |      100 |     100 |     100 |                   
-  ...le.service.ts |   94.11 |    86.66 |     100 |   94.11 | 81,86              
+  ...le.service.ts |   94.11 |    86.66 |     100 |   94.11 | 81,86             
  src/validators    |     100 |      100 |     100 |     100 |                   
   ...gin.schema.ts |     100 |      100 |     100 |     100 |                   
   ...ter.schema.ts |     100 |      100 |     100 |     100 |                   
@@ -177,10 +177,10 @@ All files          |   93.91 |    83.14 |     100 |   93.91 |
 **Command:** `npm test` (from `frontend/`)  
 **Output (actual):**
 ```
- Test Files  5 passed (5)
-      Tests  22 passed (22)
-   Start at  00:03:00
-   Duration  4.54s (environment 66%, tests 18%, setup 11%, import 4%, transform 1%)
+ Test Files  8 passed (8)
+      Tests  33 passed (33)
+   Start at  07:44:42
+   Duration  6.22s (environment 60%, tests 23%, setup 11%, import 3%, worker 2%, transform 1%)
 ```
 
 **Coverage (actual):** `npm run test:coverage`
@@ -188,22 +188,27 @@ All files          |   93.91 |    83.14 |     100 |   93.91 |
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   88.04 |    83.96 |   88.46 |   87.79 |                   
- api               |      85 |    75.86 |      75 |      85 |                   
-  auth.ts          |       0 |      100 |       0 |       0 | 10-17              
-  client.ts        |   89.47 |    75.86 |     100 |   89.47 | 57-58,87,107       
+All files          |   83.79 |    73.27 |   86.25 |   84.46 |                   
+ api               |   90.19 |    79.16 |      75 |   90.19 |                   
+  auth.ts          |       0 |      100 |       0 |       0 | 10-17             
+  client.ts        |   89.47 |    75.86 |     100 |   89.47 | 84-85,135         
  auth              |   87.09 |       88 |   94.44 |   86.44 |                   
-  AuthContext.tsx  |   82.85 |       75 |    90.9 |   81.81 | 36,64-67,93        
-  session.ts       |   92.59 |    94.11 |     100 |    92.3 | 33,51              
- components        |   89.61 |    83.82 |   86.36 |    89.7 |                   
-  AdminRoute.tsx   |   83.33 |       75 |     100 |   83.33 | 8                  
+  AuthContext.tsx  |   82.85 |       75 |    90.9 |   81.81 | 36,64-67,93       
+  session.ts       |   92.59 |    94.11 |     100 |    92.3 | 33,51             
+ components        |   75.67 |    63.26 |      80 |   77.08 |                   
+  AdminRoute.tsx   |   83.33 |       75 |     100 |   83.33 | 8                 
   ...ctedRoute.tsx |     100 |      100 |     100 |     100 |                   
-  ...chFilters.tsx |   91.52 |    77.27 |   93.75 |      92 | 46,50,110-111      
-  VehicleCard.tsx  |   71.42 |      100 |      50 |   71.42 | 97-105             
+  ...chFilters.tsx |   91.52 |    77.27 |   93.75 |      92 | 46,50,110-111     
+  State.tsx        |   44.11 |    16.66 |    62.5 |   46.42 | 4-41,83-98        
+  VehicleCard.tsx  |   71.42 |      100 |      50 |   71.42 | 97-105            
+ pages             |   91.25 |    86.11 |     100 |   91.25 |                   
+  Login.tsx        |   94.11 |    92.85 |     100 |   94.11 | 37,42             
+  Register.tsx     |   89.13 |    81.81 |     100 |   89.13 | 36,41-47          
  test              |     100 |      100 |     100 |     100 |                   
   fixtures.ts      |     100 |      100 |     100 |     100 |                   
- utils             |     100 |      100 |     100 |     100 |                   
+ utils             |      70 |       50 |   71.42 |      70 |                   
   format.ts        |     100 |      100 |     100 |     100 |                   
+  validation.ts    |   66.66 |       50 |   66.66 |   66.66 | 10-18,34,48       
 -------------------|---------|----------|---------|---------|-------------------
 ```
 
@@ -265,7 +270,7 @@ npm test && npm run test:coverage && npx tsc --noEmit && npm run lint && npm run
 
 ## Additional references
 - Prompt history (raw): [`PROMPTS.md`](PROMPTS.md)
-- Auditor prompts (raw): [`testprompts.md`](testprompts.md)
+- Auditor prompts (raw): [`TESTPROMPTS.md`](TESTPROMPTS.md)
 - Backend details: [`backend/README.md`](backend/README.md)
 
 ## My AI Usage
