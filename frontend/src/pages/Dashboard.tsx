@@ -1,21 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { purchaseVehicle, searchVehicles } from "../api/vehicles";
+import {
+  deleteVehicle,
+  purchaseVehicle,
+  restockVehicle,
+  searchVehicles,
+} from "../api/vehicles";
 import { ApiError } from "../api/client";
 import { VehicleCard } from "../components/VehicleCard";
 import { SearchFilters } from "../components/SearchFilters";
-import { EmptyState, Spinner, Toast } from "../components/State";
+import {
+  ConfirmDialog,
+  EmptyState,
+  Spinner,
+  Toast,
+} from "../components/State";
+import { RestockDialog } from "../components/RestockDialog";
 import type { Vehicle, VehicleSearchParams } from "../types";
 
 export function DashboardPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [filters, setFilters] = useState<VehicleSearchParams>({});
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [deletingVehicle, setDeletingVehicle] = useState<Vehicle | null>(null);
+  const [restockingVehicle, setRestockingVehicle] = useState<Vehicle | null>(
+    null,
+  );
 
   const canManage = user?.role === "ADMIN";
 
@@ -78,6 +93,30 @@ export function DashboardPage() {
     }
   }
 
+  async function handleDeleteConfirm() {
+    if (!deletingVehicle) return;
+    try {
+      await deleteVehicle(deletingVehicle.id);
+      setVehicles((current) =>
+        current.filter((item) => item.id !== deletingVehicle.id),
+      );
+      setDeletingVehicle(null);
+    } catch (caught) {
+      if (caught instanceof ApiError) {
+        setToast(caught.message);
+      } else {
+        setToast("Failed to delete vehicle.");
+      }
+    }
+  }
+
+  async function handleRestockSubmit(vehicle: Vehicle, amount: number) {
+    const updated = await restockVehicle(vehicle.id, amount);
+    setVehicles((current) =>
+      current.map((item) => (item.id === updated.id ? updated : item)),
+    );
+  }
+
   return (
     <div className="min-h-screen bg-canvas">
       <header className="sticky top-0 z-20 border-b border-line bg-canvas/90 backdrop-blur">
@@ -90,7 +129,7 @@ export function DashboardPage() {
               Dealership inventory
             </h1>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
             <span>{user?.email}</span>
             <span className="badge">{user?.role}</span>
             {canManage && (
@@ -98,6 +137,14 @@ export function DashboardPage() {
                 Add vehicle
               </Link>
             )}
+            <button
+              type="button"
+              className="btn-secondary min-h-8 px-2.5 py-1 text-xs"
+              onClick={logout}
+              aria-label="Sign out"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </header>
@@ -152,11 +199,32 @@ export function DashboardPage() {
                 canManage={canManage}
                 purchasing={purchasingId === vehicle.id}
                 onPurchase={handlePurchase}
+                onRestock={(v) => setRestockingVehicle(v)}
+                onDelete={(v) => setDeletingVehicle(v)}
               />
             ))}
           </div>
         )}
       </main>
+
+      <ConfirmDialog
+        open={Boolean(deletingVehicle)}
+        title={
+          deletingVehicle
+            ? `Delete ${deletingVehicle.make} ${deletingVehicle.model}?`
+            : "Delete vehicle?"
+        }
+        description="This action removes the vehicle permanently from inventory."
+        confirmLabel="Delete"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeletingVehicle(null)}
+      />
+
+      <RestockDialog
+        vehicle={restockingVehicle}
+        onRestock={handleRestockSubmit}
+        onClose={() => setRestockingVehicle(null)}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { FieldError } from "../components/State";
-import { validateCredentials } from "../utils/validation";
+import { validateEmail, validatePassword } from "../utils/validation";
 import { ApiError } from "../api/client";
 
 export function LoginPage() {
@@ -15,8 +15,9 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const validationError = validateCredentials(email, password);
-  const showError = touched && (serverError || validationError);
+  const emailError = validateEmail(email);
+  const passwordError = validatePassword(password);
+  const hasClientError = Boolean(emailError || passwordError);
   const destination =
     (location.state as { from?: string } | null)?.from ?? "/";
 
@@ -25,7 +26,7 @@ export function LoginPage() {
     setTouched(true);
     setServerError(null);
 
-    if (validationError) {
+    if (hasClientError) {
       return;
     }
 
@@ -44,6 +45,9 @@ export function LoginPage() {
       setSubmitting(false);
     }
   }
+
+  const activeEmailError = touched ? emailError : null;
+  const activePasswordError = touched ? passwordError : null;
 
   return (
     <main className="shell flex min-h-screen items-center justify-center py-10">
@@ -79,6 +83,7 @@ export function LoginPage() {
               onBlur={() => setTouched(true)}
               required
             />
+            <FieldError testId="email-error" message={activeEmailError} />
           </div>
 
           <div>
@@ -103,9 +108,10 @@ export function LoginPage() {
             <p className="mt-1 text-xs text-muted">
               Must be between 8 and 72 characters.
             </p>
+            <FieldError testId="password-error" message={activePasswordError} />
           </div>
 
-          <FieldError message={showError ? serverError ?? validationError : null} />
+          <FieldError message={serverError} />
 
           <button
             type="submit"

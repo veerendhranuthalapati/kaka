@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 export function Spinner({ className = "" }: { className?: string }) {
   return (
     <span
@@ -66,6 +68,42 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+        return;
+      }
+
+      if (event.key === "Tab" && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (!first || !last) return;
+
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onCancel]);
+
   if (!open) return null;
 
   return (
@@ -78,7 +116,7 @@ export function ConfirmDialog({
         className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
         onClick={onCancel}
       />
-      <div className="surface relative z-10 w-full max-w-md p-6">
+      <div ref={dialogRef} className="surface relative z-10 w-full max-w-md p-6">
         <h2 className="text-lg font-semibold text-ink">{title}</h2>
         <p className="mt-2 text-sm text-muted">{description}</p>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
