@@ -2,6 +2,7 @@ import "dotenv/config";
 import { resolve } from "node:path";
 import { prisma } from "../src/lib/prisma.js";
 import {
+  cleanupLegacyDemoSeedVehicles,
   DEMO_VEHICLE_CATALOG,
   listAllCarAssetFilenames,
   refuseProductionSeed,
@@ -20,6 +21,8 @@ async function main(): Promise<void> {
       `seed:demo needs at least 8 files in frontend/public/cars (found ${assets.length})`,
     );
   }
+
+  await cleanupLegacyDemoSeedVehicles(prisma);
 
   await prisma.vehicle.deleteMany({
     where: {

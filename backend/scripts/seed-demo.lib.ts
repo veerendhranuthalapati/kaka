@@ -1,5 +1,27 @@
+import type { PrismaClient } from "@prisma/client";
 import { existsSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
+
+export const LEGACY_DEMO_SEED_MAKE = "demo-seed";
+
+/** Rows from an older seed:make prefix scheme, or make exactly `demo-seed`. */
+export function legacyDemoSeedVehicleWhere() {
+  return {
+    OR: [
+      { make: LEGACY_DEMO_SEED_MAKE },
+      { make: { startsWith: `${LEGACY_DEMO_SEED_MAKE} ` } },
+    ],
+  };
+}
+
+export async function cleanupLegacyDemoSeedVehicles(
+  client: Pick<PrismaClient, "vehicle">,
+): Promise<number> {
+  const result = await client.vehicle.deleteMany({
+    where: legacyDemoSeedVehicleWhere(),
+  });
+  return result.count;
+}
 
 export function refuseProductionSeed(nodeEnv: string | undefined): void {
   if (nodeEnv === "production") {
