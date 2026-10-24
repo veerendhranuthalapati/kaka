@@ -18,14 +18,14 @@ export function passwordValid(value: string): boolean {
   return byteLength(value) <= 72;
 }
 
-export function validateCredentials(
-  email: string,
-  password: string,
-): string | null {
+export function validateEmail(email: string): string | null {
   if (!isValidEmail(email)) {
     return "Enter a valid email address.";
   }
+  return null;
+}
 
+export function validatePassword(password: string): string | null {
   if (password.length < 8) {
     return "Password must be at least 8 characters.";
   }
@@ -39,4 +39,11 @@ export function validateCredentials(
   }
 
   return null;
+}
+
+export function validateCredentials(
+  email: string,
+  password: string,
+): string | null {
+  return validateEmail(email) ?? validatePassword(password);
 }

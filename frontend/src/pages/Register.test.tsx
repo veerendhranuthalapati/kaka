@@ -30,7 +30,7 @@ describe("RegisterPage", () => {
     await user.type(screen.getByLabelText("Password"), "validPassword123");
     await user.click(screen.getByRole("button", { name: /create account/i }));
 
-    expect(screen.getByTestId("email-error")).toHaveTextContent(
+    expect(screen.getByTestId("email-error").textContent).toContain(
       "Enter a valid email address.",
     );
     expect(mockRegister).not.toHaveBeenCalled();
@@ -49,7 +49,7 @@ describe("RegisterPage", () => {
     await user.type(screen.getByLabelText("Password"), "😀".repeat(20));
     await user.click(screen.getByRole("button", { name: /create account/i }));
 
-    expect(screen.getByTestId("password-error")).toHaveTextContent(
+    expect(screen.getByTestId("password-error").textContent).toContain(
       "Password must be at most 72 UTF-8 bytes.",
     );
     expect(mockRegister).not.toHaveBeenCalled();
@@ -80,10 +80,9 @@ describe("RegisterPage", () => {
     await user.type(screen.getByLabelText("Password"), "validPassword123");
     await user.click(screen.getByRole("button", { name: /create account/i }));
 
-    expect(await screen.findByTestId("email-error")).toHaveTextContent(
-      "Email already in use",
-    );
-    expect(screen.getByTestId("password-error")).toHaveTextContent(
+    const emailErr = await screen.findByTestId("email-error");
+    expect(emailErr.textContent).toContain("Email already in use");
+    expect(screen.getByTestId("password-error").textContent).toContain(
       "Password is too weak",
     );
   });

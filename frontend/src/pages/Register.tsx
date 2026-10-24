@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { FieldError } from "../components/State";
-import { validateCredentials } from "../utils/validation";
+import { validateEmail, validatePassword } from "../utils/validation";
 import { ApiError } from "../api/client";
 
 export function RegisterPage() {
@@ -13,16 +13,19 @@ export function RegisterPage() {
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const validationError = validateCredentials(email, password);
-  const showError = touched && (serverError || validationError);
+  const emailError = validateEmail(email);
+  const passwordError = validatePassword(password);
+  const hasClientError = Boolean(emailError || passwordError);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setTouched(true);
     setServerError(null);
+    setFieldErrors({});
 
-    if (validationError) {
+    if (hasClientError) {
       return;
     }
 
@@ -33,7 +36,13 @@ export function RegisterPage() {
       navigate("/", { replace: true });
     } catch (error) {
       if (error instanceof ApiError) {
-        setServerError(error.message);
+        if (error.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
+          setFieldErrors(error.fieldErrors);
+        } else if (error.code === "EMAIL_TAKEN") {
+          setFieldErrors({ email: error.message });
+        } else {
+          setServerError(error.message);
+        }
       } else {
         setServerError("Something went wrong. Try again.");
       }
@@ -41,6 +50,11 @@ export function RegisterPage() {
       setSubmitting(false);
     }
   }
+
+  const activeEmailError = touched ? (fieldErrors.email ?? emailError) : null;
+  const activePasswordError = touched
+    ? (fieldErrors.password ?? passwordError)
+    : null;
 
   return (
     <main className="shell flex min-h-screen items-center justify-center py-10">
@@ -72,10 +86,16 @@ export function RegisterPage() {
               onChange={(event) => {
                 setEmail(event.target.value);
                 setServerError(null);
+                setFieldErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.email;
+                  return next;
+                });
               }}
               onBlur={() => setTouched(true)}
               required
             />
+            <FieldError testId="email-error" message={activeEmailError} />
           </div>
 
           <div>
@@ -91,6 +111,11 @@ export function RegisterPage() {
               onChange={(event) => {
                 setPassword(event.target.value);
                 setServerError(null);
+                setFieldErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.password;
+                  return next;
+                });
               }}
               onBlur={() => setTouched(true)}
               required
@@ -100,9 +125,10 @@ export function RegisterPage() {
             <p className="mt-1 text-xs text-muted">
               8-72 characters, max 72 UTF-8 bytes.
             </p>
+            <FieldError testId="password-error" message={activePasswordError} />
           </div>
 
-          <FieldError message={showError ? serverError ?? validationError : null} />
+          <FieldError message={serverError} />
 
           <button
             type="submit"

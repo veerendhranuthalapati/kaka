@@ -101,12 +101,18 @@ export function ConfirmDialog({
 
 export function FieldError({
   message,
+  testId,
 }: {
   message?: string | null;
+  testId?: string;
 }) {
   if (!message) return null;
   return (
-    <p className="mt-1 text-sm font-medium text-danger" role="alert">
+    <p
+      className="mt-1 text-sm font-medium text-danger"
+      role="alert"
+      data-testid={testId}
+    >
       {message}
     </p>
   );
