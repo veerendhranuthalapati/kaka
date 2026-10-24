@@ -3,6 +3,8 @@ import type { ApiErrorBody } from "../types";
 export const TOKEN_STORAGE_KEY = "dealership_token";
 
 export class ApiError extends Error {
+  readonly fieldErrors?: Record<string, string>;
+
   constructor(
     readonly status: number,
     readonly code: string,
@@ -11,6 +13,25 @@ export class ApiError extends Error {
   ) {
     super(message);
     this.name = "ApiError";
+
+    if (
+      code === "VALIDATION_ERROR" &&
+      details &&
+      typeof details === "object" &&
+      "fieldErrors" in details &&
+      details.fieldErrors &&
+      typeof details.fieldErrors === "object"
+    ) {
+      const mapped: Record<string, string> = {};
+      for (const [key, val] of Object.entries(
+        details.fieldErrors as Record<string, unknown>,
+      )) {
+        if (Array.isArray(val) && val.length > 0 && typeof val[0] === "string") {
+          mapped[key] = val[0];
+        }
+      }
+      this.fieldErrors = mapped;
+    }
   }
 }
 
@@ -36,12 +57,18 @@ function toApiError(status: number, payload: unknown): ApiError {
     typeof payload === "object" && payload !== null
       ? (payload as ApiErrorBody).error
       : undefined;
-  const code =
+
+  let code =
     typeof envelope?.code === "string" ? envelope.code : "REQUEST_FAILED";
-  const message =
+  let message =
     typeof envelope?.message === "string"
       ? envelope.message
       : `Request failed with status ${status}`;
+
+  if (status === 429) {
+    code = "TOO_MANY_REQUESTS";
+    message = "Too many attempts. Try again in a minute.";
+  }
 
   return new ApiError(status, code, message, envelope?.details);
 }
@@ -87,7 +114,7 @@ export async function apiRequest<T>(
     throw new ApiError(
       0,
       "NETWORK_ERROR",
-      "Unable to reach the server. Check your connection and try again.",
+      "Cannot reach the server. Check your connection.",
     );
   }
 
@@ -104,10 +131,20 @@ export async function apiRequest<T>(
   try {
     payload = await response.json();
   } catch {
+    if (response.status === 429) {
+      throw new ApiError(
+        429,
+        "TOO_MANY_REQUESTS",
+        "Too many attempts. Try again in a minute.",
+      );
+    }
+
     throw new ApiError(
       response.status,
       "INVALID_RESPONSE",
-      "The server returned an unreadable response.",
+      response.status > 0
+        ? `The server returned an unreadable response (status ${response.status}).`
+        : "The server returned an unreadable response.",
     );
   }
 

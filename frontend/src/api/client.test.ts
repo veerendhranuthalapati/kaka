@@ -133,9 +133,9 @@ describe("apiRequest", () => {
       } as unknown as Response),
     );
 
-    const error = await apiRequest("/api/auth/register", {
+    const error = (await apiRequest("/api/auth/register", {
       method: "POST",
-    }).catch((err) => err);
+    }).catch((err: unknown) => err)) as ApiError;
 
     expect(error).toBeInstanceOf(ApiError);
     expect(error.status).toBe(404);
@@ -185,9 +185,9 @@ describe("apiRequest", () => {
       ),
     );
 
-    const error = await apiRequest("/api/auth/register", {
+    const error = (await apiRequest("/api/auth/register", {
       method: "POST",
-    }).catch((err) => err);
+    }).catch((err: unknown) => err)) as ApiError;
 
     expect(error).toBeInstanceOf(ApiError);
     expect(error.code).toBe("VALIDATION_ERROR");
