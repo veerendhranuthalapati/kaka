@@ -79,15 +79,12 @@ export function RestockDialog({
       aria-labelledby="restock-title"
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
     >
-      <div
-        className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="dialog-backdrop" onClick={onClose} />
       <div
         ref={dialogRef}
-        className="surface relative z-10 w-full max-w-md p-6"
+        className="surface dialog-panel relative z-10 w-full max-w-md p-6"
       >
-        <h2 id="restock-title" className="text-lg font-semibold text-ink">
+        <h2 id="restock-title" className="font-display text-card-title text-ink">
           Restock {vehicle.make} {vehicle.model}
         </h2>
         <p className="mt-1 text-sm text-muted">

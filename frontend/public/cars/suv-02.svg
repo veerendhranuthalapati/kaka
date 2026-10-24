@@ -1,6 +1,9 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Auto Yard vehicle illustration">
-  <rect width="640" height="360" fill="#f1f5f9"/>
-  <path d="M96 232h448l-48-96H144l-48 96z" fill="#1d4ed8"/>
-  <circle cx="208" cy="232" r="40" fill="#0f172a"/>
-  <circle cx="432" cy="232" r="40" fill="#0f172a"/>
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-hidden="true">
+  <ellipse cx="400" cy="328" rx="300" ry="18" fill="currentColor" opacity="0.1" stroke="none"/>
+  <path d="M88 256h624l-52-108H140l-52 108z"/>
+  <path d="M136 152h128l24 56h224l24-56h128l52 108"/>
+  <path d="M184 152c20-60 72-96 148-96h136c76 0 128 36 148 96"/>
+  <path d="M240 152v60M560 152v60"/>
+  <circle cx="212" cy="256" r="44"/><circle cx="212" cy="256" r="22"/>
+  <circle cx="588" cy="256" r="44"/><circle cx="588" cy="256" r="22"/>
 </svg>

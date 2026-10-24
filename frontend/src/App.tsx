@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import { AdminRoute } from "./components/AdminRoute";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { RouteFade } from "./components/RouteFade";
 import { DashboardPage } from "./pages/Dashboard";
 import { LoginPage } from "./pages/Login";
 import { RegisterPage } from "./pages/Register";
@@ -17,11 +18,16 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/vehicles/:id" element={<VehicleDetailsPage />} />
-          <Route element={<AdminRoute />}>
-            <Route path="/admin/vehicles/new" element={<AddVehiclePage />} />
-            <Route path="/admin/vehicles/:id/edit" element={<EditVehiclePage />} />
+          <Route element={<RouteFade />}>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/vehicles/:id" element={<VehicleDetailsPage />} />
+            <Route element={<AdminRoute />}>
+              <Route path="/admin/vehicles/new" element={<AddVehiclePage />} />
+              <Route
+                path="/admin/vehicles/:id/edit"
+                element={<EditVehiclePage />}
+              />
+            </Route>
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />

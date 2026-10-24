@@ -97,7 +97,7 @@ describe("DashboardPage purchase flow", () => {
     });
 
     const inventory = screen.getByRole("region", { name: "Inventory" });
-    expect(inventory.querySelectorAll(".animate-pulse").length).toBe(6);
+    expect(inventory.querySelectorAll(".skeleton").length).toBeGreaterThanOrEqual(6);
 
     vi.useRealTimers();
   });

@@ -50,7 +50,7 @@ export function LoginPage() {
   const activePasswordError = touched ? passwordError : null;
 
   return (
-    <main className="shell flex min-h-screen items-center justify-center py-10">
+    <main className="shell flex min-h-screen items-center justify-center py-10 showroom-glow">
       <section className="surface w-full max-w-md p-6 sm:p-8">
         <header className="mb-6">
           <p className="text-overline">Auto Yard</p>

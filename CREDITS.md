@@ -2,7 +2,7 @@
 
 ## Original SVG illustrations
 
-The following files in `frontend/public/cars/` are original SVG artwork created for the Auto Yard demo (simple geometric silhouettes). They are not photographs and do not depict real vehicles or third-party brands.
+The following files in `frontend/public/cars/` are original SVG artwork created for the Auto Yard demo (side-view line-art silhouettes). They are not photographs and do not depict real vehicles or third-party brands.
 
 - `coupe-01.svg`
 - `ev-01.svg`
@@ -17,8 +17,8 @@ The following files in `frontend/public/cars/` are original SVG artwork created 
 
 ## Typography
 
-- **Manrope** — headings, model names, and prices. [SIL Open Font License 1.1](https://openfontlicense.org). Self-hosted via `@fontsource-variable/manrope@5.3.0` (latin subset).
-- **Inter** — body copy, labels, inputs, and buttons. [SIL Open Font License 1.1](https://openfontlicense.org). Self-hosted via `@fontsource-variable/inter@5.3.0` (latin subset).
+- **Sora** — titles, prices, and large numerals. [SIL Open Font License 1.1](https://openfontlicense.org). Self-hosted via `@fontsource-variable/sora@5.3.0` (latin subset).
+- **Inter** — body copy, labels, inputs, buttons, and tabular spec values. [SIL Open Font License 1.1](https://openfontlicense.org). Self-hosted via `@fontsource-variable/inter@5.3.0` (latin subset).
 
 Font files are bundled at build time; the app does not request Google Fonts or other third-party font CDNs.
 

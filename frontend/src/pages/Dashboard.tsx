@@ -29,7 +29,10 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; tone: "success" | "danger" } | null>(
+    null,
+  );
+  const [stockHighlightId, setStockHighlightId] = useState<string | null>(null);
   const [deletingVehicle, setDeletingVehicle] = useState<Vehicle | null>(null);
   const [restockingVehicle, setRestockingVehicle] = useState<Vehicle | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -79,24 +82,30 @@ export function DashboardPage() {
 
     setPurchasingId(vehicle.id);
     setToast(null);
+    setStockHighlightId(null);
 
     try {
       const updated = await purchaseVehicle(vehicle.id);
       setVehicles((current) =>
         current.map((item) => (item.id === updated.id ? updated : item)),
       );
+      setStockHighlightId(updated.id);
+      setToast({
+        message: `Purchased 1 x ${updated.make} ${updated.model} - ${updated.quantity} left`,
+        tone: "success",
+      });
     } catch (caught) {
       if (caught instanceof ApiError && caught.code === "OUT_OF_STOCK") {
-        setToast("Just sold out");
+        setToast({ message: "Just sold out", tone: "danger" });
         setVehicles((current) =>
           current.map((item) =>
             item.id === vehicle.id ? { ...item, quantity: 0 } : item,
           ),
         );
       } else if (caught instanceof ApiError) {
-        setToast(caught.message);
+        setToast({ message: caught.message, tone: "danger" });
       } else {
-        setToast("Purchase failed. Try again.");
+        setToast({ message: "Purchase failed. Try again.", tone: "danger" });
       }
     } finally {
       setPurchasingId(null);
@@ -116,7 +125,7 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas pb-32">
+    <div className="min-h-screen bg-canvas pb-32 showroom-glow">
       <TopBar
         user={user}
         onLogout={logout}
@@ -128,7 +137,7 @@ export function DashboardPage() {
       <main className="shell grid gap-12 py-8 lg:py-12">
         <section className="grid gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            <h1 className="font-display text-hero tracking-tight text-ink">
               Find your next drive
             </h1>
             <p className="mt-2 max-w-2xl text-muted">
@@ -183,11 +192,11 @@ export function DashboardPage() {
                 <button
                   key={category}
                   type="button"
-                  className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
+                  className={
                     filters.category === category
-                      ? "border-accent bg-accent/10 text-accent"
-                      : "border-line text-muted hover:text-ink"
-                  }`}
+                      ? "filter-chip-active"
+                      : "filter-chip-idle"
+                  }
                   onClick={() =>
                     setFilters((current) => ({
                       ...current,
@@ -236,7 +245,7 @@ export function DashboardPage() {
             </div>
           </div>
 
-          {toast && <Toast message={toast} tone="danger" />}
+          {toast && <Toast message={toast.message} tone={toast.tone} />}
 
           {error && (
             <div className="surface flex flex-col items-center gap-3 p-8 text-center">
@@ -249,7 +258,7 @@ export function DashboardPage() {
           )}
 
           {!error && loading && (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="inventory-grid">
               {Array.from({ length: 6 }).map((_, index) => (
                 <InventorySkeletonCard key={index} />
               ))}
@@ -264,7 +273,7 @@ export function DashboardPage() {
           )}
 
           {!error && !loading && vehicles.length > 0 && (
-            <div className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
+            <div className="inventory-grid">
               {vehicles.map((vehicle, index) => (
                 <div
                   key={vehicle.id}
@@ -275,6 +284,7 @@ export function DashboardPage() {
                   vehicle={vehicle}
                   canManage={canManage}
                   purchasing={purchasingId === vehicle.id}
+                  stockHighlight={stockHighlightId === vehicle.id}
                   onPurchase={handlePurchase}
                   onEdit={(item) => {
                     window.location.assign(`/admin/vehicles/${item.id}/edit`);

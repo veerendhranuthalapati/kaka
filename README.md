@@ -109,10 +109,11 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 | --- | --- | --- | --- |
 | POST | `/api/auth/register` | Public + rate limited | Registers as `USER`; rejects unknown fields; returns `{ user, token }` (no passwordHash) |
 | POST | `/api/auth/login` | Public + rate limited | Identical 401 for unknown/wrong password; dummy hash used for unknown email; returns `{ user, token }` |
-| GET | `/api/vehicles` | Authenticated | List all vehicles (includes quantity 0) |
-| GET | `/api/vehicles/search` | Authenticated | Search: make/model case-insensitive contains; category case-insensitive exact; minPrice/maxPrice inclusive; `minPrice > maxPrice` → 400. Route registered before `/:id`. |
-| POST | `/api/vehicles` | Admin | Create vehicle. Max 100 chars for make/model/category; price non-negative; quantity non-negative integer |
-| PUT | `/api/vehicles/:id` | Admin | Partial update of make/model/category/price only. **Quantity cannot be updated via PUT** (400). Empty body → 400 |
+| GET | `/api/vehicles` | Authenticated | List all vehicles (includes quantity 0). Each item includes core fields, optional spec fields, `imageUrl`, and ISO `createdAt` / `updatedAt`. |
+| GET | `/api/vehicles/search` | Authenticated | Search: make/model case-insensitive contains; category case-insensitive exact; minPrice/maxPrice inclusive; optional `fuelType`, `minYear`, `maxOdometerKm`; `minPrice > maxPrice` → 400. Registered before `/:id`. |
+| GET | `/api/vehicles/:id` | Authenticated | Single vehicle by UUID. **200** with full DTO; **400** if `id` is not a UUID; **404** if not found. |
+| POST | `/api/vehicles` | Admin | Create vehicle (core + optional specs + optional `imageUrl`). See [Vehicle fields](#vehicle-fields-and-validation). |
+| PUT | `/api/vehicles/:id` | Admin | Partial update of core fields, specs, and `imageUrl`. **Quantity cannot be updated via PUT** (send `quantity` → 400). Empty body → 400. |
 | DELETE | `/api/vehicles/:id` | Admin | Returns 204 on success |
 | POST | `/api/vehicles/:id/purchase` | Authenticated | Exactly 1 unit, atomic conditional decrement; 409 `OUT_OF_STOCK` if unavailable |
 | POST | `/api/vehicles/:id/restock` | Admin | Body `{ amount }` integer 1-10000; increments quantity |
@@ -129,6 +130,37 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 - `TOO_MANY_REQUESTS` (429) - auth rate limit exceeded
 - `INTERNAL_ERROR` (500) - generic, no stack traces
 
+## Vehicle fields and validation
+
+All create/update bodies use **strict** Zod schemas (unknown keys → 400). Spec fields are optional on create and may be omitted, set, or sent as `null` to clear on update.
+
+| Field | Create | Update | Rules |
+| --- | --- | --- | --- |
+| `make` | required | optional | string, 1–100 chars |
+| `model` | required | optional | string, 1–100 chars |
+| `category` | required | optional | string, 1–100 chars |
+| `price` | required | optional | number ≥ 0 |
+| `quantity` | required | **not allowed** | non-negative integer on create only |
+| `imageUrl` | optional | optional | `null`, `https://…`, or site-relative path starting with `/` (max 2048). Rejects `javascript:`, `data:`, `file:`, `http:`, `//`, whitespace/control chars |
+| `year` | optional | optional | integer 1980 … current calendar year + 1, or `null` |
+| `odometerKm` | optional | optional | integer 0–2,000,000, or `null` |
+| `engineCc` | optional | optional | integer 50–10,000, or `null` |
+| `powerBhp` | optional | optional | integer 1–2,000, or `null` |
+| `torqueNm` | optional | optional | integer 1–3,000, or `null` |
+| `fuelType` | optional | optional | `PETROL`, `DIESEL`, `ELECTRIC`, `HYBRID`, `PLUG_IN_HYBRID`, `CNG`, `LPG`, or `null` |
+| `transmission` | optional | optional | `MANUAL`, `AUTOMATIC`, `CVT`, `DCT`, or `null` |
+| `drivetrain` | optional | optional | `FWD`, `RWD`, `AWD`, `FOUR_WD`, or `null` |
+| `fuelEconomyKmpl` | optional | optional | number 0.1–100, or `null` |
+| `color` | optional | optional | letters, spaces, hyphens; max 32; or `null` |
+| `owners` | optional | optional | integer 1–10, or `null` |
+| `vin` | optional | optional | 17 chars (excludes I/O/Q), or `null` |
+
+**Search query (GET `/api/vehicles/search`):** optional `make`, `model`, `category`, `minPrice`, `maxPrice`, `fuelType`, `minYear`, `maxOdometerKm` (same enums/ranges as above where applicable).
+
+### Sample / demo data disclaimer
+
+`npm run seed:demo` fills inventory with **illustrative** make/model/spec values for UI and API demos. They are **not** verified against real manufacturer data, VIN registries, or emissions tests. Do not treat seeded specs as factual listings.
+
 ## Assumptions and design decisions
 
 - **Admin-only writes:** `POST/PUT/DELETE /api/vehicles` and `POST /:id/restock` require `ADMIN`. This prevents unauthorized inventory changes while allowing customers to purchase. The frontend hides admin controls for `USER`, but never relies on it for security.
@@ -140,9 +172,9 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 - **Error envelope:** All API errors follow the standardized envelope for consistent frontend parsing.
 - **Rate limiting & scaling:** Auth routes are rate-limited only (`/api/auth`). The limiter uses `express-rate-limit`'s in-memory store and is a **single-instance assumption** (no shared store like Redis) - in multi-replica deployments, limits will be per instance; swap to a shared store (e.g., `rate-limit-redis`) if scaling horizontally.
 - **Prisma placement:** `prisma` is listed as a dependency (not only devDependency) because `prisma migrate deploy` is used at build/deploy time and the Prisma CLI/schema may be required in production containers/images without dev dependencies installed.
-- **Frontend UX:** Debounced search (300ms), min<=max validation before sending, out-of-stock buttons disabled with label, purchase shows loading and on 409 patches that card to quantity 0 (no full-page reload) with a "Just sold out" toast, admin quantity field omitted on edit, delete requires confirmation, restock integer 1-10000.
+- **Frontend UX:** Debounced search (300ms), min<=max validation before sending, out-of-stock buttons disabled with label, purchase shows loading and on success updates stock in place with a success toast; on 409 patches that card to quantity 0 (no full-page reload) with a "Just sold out" toast, admin quantity field omitted on edit, delete requires confirmation, restock integer 1-10000. **Vehicle details** at `/vehicles/:id` shows a large image panel, sticky purchase panel (desktop), and a spec grid (missing values shown as `-`).
 - **Featured carousel:** In-stock vehicles only, sorted by `createdAt` descending, maximum six slides (documented on the dashboard).
-- **Visual design:** Showroom-style layout inspired by contemporary automotive storefronts; implementation, branding, and imagery are original. **Typography:** Manrope (display — headings, model names, prices) and Inter (UI/body), self-hosted via Fontsource (`@fontsource-variable/manrope` / `inter` @ 5.3.0, latin subset in `src/fonts/latin-fonts.css`). **Tokens:** warm neutrals, electric-blue accent (`#2f5bff`), 20px card radius, 12px control radius, 8px spacing grid, `max-w-shell` (1280px). Customize in `tailwind.config.js`, `src/index.css` (`:root` CSS variables), and `src/utils/designTokens.ts` (contrast pairs). Dark mode follows `prefers-color-scheme` with the same token names.
+- **Visual design:** Dark premium showroom UI; implementation, branding, and imagery are original. **Typography:** Sora (display — titles, prices) and Inter (body, forms, tabular spec values), self-hosted via Fontsource (`@fontsource-variable/sora` / `inter` @ 5.3.0, latin subset in `src/fonts/latin-fonts.css`). **Tokens:** near-black surfaces, electric-blue accent, 20px card radius, glass top bar, `max-w-shell` (1280px). Customize in `tailwind.config.js`, `src/index.css` (`:root` CSS variables), and `src/utils/designTokens.ts` (WCAG contrast pairs).
 
 ## Vehicle images
 
@@ -155,38 +187,38 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 ## Test report
 
 ### Backend
-**Command:** `npm test` (from `backend/`)  
-**Output (actual):**
+**Command:** `npm test` (from `backend/`, requires Postgres DB whose name ends with `_test`; migrations run automatically)  
+**Output (actual, RUN3):**
 ```
- Test Files  16 passed (16)
-      Tests  77 passed (77)
+ Test Files  19 passed (19)
+      Tests  92 passed (92)
 ```
 
-**Coverage (actual):** `npm run test:coverage`
+**Coverage (actual, RUN3):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 93.8% ( 303/323 )
-Branches     : 86.95% ( 140/161 )
-Functions    : 100% ( 71/71 )
-Lines        : 93.78% ( 302/322 )
+Statements   : 94.41% ( 338/358 )
+Branches     : 87.31% ( 179/205 )
+Functions    : 100% ( 86/86 )
+Lines        : 94.39% ( 337/357 )
 ================================================================================
 ```
 
 ### Frontend
 **Command:** `npm test` (from `frontend/`)  
-**Output (actual):**
+**Output (actual, RUN3):**
 ```
- Test Files  22 passed (22)
-      Tests  82 passed (82)
+ Test Files  28 passed (28)
+      Tests  97 passed (97)
 ```
 
-**Coverage (actual):** `npm run test:coverage`
+**Coverage (actual, RUN3):** `npm run test:coverage`
 ```
 =============================== Coverage summary ===============================
-Statements   : 79.97% ( 611/764 )
-Branches     : 74.95% ( 376/502 )
-Functions    : 76.25% ( 165/216 )
-Lines        : 81.36% ( 572/703 )
+Statements   : 78.14% ( 783/1002 )
+Branches     : 73.34% ( 553/754 )
+Functions    : 74.42% ( 195/262 )
+Lines        : 80.06% ( 731/913 )
 ================================================================================
 ```
 
@@ -205,8 +237,9 @@ Coverage is measured from files loaded by the test suite (V8); admin pages and d
 | `/login` | LoginPage | Public | Email/password login with validation and server error display |
 | `/register` | RegisterPage | Public | Registration (USER only) with validation mirroring server rules |
 | `/` | DashboardPage | Protected | Vehicle grid, debounced search/filters, purchase flow, admin shortcuts |
-| `/admin/vehicles/new` | AddVehiclePage | Admin only | Create vehicle (make/model/category/price/quantity) |
-| `/admin/vehicles/:id/edit` | EditVehiclePage | Admin only | Edit make/model/category/price, restock (1-10000), delete with confirmation |
+| `/vehicles/:id` | VehicleDetailsPage | Protected | Large image, sticky purchase panel (desktop), full spec grid |
+| `/admin/vehicles/new` | AddVehiclePage | Admin only | Create vehicle (core fields, optional specs, optional image URL) |
+| `/admin/vehicles/:id/edit` | EditVehiclePage | Admin only | Edit core fields and specs, restock (1-10000), delete with confirmation |
 | `*` | NotFoundPage | Public | 404 page |
 
 ### Screens (placeholders)

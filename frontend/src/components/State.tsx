@@ -1,19 +1,11 @@
 import { useEffect, useRef } from "react";
 
-export function Spinner({ className = "" }: { className?: string }) {
-  return (
-    <span
-      role="status"
-      aria-live="polite"
-      className={`inline-flex items-center justify-center ${className}`}
-    >
-      <span
-        aria-hidden="true"
-        className="size-5 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
-      />
-      <span className="sr-only">Loading</span>
-    </span>
-  );
+export function SkeletonBlock({
+  className = "",
+}: {
+  className?: string;
+}) {
+  return <span className={`skeleton block ${className}`} aria-hidden="true" />;
 }
 
 export function EmptyState({
@@ -36,17 +28,20 @@ export function Toast({
   tone = "info",
 }: {
   message: string;
-  tone?: "info" | "danger";
+  tone?: "info" | "danger" | "success";
 }) {
+  const toneClass =
+    tone === "danger"
+      ? "toast-danger"
+      : tone === "success"
+        ? "toast-success"
+        : "toast-info";
+
   return (
     <div
       role="status"
       aria-live={tone === "danger" ? "assertive" : "polite"}
-      className={`rounded-card border px-4 py-3 font-sans text-body shadow-resting ${
-        tone === "danger"
-          ? "border-danger/30 bg-danger-soft text-danger"
-          : "border-line bg-surface text-ink"
-      }`}
+      className={`rounded-card border px-4 py-3 font-sans text-body shadow-resting motion-safe:animate-fade-in ${toneClass}`}
     >
       {message}
     </div>
@@ -112,11 +107,8 @@ export function ConfirmDialog({
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
     >
-      <div
-        className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-        onClick={onCancel}
-      />
-      <div ref={dialogRef} className="surface relative z-10 w-full max-w-md p-6">
+      <div className="dialog-backdrop" onClick={onCancel} />
+      <div ref={dialogRef} className="surface dialog-panel relative z-10 w-full max-w-md p-6">
         <h2 className="font-display text-card-title text-ink">{title}</h2>
         <p className="mt-2 font-sans text-body text-muted">{description}</p>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
@@ -153,4 +145,9 @@ export function FieldError({
       <span>{message}</span>
     </p>
   );
+}
+
+/** @deprecated use SkeletonBlock for loading placeholders */
+export function Spinner({ className = "" }: { className?: string }) {
+  return <SkeletonBlock className={`size-5 rounded-full ${className}`} />;
 }

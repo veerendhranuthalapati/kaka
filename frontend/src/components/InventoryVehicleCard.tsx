@@ -15,6 +15,7 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
   vehicle,
   purchasing,
   canManage,
+  stockHighlight,
   onPurchase,
   onEdit,
   onRestock,
@@ -23,6 +24,7 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
   vehicle: Vehicle;
   purchasing: boolean;
   canManage: boolean;
+  stockHighlight?: boolean;
   onPurchase: (vehicle: Vehicle) => void;
   onEdit?: (vehicle: Vehicle) => void;
   onRestock?: (vehicle: Vehicle) => void;
@@ -34,14 +36,14 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
   const chips = cardSpecChips(vehicle, { omitYear: yearLabel != null });
 
   return (
-    <article className="surface-hover overflow-hidden">
+    <article className="surface-hover flex h-full flex-col overflow-hidden">
       <VehicleImage
         src={vehicle.imageUrl}
         category={vehicle.category}
         alt={title}
         className="rounded-none"
       />
-      <div className="flex flex-col gap-3 p-5">
+      <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h3 className="font-display text-card-title tracking-tight text-ink">
@@ -56,19 +58,21 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
         {chips.length > 0 && (
           <ul className="flex flex-wrap gap-2" aria-label="Key specifications">
             {chips.map((chip) => (
-              <li key={chip} className="rounded-full bg-raised px-2.5 py-0.5 text-label text-muted">
+              <li key={chip} className="spec-chip">
                 {chip}
               </li>
             ))}
           </ul>
         )}
         <p className="text-price">{formatPrice(vehicle.price)}</p>
-        <p className={stockClass(vehicle.quantity)}>
+        <p
+          className={`${stockClass(vehicle.quantity)} ${stockHighlight ? "stock-updated" : ""}`}
+        >
           {outOfStock ? "Out of stock" : `${vehicle.quantity} in stock`}
         </p>
         <button
           type="button"
-          className="btn-primary w-full whitespace-nowrap"
+          className={`btn-primary w-full whitespace-nowrap ${purchasing ? "btn-skeleton" : ""}`}
           disabled={outOfStock || purchasing}
           aria-busy={purchasing}
           onClick={() => onPurchase(vehicle)}
@@ -82,7 +86,7 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
           View details
         </Link>
         {canManage && (
-          <div className="flex flex-wrap gap-2 border-t border-line pt-3">
+          <div className="mt-auto flex flex-wrap gap-2 border-t border-line/80 pt-3">
             <button type="button" className="btn-ghost text-label normal-case whitespace-nowrap" onClick={() => onEdit?.(vehicle)}>
               Edit
             </button>
@@ -101,12 +105,13 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
 
 export function InventorySkeletonCard() {
   return (
-    <div className="surface animate-pulse overflow-hidden motion-reduce:animate-none">
-      <div className="aspect-[16/9] bg-raised" />
+    <div className="surface overflow-hidden">
+      <div className="aspect-[16/9] skeleton" />
       <div className="space-y-3 p-5">
-        <div className="h-6 w-2/3 rounded bg-raised" />
-        <div className="h-4 w-1/3 rounded bg-raised" />
-        <div className="h-8 w-1/2 rounded bg-raised" />
+        <div className="h-6 w-2/3 skeleton rounded-btn" />
+        <div className="h-4 w-1/3 skeleton rounded-btn" />
+        <div className="h-8 w-1/2 skeleton rounded-btn" />
+        <div className="h-11 w-full skeleton rounded-btn" />
       </div>
     </div>
   );

@@ -564,3 +564,35 @@ SCOPE: bug fixes, dashboard wiring, shared form. No visual redesign, no fonts, n
 Tasks: (1) INVALID DATE BUG — createdAt/updatedAt ISO on list/search/GET/create/update; frontend "-" for invalid dates. (2) SEED CLEANUP — delete make exactly "demo-seed" before insert. (3) DASHBOARD CARDS — cardSpecChips, title/subtitle, View details link, memoize, remove details dialog if unused. (4) SHARED VehicleForm for Add/Edit with spec validation. (5) TOP BAR — nowrap, hide email/role below breakpoint in account menu.
 
 Rules: strict TDD, separate test/source commits, first commit append this prompt to PROMPTS.md, update docs/ai-reports/PROGRESS.md, FINAL REPORT docs/ai-reports/RUN1-REPORT.md, no push, Co-authored-by trailer, coverage floors 80%/90%.
+
+### RUN2 — Visual redesign — 2026-10-24T16:54:00+05:30
+
+SCOPE OF THIS RUN: visual redesign only. Behavior and API unchanged. Dependency exception: add @fontsource-variable/sora@5.3.0 (already verified to exist) and remove @fontsource-variable/manrope if nothing else uses it.
+
+DIRECTION: dark premium showroom. Near-black base, a soft radial glow behind the hero, one accent (electric blue), glass top bar, generous spacing, 20px card radius, two shadow levels.
+1. FONTS: Sora for titles, prices and big numbers; Inter for body, forms and tabular numerals in spec values. Self-hosted via Fontsource, latin subsets only, no external font requests. Type scale as tailwind tokens. Update CREDITS.md (Sora and Inter, SIL OFL).
+2. TOKENS in tailwind.config.js and CSS variables: surfaces, borders, text, accent, semantic stock colors, radius, shadows, spacing. WCAG AA contrast for every text/background pair; add a small test that checks the token pairs.
+3. GRID: responsive auto-fill (minmax about 280px) so cards use the full width with no empty gap at 375, 768, 1024 and 1280px.
+4. CARDS and DETAILS PAGE: restyle with the system: image panel with a tinted gradient, spec chips, price in display font, stock pill, details page with a large image panel, sticky purchase panel on desktop, spec grid (Distance travelled, Year, Engine cc, Power, Torque, Fuel type, Transmission, Drivetrain, Mileage km/l, Colour, Owners, VIN; missing values "-"), 2 columns on mobile.
+5. ILLUSTRATIONS: replace the crude shapes in frontend/public/cars with clean side-view line-art silhouettes in one consistent style (viewBox 800x400, one stroke weight, window cutouts, wheel arches with rims, soft ground shadow, currentColor strokes so they theme correctly): SUV, sedan, hatchback, truck, coupe, EV, wagon and the placeholder. Keep file names and the fallback helper unchanged. Open them in the running app and check them; simplify rather than leave odd geometry. Illustrations use object-contain with padding on the tinted panel; real photos object-cover.
+6. SMOOTHNESS, CSS only, all disabled under prefers-reduced-motion: 150-250ms ease-out transitions; card hover lift; button press feedback; image fade-in on load with a fixed aspect ratio; dialog and drawer enter/exit animations; route fade; staggered fade-up on the first grid render; skeletons instead of spinners; on purchase update the stock number in place with a short highlight animation and a toast "Purchased 1 x Make Model - N left" (keep the 409 handling).
+7. Restyle top bar, filters, toasts, dialogs, login and register in the same system. Visible focus rings, labelled inputs, no horizontal scroll at 375, 768, 1024 and 1280px.
+
+Existing tests may change only for markup text or structure; list each. Report bundle sizes before/after. Update PROGRESS.md, print the FINAL REPORT (docs/ai-reports/RUN2-REPORT.md), stop.
+
+### RUN3 — Documentation and verification — 2026-10-24T18:18:00+05:30
+
+SCOPE OF THIS RUN: documentation and verification only. No feature or visual changes.
+1. README: the new fields and validation table, GET /api/vehicles/:id in the API table, the details page, the sample-data disclaimer (seed specs are illustrative, not verified), updated real test and coverage output. Leave the "My AI Usage" and screenshots TODOs untouched. CREDITS.md stays accurate.
+2. Run seed:demo on the DEV database, start both servers, and with curl.exe through port 5173 verify: list and search include the new fields and valid dates, GET /:id works (200, 400, 404), create with specs works for the seeded admin, javascript: image URLs rejected, USER gets 403 on admin routes. Never print credentials or tokens.
+3. Fresh clone in a temp directory: npm ci in both packages, throwaway database ending in "_test", migrate, backend tests, frontend tests, build; then delete both.
+4. Hygiene greps (file:line only): local absolute paths, personal emails, JWT-looking strings, tracked .env files. npm audit --omit=dev for both packages.
+Print the FINAL REPORT (docs/ai-reports/RUN3-REPORT.md), stop.
+
+### Prompt 13 — 2026-10-24T18:31:00+05:30
+
+Briefly inform the user about the task result and perform any follow-up actions (if needed). If there's no follow-ups needed, don't explicitly say that.
+
+### Prompt 14 — 2026-10-24T18:31:00+05:30
+
+appened all these prompts to the prompts.md

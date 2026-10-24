@@ -1,21 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { auditContrastPairs, contrastRatio } from "./designContrast";
 import {
-  DARK_CONTRAST_PAIRS,
   FONT_DISPLAY_STACK,
   FONT_SANS_STACK,
-  LIGHT_CONTRAST_PAIRS,
+  THEME_CONTRAST_PAIRS,
 } from "./designTokens";
 
 describe("designContrast", () => {
-  it("meets WCAG AA for every light theme token pair", () => {
-    const results = auditContrastPairs(LIGHT_CONTRAST_PAIRS);
-    const failures = results.filter((result) => !result.pass);
-    expect(failures).toEqual([]);
-  });
-
-  it("meets WCAG AA for every dark theme token pair", () => {
-    const results = auditContrastPairs(DARK_CONTRAST_PAIRS);
+  it("meets WCAG AA for every showroom token pair", () => {
+    const results = auditContrastPairs(THEME_CONTRAST_PAIRS);
     const failures = results.filter((result) => !result.pass);
     expect(failures).toEqual([]);
   });
@@ -28,8 +21,8 @@ describe("designContrast", () => {
 });
 
 describe("font stacks", () => {
-  it("prefers self-hosted Manrope for display and Inter for body", () => {
-    expect(FONT_DISPLAY_STACK[0]).toBe("Manrope Variable");
+  it("prefers self-hosted Sora for display and Inter for body", () => {
+    expect(FONT_DISPLAY_STACK[0]).toBe("Sora Variable");
     expect(FONT_SANS_STACK[0]).toBe("Inter Variable");
     expect(FONT_DISPLAY_STACK.length).toBeGreaterThan(2);
     expect(FONT_SANS_STACK.length).toBeGreaterThan(2);
