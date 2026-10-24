@@ -32,11 +32,11 @@
   }
 
   html {
-    @apply bg-canvas text-ink antialiased;
+    @apply overflow-x-hidden bg-canvas text-ink antialiased;
   }
 
   body {
-    @apply min-h-screen bg-canvas font-sans text-ink;
+    @apply min-h-screen overflow-x-hidden bg-canvas font-sans text-ink;
   }
 
   ::selection {
@@ -75,6 +75,10 @@
 
   .btn-secondary {
     @apply btn border border-line bg-surface text-ink hover:bg-raised active:translate-y-px;
+  }
+
+  .btn-hero-secondary {
+    @apply btn border-0 bg-white text-ink shadow-sm hover:bg-raised active:translate-y-px;
   }
 
   .btn-danger {

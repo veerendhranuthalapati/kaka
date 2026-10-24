@@ -27,13 +27,19 @@ export function TopBar({
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur">
-      <div className="shell flex h-16 items-center justify-between gap-4">
-        <Link to="/" className="text-lg font-bold tracking-tight text-ink">
+    <header className="sticky top-0 z-40 border-b border-line/80 bg-surface backdrop-blur-md">
+      <div className="shell grid h-[4.25rem] grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <Link
+          to="/"
+          className="text-base font-bold tracking-tight text-ink sm:text-lg"
+        >
           Auto Yard
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex" aria-label="Primary">
+        <nav
+          className="hidden items-center justify-center gap-5 md:flex"
+          aria-label="Primary"
+        >
           <button type="button" className="link text-sm" onClick={onInventoryClick}>
             Inventory
           </button>
@@ -49,7 +55,7 @@ export function TopBar({
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center justify-end gap-3 md:flex">
           <span className="text-sm text-muted">{user?.email}</span>
           <span className="badge">{user?.role}</span>
           {user?.role === "ADMIN" && (
@@ -64,7 +70,7 @@ export function TopBar({
 
         <button
           type="button"
-          className="btn-secondary min-h-10 px-3 md:hidden"
+          className="btn-secondary col-start-3 min-h-10 justify-self-end px-3 md:hidden"
           aria-expanded={menuOpen}
           aria-controls="mobile-nav"
           onClick={() => setMenuOpen((open) => !open)}

@@ -45,50 +45,88 @@ export function HeroCarousel({
     return null;
   }
 
-  const outOfStock = active.quantity === 0;
-  const purchasing = purchasingId === active.id;
   const slideLabel = `${active.make} ${active.model}`;
 
   return (
-    <section
-      aria-label="Featured vehicles"
-      className="relative"
-    >
-      <div className="overflow-hidden rounded-3xl">
-        <div
-          className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth motion-reduce:scroll-auto"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {vehicles.map((vehicle, slideIndex) => (
+    <section aria-label="Featured vehicles" className="relative">
+      <div className="relative overflow-hidden rounded-[2rem] shadow-card">
+        {vehicles.map((vehicle, slideIndex) => {
+          const outOfStock = vehicle.quantity === 0;
+          const purchasing = purchasingId === vehicle.id;
+          const isActive = slideIndex === index;
+
+          return (
             <article
               key={vehicle.id}
-              className="relative min-w-full snap-center"
-              hidden={slideIndex !== index}
+              className="relative w-full"
+              hidden={!isActive}
             >
-              <div className="relative aspect-[16/9] max-h-[420px] w-full sm:aspect-[16/9] md:max-h-none">
+              <div className="relative aspect-[16/10] w-full max-h-[min(72vh,520px)] sm:aspect-[16/9]">
                 <VehicleImage
                   src={vehicle.imageUrl}
                   alt={`${vehicle.make} ${vehicle.model}`}
-                  className="h-full max-h-[420px] md:max-h-[480px] rounded-3xl"
+                  loading={slideIndex === 0 ? "eager" : "lazy"}
+                  className="h-full max-h-[min(72vh,520px)] rounded-[2rem]"
                 />
                 <div
-                  className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-t from-ink/80 via-ink/35 to-transparent"
+                  className="pointer-events-none absolute inset-0 rounded-[2rem] bg-gradient-to-t from-ink/90 via-ink/45 to-ink/10"
                   aria-hidden="true"
                 />
-                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 p-6 text-white sm:p-8">
-                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+                <button
+                  type="button"
+                  className="absolute left-4 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/90 text-lg text-ink shadow-float motion-reduce:transition-none hover:bg-white"
+                  aria-label="Previous featured vehicle"
+                  onClick={() => go(index - 1)}
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  className="absolute right-4 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/90 text-lg text-ink shadow-float motion-reduce:transition-none hover:bg-white"
+                  aria-label="Next featured vehicle"
+                  onClick={() => go(index + 1)}
+                >
+                  →
+                </button>
+
+                <div
+                  className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-4 p-6 pb-8 text-white sm:p-10 sm:pb-10"
+                >
+                  <div
+                    className="flex justify-center gap-2 pb-2"
+                    role="tablist"
+                    aria-label="Featured vehicle slides"
+                  >
+                    {vehicles.map((dotVehicle, dotIndex) => (
+                      <button
+                        key={dotVehicle.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={dotIndex === index}
+                        aria-label={`${dotVehicle.make} ${dotVehicle.model}`}
+                        className={`h-2 rounded-full transition-all motion-reduce:transition-none ${
+                          dotIndex === index
+                            ? "w-7 bg-white"
+                            : "w-2 bg-white/50"
+                        }`}
+                        onClick={() => go(dotIndex)}
+                      />
+                    ))}
+                  </div>
+
+                  <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/85">
                     {vehicle.category}
                   </span>
-                  <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+                  <h2 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                     {vehicle.make} {vehicle.model}
                   </h2>
-                  <p className="text-lg font-semibold sm:text-xl">
+                  <p className="text-xl font-semibold sm:text-2xl">
                     {formatPrice(vehicle.price)}
                   </p>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-3 pt-1">
                     <button
                       type="button"
-                      className="btn-primary min-w-[9rem]"
+                      className="btn-primary min-w-[10rem] rounded-full px-6"
                       disabled={outOfStock || purchasing}
                       aria-busy={purchasing}
                       onClick={() => onPurchase(vehicle)}
@@ -101,7 +139,7 @@ export function HeroCarousel({
                     </button>
                     <button
                       type="button"
-                      className="btn-secondary border-white/30 bg-white/10 text-white hover:bg-white/20"
+                      className="btn-hero-secondary min-w-[10rem] rounded-full px-6"
                       onClick={() => onDetails(vehicle)}
                     >
                       Details
@@ -110,42 +148,8 @@ export function HeroCarousel({
                 </div>
               </div>
             </article>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <button
-          type="button"
-          className="btn-secondary min-h-10 px-3"
-          aria-label="Previous featured vehicle"
-          onClick={() => go(index - 1)}
-        >
-          ←
-        </button>
-        <div className="flex flex-1 justify-center gap-2" role="tablist">
-          {vehicles.map((vehicle, dotIndex) => (
-            <button
-              key={vehicle.id}
-              type="button"
-              role="tab"
-              aria-selected={dotIndex === index}
-              aria-label={`${vehicle.make} ${vehicle.model}`}
-              className={`h-2.5 rounded-full transition-all motion-reduce:transition-none ${
-                dotIndex === index ? "w-8 bg-accent" : "w-2.5 bg-line"
-              }`}
-              onClick={() => go(dotIndex)}
-            />
-          ))}
-        </div>
-        <button
-          type="button"
-          className="btn-secondary min-h-10 px-3"
-          aria-label="Next featured vehicle"
-          onClick={() => go(index + 1)}
-        >
-          →
-        </button>
+          );
+        })}
       </div>
       <p className="sr-only" role="status">{slideLabel}</p>
     </section>

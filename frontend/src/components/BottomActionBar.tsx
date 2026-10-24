@@ -14,7 +14,7 @@ export function BottomActionBar({
       className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2"
       aria-label="Quick actions"
     >
-      <div className="flex w-full max-w-xl items-center gap-2 rounded-2xl border border-line bg-surface/95 px-3 py-2 shadow-card backdrop-blur">
+      <div className="flex w-full max-w-2xl items-center gap-2 rounded-full border border-line/80 bg-surface/95 px-4 py-2.5 shadow-float backdrop-blur-md">
         <input
           type="search"
           aria-label="Quick search inventory"
