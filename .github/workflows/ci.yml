@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dealership_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dealership_test
+      JWT_SECRET: ci-jwt-secret-entropy-abcdefghijklmnopqrstuvwxyz-99
+      CORS_ORIGIN: http://localhost:5173
+      BCRYPT_COST: "4"
+    steps:
+      - uses: actions/checkout@v4 # pin to commit SHA in high-assurance deploys
+      - uses: actions/setup-node@v4 # pin to commit SHA in high-assurance deploys
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npm test
+      - run: npm run test:coverage
+      - run: npx license-checker --summary
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4 # pin to commit SHA in high-assurance deploys
+      - uses: actions/setup-node@v4 # pin to commit SHA in high-assurance deploys
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:bundle-size
+      - run: npx license-checker --summary
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 # pin to commit SHA in high-assurance deploys
+      - uses: actions/setup-node@v4 # pin to commit SHA in high-assurance deploys
+        with:
+          node-version-file: .nvmrc
+      - name: Backend audit
+        working-directory: backend
+        run: |
+          npm ci
+          npm audit --omit=dev --audit-level=high
+          npm audit signatures
+      - name: Frontend audit
+        working-directory: frontend
+        run: |
+          npm ci
+          npm audit --omit=dev --audit-level=high
+          npm audit signatures
+      - name: Secret scan
+        run: |
+          node scripts/check-secrets.mjs
+          node --test scripts/check-secrets.test.mjs
