@@ -270,6 +270,9 @@ Coverage is measured from files loaded by the test suite (V8); admin pages and d
 Screenshots are expected at `docs/screenshots/*.png`. Placeholders are tracked in `docs/screenshots/.gitkeep`. Suggested captures: login, register, dashboard (with filters), out-of-stock card, admin create, admin edit/restock/delete.
 
 ## Security notes
+
+See [SECURITY.md](./SECURITY.md) (reporting and supported versions) and [docs/SECURITY-DESIGN.md](./docs/SECURITY-DESIGN.md) (architecture, OWASP mapping, deployment checklist).
+
 - No `dangerouslySetInnerHTML`, `eval`, or `new Function` used.
 - No secrets committed; only `.env.example` files present.
 - Frontend only uses `VITE_API_URL` (no secrets in bundle).
