@@ -1,6 +1,54 @@
-# Car Dealership Inventory
+# Car Dealership Inventory (Auto Yard)
 
-A full-stack vehicle inventory system with a role-based API and a React frontend. The backend enforces admin-only writes, atomic one-unit purchases, strict validation, and secure auth flows. The frontend provides a responsive dashboard with debounced search, purchase flows, and admin management tools.
+## About this project
+
+**Auto Yard** is a full-stack web application for browsing and managing a vehicle dealership inventory. Customers register, sign in, search and filter in-stock vehicles, purchase one unit at a time, and open rich detail pages with photos and specifications. Administrators create and edit listings, restock quantity, and delete vehicles—all enforced on the server, not only in the UI.
+
+The system is built for clarity and safety: layered Express APIs with Zod validation, JWT sessions with role checks, atomic purchases to prevent overselling, and a React single-page app with debounced search, optimistic purchase feedback, and an accessible dark showroom design.
+
+**What you can do in the app**
+
+| Role | Capabilities |
+| --- | --- |
+| **Guest** | Register, sign in, view photo credits |
+| **User** | Dashboard, search/filters, purchase, vehicle details |
+| **Admin** | Everything users can do, plus create/edit/delete vehicles and restock |
+
+Repository layout: `backend/` (API + Prisma), `frontend/` (Vite + React), `docs/` (design notes, screenshots, reports).
+
+## Screenshots
+
+Captured from the running dev app (`frontend` on port **5173**, `backend` on **3000**). Image files live in [`docs/screenshots/`](docs/screenshots/) (also under `docs/screenshots/sc/`).
+
+### Dashboard — hero and featured vehicles
+
+<p align="center">
+  <img src="./docs/screenshots/01-dashboard-hero.png" alt="Dashboard hero with featured carousel" width="920" />
+</p>
+
+### Inventory grid — search, filters, and cards
+
+<p align="center">
+  <img src="./docs/screenshots/02-inventory-grid.png" alt="Inventory grid with vehicle cards" width="920" />
+</p>
+
+### Vehicle details — image and purchase panel
+
+<p align="center">
+  <img src="./docs/screenshots/03-vehicle-details.png" alt="Vehicle details page with image and actions" width="920" />
+</p>
+
+### Vehicle details — specifications
+
+<p align="center">
+  <img src="./docs/screenshots/04-vehicle-specs.png" alt="Vehicle specifications section" width="920" />
+</p>
+
+### Admin — edit vehicle
+
+<p align="center">
+  <img src="./docs/screenshots/05-vehicle-edit.png" alt="Admin edit vehicle form" width="920" />
+</p>
 
 ## Tech stack
 
@@ -48,7 +96,9 @@ graph TD
 - **Frontend architecture:** `src/api` (fetch client + typed functions), `src/auth` (AuthContext + session handling), `src/components` (guards, UI), `src/pages` (views). The API client parses the backend `{ error: {...} }` envelope into a typed `ApiError`, attaches Bearer tokens, and on 401 clears the session and redirects to `/login`.
 - **Security boundary:** The server is always the authority. The frontend decodes JWT claims only for UI display; admin checks are enforced server-side.
 
-## Local setup
+## How to set up and run locally
+
+Follow these steps on a clean machine. Commands below use **PowerShell** on Windows; adapt paths for macOS/Linux (`export` instead of env vars, etc.).
 
 ### Prerequisites
 - **Node.js 22.14.0** (see `.nvmrc`; Node 20+ may work but CI uses 22.14.0)
@@ -77,12 +127,26 @@ graph TD
    npx prisma db seed
    npm run seed:demo
    ```
-5. **Run servers (two terminals):**
+5. **Run the backend (terminal 1):**
    ```powershell
-   cd backend; npm run dev
-   cd frontend; npm ci; npm run dev
+   cd backend
+   npm run dev
    ```
-6. **Smoke check:** `curl.exe http://localhost:3000/health` → 200; `curl.exe http://localhost:5173/api/vehicles` → 401 (proxy to backend). Register a user, log in, browse inventory, open a vehicle details page, purchase one unit, and (as admin) create a vehicle. **Two-window race:** with quantity 1, attempt purchase from two browser windows; exactly one should succeed (409 on the other).
+   API listens at **http://localhost:3000** (or `PORT` in `.env`). Wait until the process logs that it is listening.
+
+6. **Run the frontend (terminal 2):**
+   ```powershell
+   cd frontend
+   npm ci
+   npm run dev
+   ```
+   Open **http://localhost:5173** in a browser. Vite proxies `/api` to the backend; you do not need `VITE_API_URL` for local dev unless you bypass the proxy.
+
+7. **First login:** Use **Register** to create a `USER` account, or sign in as admin with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `backend/.env` (set during `setup:env`).
+
+8. **Smoke check:** `curl.exe http://localhost:3000/health` → 200; `curl.exe http://localhost:5173/api/vehicles` → 401 (proxy works). In the UI: log in, browse inventory, open a vehicle, purchase one unit. As admin, create or edit a vehicle. **Two-window race:** with quantity 1, purchase from two windows; exactly one should succeed (409 on the other).
+
+**Production-style frontend preview (optional):** `cd frontend && npm run build && npm run preview` serves on **http://127.0.0.1:4173**. Set `VITE_API_URL=http://localhost:3000` and ensure backend `CORS_ORIGIN` allows the preview origin; the dev server proxy is not used in preview.
 
 ### Troubleshooting
 
@@ -271,8 +335,7 @@ Coverage is measured from files loaded by the test suite (V8); admin pages and d
 | `/admin/vehicles/:id/edit` | EditVehiclePage | Admin only | Edit core fields and specs, restock (1-10000), delete with confirmation |
 | `*` | NotFoundPage | Public | 404 page |
 
-### Screens (placeholders)
-Screenshots are expected at `docs/screenshots/*.png`. Placeholders are tracked in `docs/screenshots/.gitkeep`. Suggested captures: login, register, dashboard (with filters), out-of-stock card, admin create, admin edit/restock/delete.
+UI captures: [Screenshots](#screenshots) (dashboard, inventory, details, specs, admin edit).
 
 ## Security notes
 
@@ -326,12 +389,32 @@ npm test && npm run test:coverage && npx tsc --noEmit && npm run lint && npm run
 
 ## My AI Usage
 
-[TODO: my own words]
+This project was built with AI coding assistants under explicit rules: test-driven changes where required, no weakening tests, separate commits for tests vs. features when possible, and verification with real `npm test` / coverage output rather than invented numbers.
 
-**Tools used:** Cursor, OpenCode, Antigravity  
-**How each was used (draft):**
-- **Cursor:** [TODO: describe session(s), what was reviewed/rejected/changed]  
-- **OpenCode:** [TODO: describe TDD phases, scaffolding, commits, verification runs, what was rejected/changed]  
-- **Antigravity:** [TODO: describe usage, insights applied or discarded]  
+### Tools used
 
-**Reflection (honest):** [TODO: my own words - what I learned, where I disagreed with AI suggestions, verification steps I took, and lessons for future work]
+| Tool | Role in this repo |
+| --- | --- |
+| **Cursor** | Primary IDE agent: feature work, security hardening, UI passes, bug fixes (e.g. blank page after login), README and gate fixes, refactors aligned with existing patterns |
+| **OpenCode** | Early backend TDD scaffolding, API contract and commit-planning notes; some commits carry OpenCode co-author trailers from that phase |
+| **Antigravity** | Mid-project sessions (e.g. authorization matrix, grouped commits); history was not rewritten when trailers differed from the tool that actually ran |
+
+Running notes from development live in [`docs/ai-usage-notes.md`](docs/ai-usage-notes.md). Raw prompt logs: [`PROMPTS.md`](PROMPTS.md), [`TESTPROMPTS.md`](TESTPROMPTS.md).
+
+### How Cursor was used (representative)
+
+- **Scaffolding and gates:** CI, coverage thresholds, bundle-size checks, secret scanning, and README API tables with tests that assert documented behavior.
+- **Security:** JWT session versioning, rate limits, CSP/hosting header helpers, session storage choices, and backend integration tests.
+- **Frontend UX:** Data cache (stale-while-revalidate, dedupe, abort), vehicle images (cached `onLoad` fix), error boundaries, and post-login smoke tests.
+- **Review discipline:** Suggestions were accepted only after local runs (`npm test`, `npm run build`, manual login). Examples rejected or revised: over-broad refactors, commits that mixed unrelated changes, and fixes that lowered coverage or deleted assertions.
+
+### How OpenCode / Antigravity were used
+
+- **OpenCode:** Initial monorepo layout, Prisma sketch, failing-first Supertest flows, and Zod validation middleware patterns that later commits extended.
+- **Antigravity:** Batch implementation and lock-in commits; some duplicate or mixed test/source commits are documented under [Known limitations and provenance](#known-limitations-and-provenance).
+
+### Reflection
+
+AI accelerated boilerplate, test cases, and repetitive UI, but **did not replace verification**. The highest-value habit was requiring evidence: failing test output before a fix, coverage summaries pasted into reports, and reproducing bugs in the browser or jsdom before changing production code. Where AI was wrong (e.g. misdiagnosing environment issues like a shell `DATABASE_URL` overriding `.env`, or an infinite React loop in context registration), the fix came from reading stack traces, shrinking the repro, and adding a regression test.
+
+For future work I would keep: small commits, strict schemas on the API, and treating the server as the source of truth for auth and inventory. I would still manually smoke-test login, purchase, and admin flows after any auth or routing change, since automated tests do not cover every browser timing issue.
