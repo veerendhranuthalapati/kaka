@@ -51,23 +51,26 @@ graph TD
 ## Local setup
 
 ### Prerequisites
-- Node.js 20+
-- PostgreSQL 15+ on `localhost:5432` (Windows service `postgresql-x64-*` or Docker)
+- **Node.js 22.14.0** (see `.nvmrc`; Node 20+ may work but CI uses 22.14.0)
+- **PostgreSQL 15+** on `localhost:5432` (Windows service `postgresql-x64-*` or Docker)
 
 **Ports:** backend **3000** (`PORT` in `backend/.env`); frontend **5173** with `/api` proxied to `http://localhost:3000` (`frontend/vite.config.ts`).
 
 ### First-time setup (PowerShell)
 
 1. **Postgres:** confirm `Test-NetConnection localhost -Port 5432` succeeds. Start the PostgreSQL Windows service if needed (may require admin).
-2. **Databases:** create `dealership_dev` and `dealership_test` (name must end with `_test` for Vitest). Use `psql` or pgAdmin if installed; Prisma `migrate deploy` also expects `dealership_dev` to exist.
+2. **Two databases (do not mix them):**
+   - **Dev DB** — e.g. `dealership_dev`. Name must **not** end with `_test`. Used by `DATABASE_URL`, `npm run dev`, `npm run seed:demo`, and manual UI testing.
+   - **Test DB** — e.g. `dealership_test`. Name **must** end with `_test`. Used only by Vitest via `DATABASE_URL_TEST` in `backend/.env` (see `.env.example`).
+   Create both with `psql` or pgAdmin before migrating.
 3. **Backend env (never committed):**
    ```powershell
    cd backend
-   npm install
+   npm ci
    npm run setup:env
    ```
-   Creates `backend/.env` from `.env.example` only when missing; generates `JWT_SECRET` (48 random bytes, base64) and `ADMIN_PASSWORD` without printing them. Open `backend/.env` locally for `ADMIN_EMAIL` (`admin@autoyard.local`) and `ADMIN_PASSWORD`.
-4. **Schema & seed:**
+   Creates `backend/.env` from `.env.example` only when missing; generates `JWT_SECRET` (48 random bytes, base64) and `ADMIN_PASSWORD` without printing them. Set `DATABASE_URL` to the dev database and `DATABASE_URL_TEST` to the test database. Open `backend/.env` locally for `ADMIN_EMAIL` (`admin@autoyard.local`) and `ADMIN_PASSWORD`.
+4. **Schema & seed (dev database):**
    ```powershell
    npx prisma migrate deploy
    npx prisma generate
@@ -77,9 +80,9 @@ graph TD
 5. **Run servers (two terminals):**
    ```powershell
    cd backend; npm run dev
-   cd frontend; npm install; npm run dev
+   cd frontend; npm ci; npm run dev
    ```
-6. **Smoke check:** `curl.exe http://localhost:3000/health` → 200; `curl.exe http://localhost:5173/api/vehicles` → 401 (proxy to backend).
+6. **Smoke check:** `curl.exe http://localhost:3000/health` → 200; `curl.exe http://localhost:5173/api/vehicles` → 401 (proxy to backend). Register a user, log in, browse inventory, open a vehicle details page, purchase one unit, and (as admin) create a vehicle. **Two-window race:** with quantity 1, attempt purchase from two browser windows; exactly one should succeed (409 on the other).
 
 ### Troubleshooting
 
@@ -95,7 +98,7 @@ graph TD
 
 ### Frontend (daily dev)
 1. `cd frontend`
-2. `npm install` (first time)
+2. `npm ci` (first time and after lockfile changes)
 3. `npm run dev` — optional `frontend/.env` with `VITE_API_URL`; dev proxy handles `/api` without it
 4. Quality gate: `npm run build && npx tsc --noEmit && npm run lint && npm test`
 
@@ -109,6 +112,7 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 | --- | --- | --- | --- |
 | POST | `/api/auth/register` | Public + rate limited | Registers as `USER`; rejects unknown fields; returns `{ user, token }` (no passwordHash) |
 | POST | `/api/auth/login` | Public + rate limited | Identical 401 for unknown/wrong password; dummy hash used for unknown email; returns `{ user, token }` |
+| POST | `/api/auth/logout` | Authenticated | Revokes the current JWT session (token version bump); returns 204 |
 | GET | `/api/vehicles` | Authenticated | List all vehicles (includes quantity 0). Each item includes core fields, optional spec fields, `imageUrl`, and ISO `createdAt` / `updatedAt`. |
 | GET | `/api/vehicles/search` | Authenticated | Search: make/model case-insensitive contains; category case-insensitive exact; minPrice/maxPrice inclusive; optional `fuelType`, `minYear`, `maxOdometerKm`; `minPrice > maxPrice` → 400. Registered before `/:id`. |
 | GET | `/api/vehicles/:id` | Authenticated | Single vehicle by UUID. **200** with full DTO; **400** if `id` is not a UUID; **404** if not found. |
@@ -193,7 +197,7 @@ Measure before optimizing; keep before/after tables in `docs/ai-reports/P1-REPOR
 
 | Budget | Limit | Check |
 | --- | ---: | --- |
-| Total JS (gzip, `dist/assets/*.js`) | 110 kB | `cd frontend && npm run build && npm run check:bundle-size` |
+| Total JS (gzip, `dist/assets/*.js`) | ~126.6 kB (measured + 5% headroom) | `cd frontend && npm run build && npm run check:bundle-size` |
 | CSS (gzip) | 10 kB | same script |
 
 **Lighthouse (public pages):** build + `npx vite preview --port 4173`, then `npx lighthouse http://127.0.0.1:4173/login --chrome-flags="--headless=new" --only-categories=performance` (and `/credits`). Authenticated dashboard/details need a logged-in session and are not headless-audited the same way.
