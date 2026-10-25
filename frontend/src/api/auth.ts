@@ -19,3 +19,7 @@ export function registerRequest(credentials: Credentials): Promise<AuthResponse>
     body: credentials,
   });
 }
+
+export function logoutRequest(): Promise<void> {
+  return apiRequest<void>("/api/auth/logout", { method: "POST" });
+}

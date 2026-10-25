@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "./AuthContext";
 vi.mock("../api/auth", () => ({
   loginRequest: vi.fn(),
   registerRequest: vi.fn(),
+  logoutRequest: vi.fn().mockResolvedValue(undefined),
 }));
 
 const mockedLogin = vi.mocked(loginRequest);
@@ -18,8 +19,7 @@ const mockedRegister = vi.mocked(registerRequest);
 
 function tokenFor(payload: {
   sub: string;
-  email: string;
-  role: Role;
+  tv?: number;
   exp: number;
 }): string {
   const encode = (value: object) =>
@@ -27,7 +27,19 @@ function tokenFor(payload: {
       .replaceAll("+", "-")
       .replaceAll("/", "_")
       .replace(/=+$/, "");
-  return `${encode({ alg: "HS256", typ: "JWT" })}.${encode(payload)}.signature`;
+  return `${encode({ alg: "HS256", typ: "JWT" })}.${encode({
+    sub: payload.sub,
+    tv: payload.tv ?? 0,
+    exp: payload.exp,
+  })}.signature`;
+}
+
+function seedSession(
+  token: string,
+  user: { id: string; email: string; role: Role },
+): void {
+  sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+  sessionStorage.setItem("dealership_user", JSON.stringify(user));
 }
 
 function Probe() {
@@ -69,8 +81,6 @@ describe("AuthContext", () => {
     const user = userEvent.setup();
     const token = tokenFor({
       sub: "user-1",
-      email: "token@example.com",
-      role: "USER",
       exp: Math.floor(Date.now() / 1000) + 3_600,
     });
     const response: AuthResponse = {
@@ -83,7 +93,7 @@ describe("AuthContext", () => {
     await user.click(screen.getByRole("button", { name: "Log in" }));
 
     await waitFor(() => {
-      expect(screen.getByTestId("email").textContent).toBe("token@example.com");
+      expect(screen.getByTestId("email").textContent).toBe("server@example.com");
     });
     expect(screen.getByTestId("role").textContent).toBe("USER");
     expect(screen.getByTestId("token").textContent).toBe(token);
@@ -94,11 +104,13 @@ describe("AuthContext", () => {
     const user = userEvent.setup();
     const token = tokenFor({
       sub: "user-1",
-      email: "user@example.com",
-      role: "USER",
       exp: Math.floor(Date.now() / 1000) + 3_600,
     });
-    sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+    seedSession(token, {
+      id: "user-1",
+      email: "user@example.com",
+      role: "USER",
+    });
 
     renderAuth();
     expect(screen.getByTestId("email").textContent).toBe("user@example.com");
@@ -111,14 +123,12 @@ describe("AuthContext", () => {
   });
 
   it("discards an expired token when the app loads", () => {
-    sessionStorage.setItem(
-      TOKEN_STORAGE_KEY,
+    seedSession(
       tokenFor({
         sub: "user-1",
-        email: "expired@example.com",
-        role: "USER",
         exp: Math.floor(Date.now() / 1000) - 60,
       }),
+      { id: "user-1", email: "expired@example.com", role: "USER" },
     );
 
     renderAuth();
@@ -128,14 +138,12 @@ describe("AuthContext", () => {
   });
 
   it("clears the session and redirects when the API reports unauthorized", async () => {
-    sessionStorage.setItem(
-      TOKEN_STORAGE_KEY,
+    seedSession(
       tokenFor({
         sub: "user-1",
-        email: "user@example.com",
-        role: "USER",
         exp: Math.floor(Date.now() / 1000) + 3_600,
       }),
+      { id: "user-1", email: "user@example.com", role: "USER" },
     );
 
     renderAuth();

@@ -55,8 +55,21 @@ export const GATEWAY_UNAVAILABLE_MESSAGE =
 export const SERVER_ERROR_GENERIC_MESSAGE =
   "Something went wrong on the server. Please try again.";
 
-function getBaseUrl(): string {
+export function getApiBaseUrl(): string {
   return import.meta.env.VITE_API_URL ?? "";
+}
+
+export function resolveRequestUrl(path: string): string {
+  const base = getApiBaseUrl().trim();
+  if (!base) {
+    return path;
+  }
+  const url = new URL(path, base);
+  const allowed = new URL(base).origin;
+  if (url.origin !== allowed) {
+    throw new ApiError(0, "INVALID_REQUEST", "API request target is not allowed.");
+  }
+  return url.toString();
 }
 
 function isGatewayStatus(status: number): boolean {
@@ -119,8 +132,16 @@ function apiErrorForUnreadableBody(status: number): ApiError {
   );
 }
 
+function assertJsonContentType(response: Response): void {
+  const type = response.headers.get("content-type")?.split(";")[0]?.trim();
+  if (type && type !== "application/json") {
+    throw apiErrorForUnreadableBody(response.status);
+  }
+}
+
 export function handleUnauthorized(): void {
   sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  sessionStorage.removeItem("dealership_user");
 
   if (unauthorizedHandler) {
     unauthorizedHandler();
@@ -150,10 +171,12 @@ export async function apiRequest<T>(
   let response: Response;
 
   try {
-    response = await fetch(`${getBaseUrl()}${path}`, {
+    response = await fetch(resolveRequestUrl(path), {
       method: options.method ?? "GET",
       headers,
       signal: options.signal,
+      credentials: "omit",
+      referrerPolicy: "no-referrer",
       body:
         options.body === undefined ? undefined : JSON.stringify(options.body),
     });
@@ -172,6 +195,8 @@ export async function apiRequest<T>(
   if (response.status === 204) {
     return undefined as T;
   }
+
+  assertJsonContentType(response);
 
   let payload: unknown;
 

@@ -4,16 +4,18 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginRequest, registerRequest } from "../api/auth";
+import { loginRequest, logoutRequest, registerRequest } from "../api/auth";
 import { ApiError, setUnauthorizedHandler } from "../api/client";
 import type { AuthUser } from "../types";
+import { AUTH_IDLE_TIMEOUT_MS } from "./constants";
 import {
   clearSession,
-  decodeToken,
+  isTokenStructurallyValid,
   readSession,
   saveSession,
   type Session,
@@ -29,19 +31,45 @@ export type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function requireDecodedUser(token: string): AuthUser {
-  const user = decodeToken(token);
-
-  if (!user) {
+function requireUserFromResponse(
+  token: string,
+  user: AuthUser,
+): { token: string; user: AuthUser } {
+  if (!isTokenStructurallyValid(token)) {
     throw new ApiError(401, "INVALID_TOKEN", "The session token is invalid.");
   }
-
-  return user;
+  return { token, user };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(() => readSession());
+  const [idleToast, setIdleToast] = useState<string | null>(null);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearIdleTimer = useCallback(() => {
+    if (idleTimer.current) {
+      clearTimeout(idleTimer.current);
+      idleTimer.current = null;
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    void logoutRequest().catch(() => {});
+    clearSession();
+    setSession(null);
+    clearIdleTimer();
+  }, [clearIdleTimer]);
+
+  const resetIdleTimer = useCallback(() => {
+    clearIdleTimer();
+    if (!session?.token) return;
+    idleTimer.current = setTimeout(() => {
+      setIdleToast("Signed out after 30 minutes of inactivity.");
+      logout();
+      navigate("/login", { replace: true });
+    }, AUTH_IDLE_TIMEOUT_MS);
+  }, [clearIdleTimer, logout, navigate, session?.token]);
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
@@ -49,27 +77,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       navigate("/login", { replace: true });
     });
-
     return () => setUnauthorizedHandler(null);
   }, [navigate]);
 
+  useEffect(() => {
+    if (!session?.token) {
+      clearIdleTimer();
+      return;
+    }
+    const events = ["pointerdown", "keydown", "touchstart", "scroll"] as const;
+    const onActivity = () => resetIdleTimer();
+    for (const event of events) {
+      window.addEventListener(event, onActivity, { passive: true });
+    }
+    resetIdleTimer();
+    return () => {
+      for (const event of events) {
+        window.removeEventListener(event, onActivity);
+      }
+      clearIdleTimer();
+    };
+  }, [clearIdleTimer, resetIdleTimer, session?.token]);
+
   const login = useCallback(async (email: string, password: string) => {
     const response = await loginRequest({ email, password });
-    const user = requireDecodedUser(response.token);
-    saveSession(response.token);
-    setSession({ token: response.token, user });
+    const next = requireUserFromResponse(response.token, response.user);
+    saveSession(next.token, next.user);
+    setSession(next);
   }, []);
 
   const register = useCallback(async (email: string, password: string) => {
     const response = await registerRequest({ email, password });
-    const user = requireDecodedUser(response.token);
-    saveSession(response.token);
-    setSession({ token: response.token, user });
-  }, []);
-
-  const logout = useCallback(() => {
-    clearSession();
-    setSession(null);
+    const next = requireUserFromResponse(response.token, response.user);
+    saveSession(next.token, next.user);
+    setSession(next);
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -83,7 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [login, logout, register, session],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {idleToast && (
+        <div className="sr-only" role="status" aria-live="polite">
+          {idleToast}
+        </div>
+      )}
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthContextValue {

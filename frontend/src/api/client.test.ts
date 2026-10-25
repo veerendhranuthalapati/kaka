@@ -10,6 +10,7 @@ function response(status: number, body?: unknown): Response {
   return {
     ok: status >= 200 && status < 300,
     status,
+    headers: new Headers({ "content-type": "application/json" }),
     json: async () => body,
   } as Response;
 }
@@ -74,6 +75,31 @@ describe("apiRequest", () => {
     expect(init.body).toBe(
       JSON.stringify({ email: "user@example.com", password: "password123" }),
     );
+    expect(init.credentials).toBe("omit");
+    expect(init.referrerPolicy).toBe("no-referrer");
+  });
+
+  it("rejects API paths that resolve outside the configured API origin", async () => {
+    vi.stubEnv("VITE_API_URL", "http://127.0.0.1:3000");
+    const { resolveRequestUrl: resolve } = await import("./client");
+    expect(() => resolve("//evil.example/api/vehicles")).toThrow(ApiError);
+    vi.unstubAllEnvs();
+  });
+
+  it("rejects non-JSON success responses", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "text/html" }),
+        json: async () => ({}),
+      } as unknown as Response),
+    );
+
+    await expect(apiRequest("/api/vehicles")).rejects.toMatchObject({
+      code: "INVALID_RESPONSE",
+    });
   });
 
   it("clears the session and notifies the app on a 401 response", async () => {

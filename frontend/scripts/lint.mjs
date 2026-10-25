@@ -7,8 +7,20 @@ const rules = [
     pattern: /dangerouslySetInnerHTML/,
     message: "dangerouslySetInnerHTML is not allowed",
   },
+  { pattern: /\binnerHTML\b/, message: "innerHTML is not allowed" },
+  { pattern: /\bouterHTML\b/, message: "outerHTML is not allowed" },
+  { pattern: /insertAdjacentHTML/, message: "insertAdjacentHTML is not allowed" },
+  { pattern: /document\.write\s*\(/, message: "document.write is not allowed" },
   { pattern: /\beval\s*\(/, message: "eval is not allowed" },
   { pattern: /new\s+Function\s*\(/, message: "new Function is not allowed" },
+  {
+    pattern: /setTimeout\s*\(\s*['"`]/,
+    message: "setTimeout with string argument is not allowed",
+  },
+  {
+    pattern: /setInterval\s*\(\s*['"`]/,
+    message: "setInterval with string argument is not allowed",
+  },
   {
     pattern: /localStorage/,
     message: "use sessionStorage for the auth token",
@@ -42,6 +54,12 @@ for (const file of files) {
   const lines = (await readFile(file, "utf8")).split(/\r?\n/);
   lines.forEach((line, index) => {
     for (const rule of rules) {
+      if (
+        rule.pattern.source === "localStorage" &&
+        relative(process.cwd(), file).includes("session.security.test")
+      ) {
+        continue;
+      }
       if (rule.pattern.test(line)) {
         violations.push(
           `${relative(process.cwd(), file)}:${index + 1} ${rule.message}`,
