@@ -93,6 +93,7 @@ graph TD
 | Missing `imageUrl` column | Migrations not applied on dev DB | `npx prisma migrate deploy` in `backend/` |
 | `TRUST_PROXY` validation error | Invalid value in `.env` | Use `false` locally, or a numeric hop count behind a proxy — not `true` |
 | Browser `502` on `/api/*` | Backend not listening on port 3000 | Start `npm run dev` in `backend/`; confirm `PORT` matches Vite proxy target |
+| Blank page after login | Render error, stuck route fade, or API failure swallowed | Open the browser console; check **prefers-reduced-motion** (OS “reduce motion”); read the in-app error boundary message if shown |
 
 `.env` files are git-ignored — never commit them. Before commits, run `git check-ignore backend/.env` and ensure `git status` shows no `.env` staged.
 
