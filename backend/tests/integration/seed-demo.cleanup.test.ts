@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "../../src/lib/prisma.js";
 import { cleanupLegacyDemoSeedVehicles } from "../../scripts/seed-demo.lib.js";
 import { truncateTables } from "../helpers/db.js";
@@ -10,6 +10,10 @@ const base = {
 };
 
 describe("cleanupLegacyDemoSeedVehicles", () => {
+  beforeEach(async () => {
+    await truncateTables();
+  });
+
   afterEach(async () => {
     await truncateTables();
   });

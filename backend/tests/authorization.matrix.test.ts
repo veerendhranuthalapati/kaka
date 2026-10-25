@@ -31,7 +31,7 @@ describe("authorization matrix", () => {
 
     const regNo = await request(app).post("/api/auth/register").send({
       email: `u${Date.now()}@test.com`,
-      password: "password123456",
+      password: "ValidPass9!xyzz",
     });
     expect(regNo.status).toBe(201);
 

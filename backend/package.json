@@ -14,10 +14,11 @@
     "fetch:car-photos": "tsx scripts/fetch-car-photos.ts",
     "generate:photo-review": "tsx scripts/generate-photo-review.ts",
     "setup:env": "tsx scripts/setup-env.ts",
+    "security:smoke": "tsx scripts/security-smoke.ts",
     "postinstall": "prisma generate"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.14.0"
   },
   "prisma": {
     "schema": "prisma/schema.prisma",

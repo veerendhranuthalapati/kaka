@@ -1,23 +1,38 @@
 import { describe, expect, it } from "vitest";
 import { loadConfig } from "../../src/config/env.js";
 
+const TEST_JWT_SECRET =
+  "unit-test-jwt-secret-entropy-abcdefghijklmnop-99";
+const TEST_ENV = {
+  JWT_SECRET: TEST_JWT_SECRET,
+  CORS_ORIGIN: "http://localhost:5173",
+} as NodeJS.ProcessEnv;
+
 describe("trust proxy parsing", () => {
   it("throws when TRUST_PROXY is 'true'", () => {
     expect(() =>
-      loadConfig({ JWT_SECRET: "x".repeat(32), TRUST_PROXY: "true" } as NodeJS.ProcessEnv),
+      loadConfig({ ...TEST_ENV, TRUST_PROXY: "true" }),
     ).toThrow();
   });
 
   it("throws when TRUST_PROXY is boolean true", () => {
     expect(() =>
-      loadConfig({ JWT_SECRET: "x".repeat(32), TRUST_PROXY: true as unknown as string }),
+      loadConfig({ ...TEST_ENV, TRUST_PROXY: true as unknown as string }),
     ).toThrow();
   });
 
   it("accepts unset/false/positive integer/IP string", () => {
-    expect(loadConfig({ JWT_SECRET: "x".repeat(32) } as NodeJS.ProcessEnv).trustProxy).toBe(false);
-    expect(loadConfig({ JWT_SECRET: "x".repeat(32), TRUST_PROXY: "false" } as NodeJS.ProcessEnv).trustProxy).toBe(false);
-    expect(loadConfig({ JWT_SECRET: "x".repeat(32), TRUST_PROXY: "1" } as NodeJS.ProcessEnv).trustProxy).toBe(1);
-    expect(loadConfig({ JWT_SECRET: "x".repeat(32), TRUST_PROXY: "loopback" } as NodeJS.ProcessEnv).trustProxy).toBe("loopback");
+    expect(
+      loadConfig(TEST_ENV).trustProxy,
+    ).toBe(false);
+    expect(
+      loadConfig({ ...TEST_ENV, TRUST_PROXY: "false" }).trustProxy,
+    ).toBe(false);
+    expect(
+      loadConfig({ ...TEST_ENV, TRUST_PROXY: "1" }).trustProxy,
+    ).toBe(1);
+    expect(
+      loadConfig({ ...TEST_ENV, TRUST_PROXY: "loopback" }).trustProxy,
+    ).toBe("loopback");
   });
 });

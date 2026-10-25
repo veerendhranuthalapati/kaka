@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { CreateVehicleBody } from "../validators/vehicle.create.schema.js";
 import type { SearchVehiclesQuery } from "../validators/vehicle.search.schema.js";
 import type { UpdateVehicleBody } from "../validators/vehicle.update.schema.js";
+import { logSecurityEvent } from "../lib/logger.js";
 import { VehicleService } from "../services/vehicle.service.js";
 
 const vehicleService = new VehicleService();
@@ -13,6 +14,11 @@ export async function createVehicle(
 ): Promise<void> {
   try {
     const vehicle = await vehicleService.create(req.body);
+    logSecurityEvent("admin_vehicle_create", {
+      requestId: req.requestId,
+      actorId: req.user?.id,
+      entityId: vehicle.id,
+    });
     res.status(201).json(vehicle);
   } catch (error) {
     next(error);
@@ -66,6 +72,11 @@ export async function updateVehicle(
 ): Promise<void> {
   try {
     const vehicle = await vehicleService.update(req.params.id, req.body);
+    logSecurityEvent("admin_vehicle_update", {
+      requestId: req.requestId,
+      actorId: req.user?.id,
+      entityId: vehicle.id,
+    });
     res.status(200).json(vehicle);
   } catch (error) {
     next(error);
@@ -79,6 +90,11 @@ export async function deleteVehicle(
 ): Promise<void> {
   try {
     await vehicleService.remove(req.params.id);
+    logSecurityEvent("admin_vehicle_delete", {
+      requestId: req.requestId,
+      actorId: req.user?.id,
+      entityId: req.params.id,
+    });
     res.status(204).send();
   } catch (error) {
     next(error);
@@ -92,6 +108,11 @@ export async function purchaseVehicle(
 ): Promise<void> {
   try {
     const vehicle = await vehicleService.purchase(req.params.id);
+    logSecurityEvent("vehicle_purchase", {
+      requestId: req.requestId,
+      actorId: req.user?.id,
+      entityId: vehicle.id,
+    });
     res.status(200).json(vehicle);
   } catch (error) {
     next(error);
@@ -105,6 +126,11 @@ export async function restockVehicle(
 ): Promise<void> {
   try {
     const vehicle = await vehicleService.restock(req.params.id, req.body.amount);
+    logSecurityEvent("admin_vehicle_restock", {
+      requestId: req.requestId,
+      actorId: req.user?.id,
+      entityId: vehicle.id,
+    });
     res.status(200).json(vehicle);
   } catch (error) {
     next(error);

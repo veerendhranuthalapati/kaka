@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { VEHICLE_FUEL_TYPES } from "./vehicle.specs.schema.js";
+import { safeText } from "./safeText.js";
 
 const numericQuery = z.coerce.number();
 
 export const searchVehiclesQuerySchema = z
   .object({
-    make: z.string().min(1).optional(),
-    model: z.string().min(1).optional(),
-    category: z.string().min(1).optional(),
+    make: safeText(120).min(1).optional(),
+    model: safeText(120).min(1).optional(),
+    category: safeText(80).min(1).optional(),
     minPrice: numericQuery.optional(),
     maxPrice: numericQuery.optional(),
     fuelType: z.enum(VEHICLE_FUEL_TYPES).optional(),

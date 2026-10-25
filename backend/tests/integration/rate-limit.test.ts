@@ -12,6 +12,7 @@ describe("POST /api/auth/login rate limiting", () => {
     const app = createApp({
       authRateLimitMax: 3,
       authRateLimitWindowMs: 60_000,
+      globalMax: 10_000,
     });
 
     const attempts = [];
@@ -37,6 +38,7 @@ describe("POST /api/auth/login rate limiting", () => {
       authRateLimitMax: 3,
       authRateLimitWindowMs: 60_000,
       trustProxy: 1,
+      globalMax: 10_000,
     });
 
     for (let index = 0; index < 3; index += 1) {
@@ -64,6 +66,7 @@ describe("POST /api/auth/login rate limiting", () => {
     const app = createApp({
       authRateLimitMax: 3,
       authRateLimitWindowMs: 60_000,
+      globalMax: 10_000,
     });
 
     for (let index = 0; index < 3; index += 1) {
