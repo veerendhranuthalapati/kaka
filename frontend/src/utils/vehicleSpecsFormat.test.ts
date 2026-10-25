@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatBattery,
   formatCc,
   formatEconomy,
   formatKm,
   formatPower,
+  formatRange,
+  formatSeats,
   formatTorque,
   formatYear,
   labelDrivetrain,
@@ -31,8 +34,29 @@ describe("vehicleSpecsFormat", () => {
   it("labels enum values", () => {
     expect(labelFuelType("PETROL")).toBe("Petrol");
     expect(labelFuelType("PLUG_IN_HYBRID")).toBe("Plug-in hybrid");
+    expect(labelFuelType("DIESEL")).toBe("Diesel");
+    expect(labelFuelType("ELECTRIC")).toBe("Electric");
+    expect(labelFuelType("HYBRID")).toBe("Hybrid");
+    expect(labelFuelType("CNG")).toBe("CNG");
+    expect(labelFuelType("LPG")).toBe("LPG");
+    expect(labelFuelType("UNKNOWN_FUEL")).toBe("UNKNOWN_FUEL");
+    expect(labelTransmission("MANUAL")).toBe("Manual");
+    expect(labelTransmission("AUTOMATIC")).toBe("Automatic");
+    expect(labelTransmission("CVT")).toBe("CVT");
     expect(labelTransmission("DCT")).toBe("DCT");
+    expect(labelTransmission("OTHER")).toBe("OTHER");
+    expect(labelDrivetrain("FWD")).toBe("FWD");
+    expect(labelDrivetrain("RWD")).toBe("RWD");
+    expect(labelDrivetrain("AWD")).toBe("AWD");
     expect(labelDrivetrain("FOUR_WD")).toBe("4WD");
+    expect(labelDrivetrain(null)).toBe("-");
     expect(labelFuelType(null)).toBe("-");
+  });
+
+  it("formats seats, range, and battery", () => {
+    expect(formatSeats(5)).toBe("5");
+    expect(formatSeats(null)).toBe("-");
+    expect(formatRange(400)).toBe("400 km");
+    expect(formatBattery(75)).toBe("75 kWh");
   });
 });

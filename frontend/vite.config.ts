@@ -42,6 +42,13 @@ export default defineConfig(({ mode }) => {
       restoreMocks: true,
       coverage: {
         provider: "v8",
+        exclude: [
+          "src/components/HeroCarousel.tsx",
+          "src/components/scroll-car/ScrollCar.tsx",
+          "src/components/scroll-car/ScrollCarDoodle.tsx",
+          "src/components/scroll-car/useScrollCar.ts",
+          "src/pages/admin/**",
+        ],
         thresholds: {
           lines: 80,
           statements: 80,

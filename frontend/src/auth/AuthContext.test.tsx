@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loginRequest, registerRequest } from "../api/auth";
 import { ApiError, handleUnauthorized, TOKEN_STORAGE_KEY } from "../api/client";
 import type { AuthResponse, Role } from "../types";
+import { AUTH_IDLE_TIMEOUT_MS } from "./constants";
 import { AuthProvider, useAuth } from "./AuthContext";
 
 vi.mock("../api/auth", () => ({
@@ -193,5 +194,32 @@ describe("AuthContext", () => {
 
     expect(await screen.findByText("Invalid email or password")).toBeTruthy();
     expect(sessionStorage.getItem(TOKEN_STORAGE_KEY)).toBeNull();
+  });
+
+  it("logs out after the idle timeout without interaction", async () => {
+    vi.useFakeTimers();
+    const exp = Math.floor(Date.now() / 1000) + 3600;
+    seedSession(
+      tokenFor({ sub: "idle-user", exp }),
+      { id: "idle-user", email: "idle@example.com", role: "USER" },
+    );
+
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <Probe />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId("email").textContent).toBe("idle@example.com");
+
+    act(() => {
+      vi.advanceTimersByTime(AUTH_IDLE_TIMEOUT_MS + 1);
+    });
+
+    expect(screen.getByTestId("email").textContent).toBe("anonymous");
+    expect(sessionStorage.getItem(TOKEN_STORAGE_KEY)).toBeNull();
+    vi.useRealTimers();
   });
 });

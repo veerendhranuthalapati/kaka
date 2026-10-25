@@ -87,6 +87,46 @@ describe("RegisterPage", () => {
     );
   });
 
+  it("maps EMAIL_TAKEN to the email field", async () => {
+    const user = userEvent.setup();
+    mockRegister.mockRejectedValueOnce(
+      new ApiError(409, "EMAIL_TAKEN", "Email already registered"),
+    );
+
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText("Email"), "taken@example.com");
+    await user.type(screen.getByLabelText("Password"), "validPassword123");
+    await user.click(screen.getByRole("button", { name: /create account/i }));
+
+    expect((await screen.findByTestId("email-error")).textContent).toContain(
+      "Email already registered",
+    );
+  });
+
+  it("shows a fallback message for unexpected errors", async () => {
+    const user = userEvent.setup();
+    mockRegister.mockRejectedValueOnce(new Error("boom"));
+
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText("Email"), "test@example.com");
+    await user.type(screen.getByLabelText("Password"), "validPassword123");
+    await user.click(screen.getByRole("button", { name: /create account/i }));
+
+    expect(
+      await screen.findByText("Something went wrong. Try again."),
+    ).toBeTruthy();
+  });
+
   it("shows the generic server error message and a retry control", async () => {
     const user = userEvent.setup();
     mockRegister.mockRejectedValueOnce(

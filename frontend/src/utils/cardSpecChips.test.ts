@@ -49,4 +49,14 @@ describe("cardSpecChips", () => {
       cardSpecChips({ ...base, year: 2024, odometerKm: 0, fuelType: "ELECTRIC" }),
     ).toEqual(["2024", "New", "Electric"]);
   });
+
+  it("adds drivetrain when fewer than four chips exist", () => {
+    expect(
+      cardSpecChips({
+        ...base,
+        year: 2020,
+        drivetrain: "FOUR_WD",
+      }),
+    ).toEqual(["2020", "4WD"]);
+  });
 });

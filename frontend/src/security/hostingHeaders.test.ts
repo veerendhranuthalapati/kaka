@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  apiOriginFromBaseUrl,
   buildContentSecurityPolicy,
   buildHostingSecurityHeaders,
 } from "./hostingHeaders";
@@ -18,6 +19,11 @@ describe("hostingHeaders", () => {
     const csp = buildContentSecurityPolicy();
     expect(csp).toMatch(/style-src 'self' 'unsafe-inline'/);
     expect(csp).toMatch(/img-src 'self' data: https:/);
+  });
+
+  it("returns null for invalid API base URLs", () => {
+    expect(apiOriginFromBaseUrl("not-a-url")).toBeNull();
+    expect(apiOriginFromBaseUrl(undefined)).toBeNull();
   });
 
   it("includes auxiliary security headers", () => {

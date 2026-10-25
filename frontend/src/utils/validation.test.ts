@@ -20,6 +20,14 @@ describe("validatePassword", () => {
     expect(validatePassword("😀".repeat(20))).toMatch(/UTF-8 bytes/i);
     expect(validatePassword("goodPassword1")).toBeNull();
   });
+
+  it("falls back when TextEncoder is unavailable", () => {
+    const encoder = globalThis.TextEncoder;
+    // @ts-expect-error test shim
+    globalThis.TextEncoder = undefined;
+    expect(validatePassword("abcdefgh")).toBeNull();
+    globalThis.TextEncoder = encoder;
+  });
 });
 
 describe("validateCredentials", () => {

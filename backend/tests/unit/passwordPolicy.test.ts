@@ -17,4 +17,24 @@ describe("validatePasswordPolicy", () => {
       validatePasswordPolicy("Str0ng!User9x", { email: "other@example.com" }),
     ).toBeNull();
   });
+
+  it("rejects common passwords", () => {
+    expect(validatePasswordPolicy("password")).toBeTruthy();
+  });
+
+  it("rejects passwords outside length bounds", () => {
+    expect(validatePasswordPolicy("short")).toBeTruthy();
+    expect(validatePasswordPolicy("a".repeat(73))).toBeTruthy();
+  });
+
+  it("requires admin strength when flagged", () => {
+    expect(
+      validatePasswordPolicy("shortadmin1!", { requireAdminStrength: true }),
+    ).toBeTruthy();
+    expect(
+      validatePasswordPolicy("AdminStr0ng!Pass14", {
+        requireAdminStrength: true,
+      }),
+    ).toBeNull();
+  });
 });
