@@ -184,6 +184,7 @@
   }
 
   .route-fade {
+    opacity: 1;
     @apply motion-safe:animate-fade-in motion-reduce:animate-none;
   }
 

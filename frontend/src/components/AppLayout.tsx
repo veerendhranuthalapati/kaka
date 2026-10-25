@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { RouteErrorBoundary } from "./RouteErrorBoundary";
 import { TopBar } from "./TopBar";
 import { TopBarActionsProvider } from "./TopBarActionsContext";
 
@@ -18,7 +19,9 @@ export function AppLayout() {
   return (
     <TopBarActionsProvider>
       <TopBar user={user} onLogout={logout} variant={variant} />
-      <Outlet />
+      <RouteErrorBoundary>
+        <Outlet />
+      </RouteErrorBoundary>
     </TopBarActionsProvider>
   );
 }

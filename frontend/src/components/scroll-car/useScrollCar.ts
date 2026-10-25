@@ -247,12 +247,15 @@ export function useScrollCar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", syncVisibility);
 
-    const ro = new ResizeObserver(() => {
-      syncVisibility();
-      readMetrics();
-      wakeLoop();
-    });
-    ro.observe(document.body);
+    let ro: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        syncVisibility();
+        readMetrics();
+        wakeLoop();
+      });
+      ro.observe(document.body);
+    }
 
     const mq = window.matchMedia("(min-width: 640px)");
     mq.addEventListener("change", syncVisibility);
@@ -273,7 +276,7 @@ export function useScrollCar() {
       window.removeEventListener("resize", syncVisibility);
       mq.removeEventListener("change", syncVisibility);
       lockObserver.disconnect();
-      ro.disconnect();
+      ro?.disconnect();
       window.clearTimeout(idleTimer);
       window.clearTimeout(motionRef.current.tailPulseTimer);
       stopLoop();
