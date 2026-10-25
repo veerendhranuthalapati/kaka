@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { safeHref } from "../security/safeUrl";
 import { carPhotoManifest } from "../utils/carPhotos";
 
 export function PhotoCreditsPage() {
@@ -25,24 +26,32 @@ export function PhotoCreditsPage() {
               <p className="font-medium text-ink">{photo.title.replace(/^File:/, "")}</p>
               <p className="text-muted">Author: {photo.author}</p>
               <p>
-                <a
-                  className="link"
-                  href={photo.licenseUrl}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  {photo.licenseShortName}
-                </a>
+                {safeHref(photo.licenseUrl) ? (
+                  <a
+                    className="link"
+                    href={safeHref(photo.licenseUrl)!}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    {photo.licenseShortName}
+                  </a>
+                ) : (
+                  <span>{photo.licenseShortName}</span>
+                )}
               </p>
               <p>
-                <a
-                  className="link"
-                  href={photo.descriptionUrl}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  Source on Commons
-                </a>
+                {safeHref(photo.descriptionUrl) ? (
+                  <a
+                    className="link"
+                    href={safeHref(photo.descriptionUrl)!}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Source on Commons
+                  </a>
+                ) : (
+                  <span>Source on Commons</span>
+                )}
               </p>
               <p className="text-label text-muted">Resized for web</p>
             </div>

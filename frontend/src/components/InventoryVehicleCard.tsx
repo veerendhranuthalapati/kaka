@@ -5,6 +5,7 @@ import { prefetchVehicleDetails } from "../utils/prefetchRoute";
 import type { Vehicle } from "../types";
 import { cardSpecChips } from "../utils/cardSpecChips";
 import { formatPrice } from "../utils/format";
+import { VehicleDetailsImageLink } from "./VehicleDetailsImageLink";
 import { VehicleImage } from "./VehicleImage";
 
 function stockClass(quantity: number): string {
@@ -38,16 +39,30 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
   const yearLabel = vehicle.year != null ? String(vehicle.year) : null;
   const chips = cardSpecChips(vehicle, { omitYear: yearLabel != null });
 
+  function prefetchDetails() {
+    prefetchVehicleDetails(vehicle.id, {
+      route: () => import("../pages/VehicleDetails"),
+      data: (id) => loadVehicle(id),
+    });
+  }
+
   return (
     <article className="surface-hover flex h-full flex-col overflow-hidden">
-      <VehicleImage
-        src={vehicle.imageUrl}
-        category={vehicle.category}
+      <VehicleDetailsImageLink
         vehicleId={vehicle.id}
-        alt={title}
+        title={title}
         className="rounded-none"
-        layout="card"
-      />
+        onPrefetch={prefetchDetails}
+      >
+        <VehicleImage
+          src={vehicle.imageUrl}
+          category={vehicle.category}
+          vehicleId={vehicle.id}
+          alt={title}
+          className="rounded-none"
+          layout="card"
+        />
+      </VehicleDetailsImageLink>
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -87,24 +102,9 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
         <Link
           className="link text-center text-body whitespace-nowrap"
           to={`/vehicles/${vehicle.id}`}
-          onMouseEnter={() =>
-            prefetchVehicleDetails(vehicle.id, {
-              route: () => import("../pages/VehicleDetails"),
-              data: (id) => loadVehicle(id),
-            })
-          }
-          onFocus={() =>
-            prefetchVehicleDetails(vehicle.id, {
-              route: () => import("../pages/VehicleDetails"),
-              data: (id) => loadVehicle(id),
-            })
-          }
-          onTouchStart={() =>
-            prefetchVehicleDetails(vehicle.id, {
-              route: () => import("../pages/VehicleDetails"),
-              data: (id) => loadVehicle(id),
-            })
-          }
+          onMouseEnter={prefetchDetails}
+          onFocus={prefetchDetails}
+          onTouchStart={prefetchDetails}
         >
           View details
         </Link>

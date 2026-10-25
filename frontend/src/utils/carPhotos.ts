@@ -1,4 +1,5 @@
 import manifestData from "../data/car-photos.json";
+import { isSafeImagePath } from "../security/safeUrl";
 import { fallbackImageForCategory } from "./fallbackImageForCategory";
 import { isSvgVehicleImageUrl } from "./vehicleImageDisplay";
 
@@ -123,7 +124,7 @@ export function resolveVehicleImageChain(input: {
   categorySvgFailed: boolean;
 }): { url: string; level: VehicleImageChainLevel; isPhoto: boolean } {
   const trimmed = input.imageUrl?.trim() ?? "";
-  if (trimmed && !input.primaryFailed) {
+  if (trimmed && isSafeImagePath(trimmed) && !input.primaryFailed) {
     return {
       url: trimmed,
       level: "primary",

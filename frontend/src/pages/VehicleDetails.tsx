@@ -153,7 +153,10 @@ export function VehicleDetailsPage() {
       <Link className="link text-sm" to="/">← Back to inventory</Link>
 
       <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,22rem)] lg:items-start lg:gap-5">
-        <div className="min-w-0 overflow-hidden rounded-card image-panel p-4 sm:p-6">
+        <div
+          className="min-w-0 overflow-hidden rounded-card image-panel p-4 sm:p-6"
+          style={{ viewTransitionName: `vehicle-${vehicle.id}` }}
+        >
           <VehicleImage
             src={vehicle.imageUrl}
             category={vehicle.category}

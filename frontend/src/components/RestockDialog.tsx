@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useScrollLock } from "../hooks/useScrollLock";
 import type { Vehicle } from "../types";
 
 export type RestockDialogProps = {
@@ -16,6 +17,7 @@ export function RestockDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  useScrollLock(Boolean(vehicle));
 
   useEffect(() => {
     if (!vehicle) return;

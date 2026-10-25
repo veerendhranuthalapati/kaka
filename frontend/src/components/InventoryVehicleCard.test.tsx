@@ -33,7 +33,7 @@ describe("InventoryVehicleCard", () => {
     expect(screen.getByText("2022")).toBeTruthy();
     expect(screen.getByText("12,000 km")).toBeTruthy();
     expect(screen.getByText("Petrol")).toBeTruthy();
-    const link = screen.getByRole("link", { name: /view details/i });
+    const link = screen.getByRole("link", { name: "View details" });
     expect(link.getAttribute("href")).toBe("/vehicles/card-1");
   });
 });

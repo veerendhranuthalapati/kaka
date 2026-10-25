@@ -1,4 +1,6 @@
 import type { Role, Vehicle } from "../types";
+import { TOKEN_STORAGE_KEY } from "../api/client";
+import { USER_STORAGE_KEY } from "../auth/session";
 
 function encode(value: object): string {
   return btoa(JSON.stringify(value))
@@ -8,15 +10,30 @@ function encode(value: object): string {
 }
 
 export function makeToken(
-  role: Role = "USER",
-  options: { email?: string; id?: string; exp?: number } = {},
+  _role: Role = "USER",
+  options: { id?: string; exp?: number; tv?: number } = {},
 ): string {
   return `${encode({ alg: "HS256", typ: "JWT" })}.${encode({
     sub: options.id ?? "user-1",
-    email: options.email ?? "user@example.com",
-    role,
+    tv: options.tv ?? 0,
     exp: options.exp ?? Math.floor(Date.now() / 1000) + 3_600,
   })}.signature`;
+}
+
+export function seedAuthSession(
+  role: Role = "USER",
+  options: { email?: string; id?: string; exp?: number } = {},
+): void {
+  const id = options.id ?? "user-1";
+  sessionStorage.setItem(TOKEN_STORAGE_KEY, makeToken(role, { id, exp: options.exp }));
+  sessionStorage.setItem(
+    USER_STORAGE_KEY,
+    JSON.stringify({
+      id,
+      email: options.email ?? "user@example.com",
+      role,
+    }),
+  );
 }
 
 export function makeVehicle(overrides: Partial<Vehicle> = {}): Vehicle {

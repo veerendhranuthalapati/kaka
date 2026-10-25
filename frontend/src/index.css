@@ -251,6 +251,145 @@
     @apply grid min-w-0 grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6;
   }
 
+  html.has-scroll-car {
+    scrollbar-width: none;
+  }
+
+  html.has-scroll-car::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-top-bar {
+    view-transition-name: none;
+  }
+
+  .scroll-car-root {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 38;
+    width: 44px;
+    pointer-events: none;
+    transition: opacity 220ms ease-out;
+    view-transition-name: none;
+  }
+
+  .scroll-car-road {
+    position: absolute;
+    right: 0;
+    width: 44px;
+    cursor: grab;
+    touch-action: none;
+    pointer-events: auto;
+  }
+
+  .scroll-car-road:active {
+    cursor: grabbing;
+  }
+
+  .scroll-car-road-visual {
+    position: absolute;
+    right: 0;
+    width: 20px;
+    height: 100%;
+    border-radius: 999px;
+    border: 1px solid rgb(42 44 52 / 0.9);
+    background: rgb(16 16 20 / 0.92);
+    contain: layout paint style;
+    overflow: hidden;
+  }
+
+  @media (max-width: 899px) {
+    .scroll-car-road-visual {
+      width: 14px;
+    }
+  }
+
+  .scroll-car-dash {
+    position: absolute;
+    left: 50%;
+    top: -24px;
+    width: 2px;
+    height: calc(100% + 48px);
+    margin-left: -1px;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgb(var(--accent) / 0.45) 0,
+      rgb(var(--accent) / 0.45) 8px,
+      transparent 8px,
+      transparent 16px
+    );
+  }
+
+  .scroll-car-car {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 14px;
+    margin-left: -7px;
+    will-change: auto;
+  }
+
+  .scroll-car-car-inner {
+    transform-origin: 50% 50%;
+    transition: transform 220ms ease-out;
+  }
+
+  .scroll-car-car-inner.scroll-car-tail-pulse .scroll-car-tail {
+    animation: scroll-car-tail-glow 400ms ease-out;
+  }
+
+  @keyframes scroll-car-tail-glow {
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .scroll-car-puffs {
+    position: absolute;
+    left: 50%;
+    top: -6px;
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transform: translateX(-50%);
+    transition: opacity 150ms ease-out;
+  }
+
+  .scroll-car-puffs span {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgb(156 160 170 / 0.7);
+  }
+
+  .scroll-car-flag {
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    opacity: 0;
+    transform: translateX(-50%);
+    transition: opacity 200ms ease-out;
+  }
+
+  @media (max-width: 639px) {
+    .scroll-car-root {
+      display: none !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-car-car-inner {
+      transition: none;
+    }
+    .scroll-car-puffs {
+      display: none;
+    }
+  }
+
   .toast-success {
     @apply border-success/30 bg-success-soft text-success;
   }

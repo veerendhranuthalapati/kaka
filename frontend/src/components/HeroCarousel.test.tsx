@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+import { VehicleDataProvider } from "../data/VehicleDataProvider";
 import { makeVehicle } from "../test/fixtures";
 import { HeroCarousel } from "./HeroCarousel";
 
@@ -17,12 +18,14 @@ describe("HeroCarousel", () => {
   ) {
     return render(
       <MemoryRouter>
+        <VehicleDataProvider>
         <HeroCarousel
           vehicles={vehicles}
           purchasingId={null}
           onPurchase={vi.fn()}
           {...props}
         />
+        </VehicleDataProvider>
       </MemoryRouter>,
     );
   }

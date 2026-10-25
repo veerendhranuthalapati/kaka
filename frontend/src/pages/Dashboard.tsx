@@ -1,4 +1,11 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
 import { BottomActionBar } from "../components/BottomActionBar";
@@ -9,7 +16,8 @@ import {
 } from "../components/InventoryVehicleCard";
 import { RestockDialog } from "../components/RestockDialog";
 import { ConfirmDialog, EmptyState, Toast } from "../components/State";
-import { TopBar } from "../components/TopBar";
+import { SiteFooter } from "../components/SiteFooter";
+import { useRegisterTopBarActions } from "../components/TopBarActionsContext";
 import {
   SCROLL_RESTORE_KEY,
   useVehicleData,
@@ -19,7 +27,7 @@ import type { Vehicle, VehicleSearchParams } from "../types";
 import { selectFeaturedVehicles } from "../utils/featuredVehicles";
 
 export function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const {
     purchaseWithOptimistic,
     deleteVehicleFromCache,
@@ -93,9 +101,19 @@ export function DashboardPage() {
     setPurchasingId(null);
   }
 
-  function scrollToInventory() {
+  const scrollToInventory = useCallback(() => {
     inventoryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  }, []);
+
+  const onCategorySelect = useCallback((category: string) => {
+    setFilters({ category });
+  }, []);
+
+  useRegisterTopBarActions({
+    activeCategory: filters.category,
+    onInventoryClick: scrollToInventory,
+    onCategorySelect,
+  });
 
   function applyQuickSearch(value: string) {
     setDraftSearch(value);
@@ -107,14 +125,6 @@ export function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-canvas pb-32 showroom-glow">
-      <TopBar
-        user={user}
-        onLogout={logout}
-        onInventoryClick={scrollToInventory}
-        activeCategory={filters.category}
-        onCategorySelect={(category) => setFilters({ category })}
-      />
-
       <main className="shell grid gap-12 py-8 lg:py-12">
         <section className="grid gap-4 content-auto-section">
           <div>
@@ -278,6 +288,8 @@ export function DashboardPage() {
           )}
         </section>
       </main>
+
+      <SiteFooter />
 
       <BottomActionBar
         searchInputRef={searchInputRef}

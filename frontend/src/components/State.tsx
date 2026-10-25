@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useScrollLock } from "../hooks/useScrollLock";
 
 export function SkeletonBlock({
   className = "",
@@ -64,6 +65,7 @@ export function ConfirmDialog({
   onCancel: () => void;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  useScrollLock(open);
 
   useEffect(() => {
     if (!open) return;

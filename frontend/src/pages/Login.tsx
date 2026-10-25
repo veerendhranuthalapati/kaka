@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { isSafeRelativeRedirect } from "../security/safeRedirect";
 import { useAuth } from "../auth/AuthContext";
 import { FieldError } from "../components/State";
 import { validateEmail, validatePassword } from "../utils/validation";
@@ -9,6 +10,7 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
@@ -18,8 +20,12 @@ export function LoginPage() {
   const emailError = validateEmail(email);
   const passwordError = validatePassword(password);
   const hasClientError = Boolean(emailError || passwordError);
+  const fromState = (location.state as { from?: string } | null)?.from;
+  const fromQuery = searchParams.get("next");
   const destination =
-    (location.state as { from?: string } | null)?.from ?? "/";
+    (fromState && isSafeRelativeRedirect(fromState) ? fromState : null) ??
+    (fromQuery && isSafeRelativeRedirect(fromQuery) ? fromQuery : null) ??
+    "/";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
