@@ -84,6 +84,7 @@ export function SearchFilters({
     }
 
     const timeout = window.setTimeout(() => {
+      if (priceError(filters)) return;
       onApply(toCriteria(filters));
     }, 300);
 

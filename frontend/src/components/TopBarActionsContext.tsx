@@ -4,7 +4,9 @@ import {
   useEffect,
   useMemo,
   useState,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
 } from "react";
 
 export type TopBarActions = {
@@ -13,9 +15,17 @@ export type TopBarActions = {
   onInventoryClick?: () => void;
 };
 
+function actionsEqual(a: TopBarActions, b: TopBarActions): boolean {
+  return (
+    a.activeCategory === b.activeCategory &&
+    a.onCategorySelect === b.onCategorySelect &&
+    a.onInventoryClick === b.onInventoryClick
+  );
+}
+
 const TopBarActionsContext = createContext<{
   actions: TopBarActions;
-  setActions: (actions: TopBarActions) => void;
+  setActions: Dispatch<SetStateAction<TopBarActions>>;
 } | null>(null);
 
 export function TopBarActionsProvider({ children }: { children: ReactNode }) {
@@ -29,13 +39,13 @@ export function TopBarActionsProvider({ children }: { children: ReactNode }) {
 }
 
 export function useRegisterTopBarActions(actions: TopBarActions): void {
-  const ctx = useContext(TopBarActionsContext);
+  const setActions = useContext(TopBarActionsContext)?.setActions;
   useEffect(() => {
-    if (!ctx) return;
-    ctx.setActions(actions);
-    return () => ctx.setActions({});
+    if (!setActions) return;
+    setActions((previous) => (actionsEqual(previous, actions) ? previous : actions));
+    return () => setActions((previous) => (actionsEqual(previous, {}) ? previous : {}));
   }, [
-    ctx,
+    setActions,
     actions.activeCategory,
     actions.onCategorySelect,
     actions.onInventoryClick,
