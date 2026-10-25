@@ -22,33 +22,23 @@ Captured from the running dev app (`frontend` on port **5173**, `backend` on **3
 
 ### Dashboard — hero and featured vehicles
 
-<p align="center">
-  <img src="./docs/screenshots/01-dashboard-hero.png" alt="Dashboard hero with featured carousel" width="920" />
-</p>
+![Dashboard hero with featured carousel](docs/screenshots/01-dashboard-hero.png)
 
 ### Inventory grid — search, filters, and cards
 
-<p align="center">
-  <img src="./docs/screenshots/02-inventory-grid.png" alt="Inventory grid with vehicle cards" width="920" />
-</p>
+![Inventory grid with vehicle cards](docs/screenshots/02-inventory-grid.png)
 
 ### Vehicle details — image and purchase panel
 
-<p align="center">
-  <img src="./docs/screenshots/03-vehicle-details.png" alt="Vehicle details page with image and actions" width="920" />
-</p>
+![Vehicle details page with image and actions](docs/screenshots/03-vehicle-details.png)
 
 ### Vehicle details — specifications
 
-<p align="center">
-  <img src="./docs/screenshots/04-vehicle-specs.png" alt="Vehicle specifications section" width="920" />
-</p>
+![Vehicle specifications section](docs/screenshots/04-vehicle-specs.png)
 
 ### Admin — edit vehicle
 
-<p align="center">
-  <img src="./docs/screenshots/05-vehicle-edit.png" alt="Admin edit vehicle form" width="920" />
-</p>
+![Admin edit vehicle form](docs/screenshots/05-vehicle-edit.png)
 
 ## Tech stack
 
