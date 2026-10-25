@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createVehicleBodySchema } from "../../src/validators/vehicle.create.schema.js";
-import { DEMO_VEHICLE_CATALOG } from "../../scripts/demo-vehicle-catalog.js";
+import { DEMO_VEHICLE_CATALOG } from "../../scripts/seed-demo.lib.js";
 
 describe("demo vehicle catalog validity", () => {
   it("has 24+ unique make/model rows and category distribution", () => {

@@ -150,5 +150,36 @@ describe("authorization matrix", () => {
       .delete(`/api/vehicles/${created.id}`)
       .set("Authorization", `Bearer ${adminToken}`);
     expect(delA.status).toBe(204);
+
+    const demoDisabled = await request(app)
+      .post("/api/admin/demo-vehicles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({});
+    expect(demoDisabled.status).toBe(404);
+
+    const demoApp = createApp({
+      authRateLimitMax: 1000,
+      authRateLimitWindowMs: 60000,
+      demoDataEndpointEnabled: true,
+    });
+    const demoNo = await request(demoApp)
+      .post("/api/admin/demo-vehicles")
+      .send({});
+    expect(demoNo.status).toBe(401);
+    const demoU = await request(demoApp)
+      .post("/api/admin/demo-vehicles")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({});
+    expect(demoU.status).toBe(403);
+    const demoA = await request(demoApp)
+      .post("/api/admin/demo-vehicles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({});
+    expect(demoA.status).toBe(200);
+    expect(demoA.body).toMatchObject({
+      created: expect.any(Number),
+      updated: expect.any(Number),
+      skipped: expect.any(Number),
+    });
   });
 });

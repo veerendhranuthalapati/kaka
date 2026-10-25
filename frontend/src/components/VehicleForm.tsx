@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import type { VehicleInput, VehicleUpdateInput } from "../types";
 import { AdminVehicleImageField } from "./AdminVehicleImageField";
 import { FieldError } from "./State";
@@ -6,6 +6,7 @@ import {
   type VehicleFormValues,
   validateVehicleFormValues,
   buildVehicleSubmitPayload,
+  isVehicleFormDirty,
 } from "../utils/vehicleFormModel";
 
 const FUEL_OPTIONS = [
@@ -26,17 +27,30 @@ export function VehicleForm({
   initialValues,
   submitting,
   serverFieldErrors = {},
+  onDirtyChange,
   onSubmit,
 }: {
   mode: "create" | "edit";
   initialValues: VehicleFormValues;
   submitting: boolean;
   serverFieldErrors?: Record<string, string>;
+  onDirtyChange?: (dirty: boolean) => void;
   onSubmit: (payload: VehicleInput | VehicleUpdateInput) => Promise<void>;
 }) {
   const [values, setValues] = useState<VehicleFormValues>(initialValues);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
+
+  const initialValuesKey = JSON.stringify(initialValues);
+  useEffect(() => {
+    setValues(initialValues);
+    setClientErrors({});
+    setFormError(null);
+  }, [initialValuesKey, initialValues]);
+
+  useEffect(() => {
+    onDirtyChange?.(isVehicleFormDirty(initialValues, values));
+  }, [initialValues, values, onDirtyChange]);
 
   function update(field: keyof VehicleFormValues, value: string) {
     setValues((current) => ({ ...current, [field]: value }));

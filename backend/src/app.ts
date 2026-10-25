@@ -6,12 +6,14 @@ import { config, type TrustProxySetting } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { ApiError } from "./errors/ApiError.js";
 import { authRouter } from "./routes/auth.routes.js";
+import { adminRouter } from "./routes/admin.routes.js";
 import { vehiclesRouter } from "./routes/vehicles.routes.js";
 
 export type AppOptions = {
   authRateLimitMax?: number;
   authRateLimitWindowMs?: number;
   trustProxy?: TrustProxySetting;
+  demoDataEndpointEnabled?: boolean;
 };
 
 /** Express application factory for production and Supertest. */
@@ -43,6 +45,12 @@ export function createApp(options: AppOptions = {}): Express {
   app.use("/api/auth", authLimiter);
   app.use("/api/auth", authRouter);
   app.use("/api/vehicles", vehiclesRouter);
+
+  const demoEnabled =
+    options.demoDataEndpointEnabled ?? config.demoDataEndpointEnabled;
+  if (demoEnabled) {
+    app.use("/api/admin", adminRouter);
+  }
 
   app.get("/health", (_req, res) => {
     res.status(200).json({ status: "ok" });

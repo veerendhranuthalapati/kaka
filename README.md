@@ -148,6 +148,7 @@ Follow these steps on a clean machine. Commands below use **PowerShell** on Wind
 | `TRUST_PROXY` validation error | Invalid value in `.env` | Use `false` locally, or a numeric hop count behind a proxy — not `true` |
 | Browser `502` on `/api/*` | Backend not listening on port 3000 | Start `npm run dev` in `backend/`; confirm `PORT` matches Vite proxy target |
 | Blank page after login | Render error, stuck route fade, or API failure swallowed | Open the browser console; check **prefers-reduced-motion** (OS “reduce motion”); read the in-app error boundary message if shown |
+| Live dashboard empty | Production has no inventory and `seed:demo` is blocked | Set `DEMO_DATA_ENDPOINT_ENABLED=true`, redeploy, sign in as admin, use **Load sample vehicles** once (or **Add vehicle**), then remove the flag and redeploy |
 
 `.env` files are git-ignored — never commit them. Before commits, run `git check-ignore backend/.env` and ensure `git status` shows no `.env` staged.
 
@@ -176,6 +177,7 @@ All vehicle routes require `Authorization: Bearer <jwt>`. Error responses follow
 | DELETE | `/api/vehicles/:id` | Admin | Returns 204 on success |
 | POST | `/api/vehicles/:id/purchase` | Authenticated | Exactly 1 unit, atomic conditional decrement; 409 `OUT_OF_STOCK` if unavailable |
 | POST | `/api/vehicles/:id/restock` | Admin | Body `{ amount }` integer 1-10000; increments quantity |
+| POST | `/api/admin/demo-vehicles` | Admin | Loads/updates the sample catalogue idempotently (`{ created, updated, skipped }`). **Only registered when `DEMO_DATA_ENDPOINT_ENABLED=true`**; otherwise **404** `NOT_FOUND` (same envelope as unknown routes). Body must be `{}` or omitted; write rate limit applies. |
 | GET | `/health` | Public | `{ "status": "ok" }` |
 
 ## Error codes (common)
@@ -219,6 +221,14 @@ All create/update bodies use **strict** Zod schemas (unknown keys → 400). Spec
 ### Sample / demo data disclaimer
 
 `npm run seed:demo` fills inventory with **illustrative** make/model/spec values for UI and API demos. They are **not** verified against real manufacturer data, VIN registries, or emissions tests. Do not treat seeded specs as factual listings.
+
+## Deployment
+
+`seed:demo` is **disabled in production on purpose** (the script refuses `NODE_ENV=production` and databases ending in `_test`). To load sample vehicles on a live deployment: set **`DEMO_DATA_ENDPOINT_ENABLED=true`**, redeploy, log in as admin and click **Load sample vehicles** once, then remove the variable and redeploy. Or add vehicles through the dashboard **Add vehicle** drawer.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `DEMO_DATA_ENDPOINT_ENABLED` | `false` | When `true`, mounts `POST /api/admin/demo-vehicles` for admins. When `false`, the route is not registered (clients see 404). In production with the flag on, the API logs `demo data endpoint enabled` once at boot. |
 
 ## Assumptions and design decisions
 
@@ -273,8 +283,8 @@ Measure before optimizing; keep before/after tables in `docs/ai-reports/P1-REPOR
 **Command:** `npm test` (from `backend/`, requires Postgres DB whose name ends with `_test`; migrations run automatically)  
 **Output (actual, RUN3):**
 ```
- Test Files  25 passed (25)
-      Tests  114 passed (114)
+ Test Files  28 passed (28)
+      Tests  129 passed (129)
 ```
 
 **Coverage (actual, RUN3):** `npm run test:coverage`
@@ -291,8 +301,8 @@ Lines        : 94.39% ( 337/357 )
 **Command:** `npm test` (from `frontend/`)  
 **Output (actual, RUN3):**
 ```
- Test Files  36 passed (36)
-      Tests  122 passed (122)
+ Test Files  38 passed (38)
+      Tests  135 passed (135)
 ```
 
 **Coverage (actual, RUN3):** `npm run test:coverage`

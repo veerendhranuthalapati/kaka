@@ -9,6 +9,7 @@ const CONFIG_KEYS = [
   "TRUST_PROXY",
   "AUTH_RATE_LIMIT_MAX",
   "AUTH_RATE_LIMIT_WINDOW_MS",
+  "DEMO_DATA_ENDPOINT_ENABLED",
 ] as const;
 
 const example = readFileSync(

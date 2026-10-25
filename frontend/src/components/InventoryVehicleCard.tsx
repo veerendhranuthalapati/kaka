@@ -20,8 +20,11 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
   stockHighlight,
   onPurchase,
   onEdit,
+  onDuplicate,
   onRestock,
   onDelete,
+  insertHighlight,
+  headingId,
 }: {
   vehicle: Vehicle;
   purchasing: boolean;
@@ -29,8 +32,11 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
   stockHighlight?: boolean;
   onPurchase: (vehicle: Vehicle) => void;
   onEdit?: (vehicle: Vehicle) => void;
+  onDuplicate?: (vehicle: Vehicle) => void;
   onRestock?: (vehicle: Vehicle) => void;
   onDelete?: (vehicle: Vehicle) => void;
+  insertHighlight?: boolean;
+  headingId?: string;
 }) {
   const { loadVehicle } = useVehicleData();
   const outOfStock = vehicle.quantity === 0;
@@ -39,7 +45,13 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
   const chips = cardSpecChips(vehicle, { omitYear: yearLabel != null });
 
   return (
-    <article className="surface-hover flex h-full flex-col overflow-hidden">
+    <article
+      className={`surface-hover flex h-full flex-col overflow-hidden ${
+        insertHighlight
+          ? "motion-safe:animate-inventory-insert motion-reduce:animate-none"
+          : ""
+      }`}
+    >
       <VehicleImage
         src={vehicle.imageUrl}
         category={vehicle.category}
@@ -51,7 +63,10 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="font-display text-card-title tracking-tight text-ink">
+            <h3
+              id={headingId}
+              className="font-display text-card-title tracking-tight text-ink"
+            >
               {title}
             </h3>
             {yearLabel && (
@@ -112,6 +127,9 @@ export const InventoryVehicleCard = memo(function InventoryVehicleCard({
           <div className="mt-auto flex flex-wrap gap-2 border-t border-line/80 pt-3">
             <button type="button" className="btn-ghost text-label normal-case whitespace-nowrap" onClick={() => onEdit?.(vehicle)}>
               Edit
+            </button>
+            <button type="button" className="btn-ghost text-label normal-case whitespace-nowrap" onClick={() => onDuplicate?.(vehicle)}>
+              Duplicate
             </button>
             <button type="button" className="btn-ghost text-label normal-case whitespace-nowrap" onClick={() => onRestock?.(vehicle)}>
               Restock

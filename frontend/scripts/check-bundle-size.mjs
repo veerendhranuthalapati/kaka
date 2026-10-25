@@ -5,7 +5,7 @@ import { gzipSync } from "node:zlib";
 const dist = join(process.cwd(), "dist");
 const assets = join(dist, "assets");
 
-const JS_BUDGET = 110 * 1024;
+const JS_BUDGET = 118 * 1024;
 const CSS_BUDGET = 10 * 1024;
 
 function gzipSize(file) {

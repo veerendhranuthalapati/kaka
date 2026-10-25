@@ -113,6 +113,14 @@ export default {
           from: { opacity: "0", transform: "translateY(-8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "drawer-slide-in": {
+          from: { opacity: "0", transform: "translateX(16px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "inventory-insert": {
+          "0%": { opacity: "0.55", transform: "scale(0.98)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
         "stock-highlight": {
           "0%": { backgroundColor: "rgb(var(--accent) / 0)" },
           "40%": { backgroundColor: "rgb(var(--accent) / 0.2)" },
@@ -128,6 +136,8 @@ export default {
         "fade-in": "fade-in 0.2s ease-out both",
         "dialog-in": "dialog-in 0.22s ease-out both",
         "drawer-in": "drawer-in 0.2s ease-out both",
+        "drawer-slide-in": "drawer-slide-in 0.22s ease-out both",
+        "inventory-insert": "inventory-insert 0.65s ease-out both",
         "stock-highlight": "stock-highlight 0.75s ease-out both",
         shimmer: "shimmer 1.4s ease-in-out infinite",
       },

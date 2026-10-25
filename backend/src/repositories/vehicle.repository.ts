@@ -48,10 +48,14 @@ export interface VehicleRepository {
   findAll(): Promise<Vehicle[]>;
   search(filters: VehicleSearchFilters): Promise<Vehicle[]>;
   findById(id: string): Promise<Vehicle | null>;
+  findByMakeAndModel(make: string, model: string): Promise<Vehicle | null>;
   update(id: string, data: UpdateVehicleInput): Promise<Vehicle>;
   delete(id: string): Promise<Vehicle>;
   purchase(id: string): Promise<{ count: number }>;
   restock(id: string, amount: number): Promise<Vehicle>;
+  runDemoSeedTransaction<T>(
+    fn: (repo: VehicleRepository) => Promise<T>,
+  ): Promise<T>;
 }
 
 function toPrismaCreateData(
@@ -97,6 +101,42 @@ export class PrismaVehicleRepository implements VehicleRepository {
 
   findById(id: string): Promise<Vehicle | null> {
     return prisma.vehicle.findUnique({ where: { id } });
+  }
+
+  findByMakeAndModel(make: string, model: string): Promise<Vehicle | null> {
+    return prisma.vehicle.findFirst({ where: { make, model } });
+  }
+
+  runDemoSeedTransaction<T>(
+    fn: (repo: VehicleRepository) => Promise<T>,
+  ): Promise<T> {
+    return prisma.$transaction(async (tx) => {
+      const txRepo: VehicleRepository = {
+        create: (data) => tx.vehicle.create({ data: toPrismaCreateData(data) }),
+        findAll: () => tx.vehicle.findMany({ orderBy: { createdAt: "asc" } }),
+        search: (filters) => this.search(filters),
+        findById: (id) => tx.vehicle.findUnique({ where: { id } }),
+        findByMakeAndModel: (make, model) =>
+          tx.vehicle.findFirst({ where: { make, model } }),
+        update: (id, data) =>
+          tx.vehicle.update({ where: { id }, data: toPrismaUpdateData(data) }),
+        delete: (id) => tx.vehicle.delete({ where: { id } }),
+        purchase: async (id) => {
+          const result = await tx.vehicle.updateMany({
+            where: { id, quantity: { gt: 0 } },
+            data: { quantity: { decrement: 1 } },
+          });
+          return { count: result.count };
+        },
+        restock: (id, amount) =>
+          tx.vehicle.update({
+            where: { id },
+            data: { quantity: { increment: amount } },
+          }),
+        runDemoSeedTransaction: (inner) => inner(txRepo),
+      };
+      return fn(txRepo);
+    });
   }
 
   update(id: string, data: UpdateVehicleInput): Promise<Vehicle> {

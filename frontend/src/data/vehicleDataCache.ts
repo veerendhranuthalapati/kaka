@@ -1,4 +1,5 @@
 import type { Vehicle, VehicleSearchParams } from "../types";
+import { vehicleMatchesSearch } from "../utils/vehicleSearchMatch";
 
 export const STALE_MS = 30_000;
 
@@ -85,6 +86,21 @@ export class VehicleDataCache {
   upsertVehicle(vehicle: Vehicle): void {
     this.setVehicle(vehicle);
     this.syncVehicleInAllSearches(vehicle);
+  }
+
+  appendVehicleToMatchingSearches(
+    vehicle: Vehicle,
+    params: VehicleSearchParams,
+  ): void {
+    if (!vehicleMatchesSearch(vehicle, params)) return;
+    const key = searchCacheKey(params);
+    const entry = this.search.get(key);
+    if (!entry) return;
+    if (entry.data.some((row) => row.id === vehicle.id)) return;
+    this.search.set(key, {
+      ...entry,
+      data: [...entry.data, vehicle],
+    });
   }
 
   removeVehicle(id: string): void {

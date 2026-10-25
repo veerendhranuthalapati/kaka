@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createVehicle } from "../../api/vehicles";
 import { ApiError } from "../../api/client";
@@ -54,7 +54,7 @@ export function AddVehiclePage() {
         )}
         <VehicleForm
           mode="create"
-          initialValues={emptyVehicleFormValues()}
+          initialValues={useMemo(() => emptyVehicleFormValues(), [])}
           submitting={submitting}
           serverFieldErrors={serverFieldErrors}
           onSubmit={handleSubmit}

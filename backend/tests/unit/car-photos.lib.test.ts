@@ -23,7 +23,7 @@ import {
   photoAcceptableForDemoVehicle,
   photoMatchesDemoVehicle,
 } from "../../scripts/car-photos.lib.js";
-import { DEMO_VEHICLE_CATALOG } from "../../scripts/demo-vehicle-catalog.js";
+import { DEMO_VEHICLE_CATALOG } from "../../scripts/seed-demo.lib.js";
 
 const DEMO_MAKES = [...new Set(DEMO_VEHICLE_CATALOG.map((v) => v.make))];
 import type { CommonsSearchPage } from "../../scripts/car-photos.lib.js";

@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { DEMO_VEHICLE_CATALOG } from "./demo-vehicle-catalog.js";
+import { DEMO_VEHICLE_CATALOG } from "../src/demo/catalog.js";
 import { escapeHtml } from "./car-photos.lib.js";
 import { demoVehicleImageSlug } from "./seed-demo.lib.js";
 

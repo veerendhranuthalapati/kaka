@@ -84,6 +84,23 @@ export function vehicleToFormValues(vehicle: Vehicle): VehicleFormValues {
   };
 }
 
+export function vehicleToDuplicateFormValues(vehicle: Vehicle): VehicleFormValues {
+  const base = vehicleToFormValues(vehicle);
+  return {
+    ...base,
+    vin: "",
+    imageUrl: "",
+    quantity: "1",
+  };
+}
+
+export function isVehicleFormDirty(
+  initial: VehicleFormValues,
+  current: VehicleFormValues,
+): boolean {
+  return JSON.stringify(initial) !== JSON.stringify(current);
+}
+
 export function emptyVehicleFormValues(): VehicleFormValues {
   return {
     make: "",

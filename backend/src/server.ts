@@ -5,6 +5,12 @@ import { prisma } from "./lib/prisma.js";
 
 export async function startServer(): Promise<void> {
   await prisma.$connect();
+  if (
+    process.env.NODE_ENV === "production" &&
+    config.demoDataEndpointEnabled
+  ) {
+    console.warn("demo data endpoint enabled");
+  }
   const app = createApp();
 
   const server = app.listen(config.port, () => {

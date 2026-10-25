@@ -1,4 +1,13 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { SAMPLE_CATALOG_VEHICLE_COUNT } from "../constants/demoCatalog";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
 import { BottomActionBar } from "../components/BottomActionBar";
@@ -17,6 +26,18 @@ import {
 } from "../data/VehicleDataProvider";
 import type { Vehicle, VehicleSearchParams } from "../types";
 import { selectFeaturedVehicles } from "../utils/featuredVehicles";
+import {
+  emptyVehicleFormValues,
+  vehicleToDuplicateFormValues,
+  type VehicleFormValues,
+} from "../utils/vehicleFormModel";
+import { searchFiltersActive } from "../utils/vehicleSearchMatch";
+
+const VehicleCreateDrawer = lazy(() =>
+  import("../components/VehicleCreateDrawer").then((mod) => ({
+    default: mod.VehicleCreateDrawer,
+  })),
+);
 
 export function DashboardPage() {
   const { user, logout } = useAuth();
@@ -24,6 +45,8 @@ export function DashboardPage() {
     purchaseWithOptimistic,
     deleteVehicleFromCache,
     restockVehicleInCache,
+    createVehicleForSearch,
+    bumpSearchRefresh,
   } = useVehicleData();
   const [filters, setFilters] = useState<VehicleSearchParams>({});
   const deferredFilters = useDeferredValue(filters);
@@ -36,10 +59,20 @@ export function DashboardPage() {
   const [stockHighlightId, setStockHighlightId] = useState<string | null>(null);
   const [deletingVehicle, setDeletingVehicle] = useState<Vehicle | null>(null);
   const [restockingVehicle, setRestockingVehicle] = useState<Vehicle | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerTitle, setDrawerTitle] = useState("Add vehicle");
+  const [drawerInitialValues, setDrawerInitialValues] = useState<VehicleFormValues>(
+    emptyVehicleFormValues(),
+  );
+  const [insertHighlightId, setInsertHighlightId] = useState<string | null>(null);
+  const [loadSampleOpen, setLoadSampleOpen] = useState(false);
+  const [loadSampleBusy, setLoadSampleBusy] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const inventoryRef = useRef<HTMLElement>(null);
 
   const canManage = user?.role === "ADMIN";
+  const filtersActive = searchFiltersActive(deferredFilters);
+  const inventoryEmpty = !loading && !error && vehicles.length === 0;
 
   useEffect(() => {
     const saved = sessionStorage.getItem(SCROLL_RESTORE_KEY);
@@ -63,6 +96,69 @@ export function DashboardPage() {
     const timeout = window.setTimeout(() => setToast(null), 3_500);
     return () => window.clearTimeout(timeout);
   }, [toast]);
+
+  useEffect(() => {
+    if (!insertHighlightId) return;
+    const timer = window.setTimeout(() => {
+      const heading = document.getElementById(`vehicle-heading-${insertHighlightId}`);
+      if (heading && typeof heading.scrollIntoView === "function") {
+        heading.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      if (heading instanceof HTMLElement) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
+    }, 80);
+    const clearHighlight = window.setTimeout(() => setInsertHighlightId(null), 900);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(clearHighlight);
+    };
+  }, [insertHighlightId, vehicles]);
+
+  function openCreateDrawer(values: VehicleFormValues, title: string) {
+    setDrawerInitialValues(values);
+    setDrawerTitle(title);
+    setDrawerOpen(true);
+  }
+
+  async function handleLoadSampleConfirm() {
+    if (loadSampleBusy) return;
+    setLoadSampleBusy(true);
+    setToast(null);
+    try {
+      const { loadDemoVehicles } = await import("../api/admin");
+      const result = await loadDemoVehicles();
+      setLoadSampleOpen(false);
+      setToast({
+        message: `Added ${result.created}, updated ${result.updated}`,
+        tone: "success",
+      });
+      bumpSearchRefresh();
+    } catch (caught) {
+      if (caught instanceof ApiError) {
+        if (caught.status === 404) {
+          const { DEMO_VEHICLES_DISABLED_MESSAGE } = await import("../api/admin");
+          setToast({ message: DEMO_VEHICLES_DISABLED_MESSAGE, tone: "danger" });
+        } else if (caught.status === 403) {
+          setToast({ message: caught.message, tone: "danger" });
+        } else if (caught.code === "TOO_MANY_REQUESTS") {
+          setToast({ message: caught.message, tone: "danger" });
+        } else if (caught.status >= 500 || caught.code === "SERVICE_UNAVAILABLE") {
+          setToast({ message: caught.message, tone: "danger" });
+        } else {
+          setToast({ message: caught.message, tone: "danger" });
+        }
+      } else {
+        setToast({
+          message: "Could not reach the server. Check your connection.",
+          tone: "danger",
+        });
+      }
+    } finally {
+      setLoadSampleBusy(false);
+    }
+  }
 
   const featured = useMemo(() => selectFeaturedVehicles(vehicles), [vehicles]);
 
@@ -168,7 +264,18 @@ export function DashboardPage() {
                 }}
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {canManage && (
+                <button
+                  type="button"
+                  className="btn-primary min-w-[9.5rem] whitespace-nowrap"
+                  onClick={() =>
+                    openCreateDrawer(emptyVehicleFormValues(), "Add vehicle")
+                  }
+                >
+                  Add vehicle
+                </button>
+              )}
               {categories.map((category) => (
                 <button
                   key={category}
@@ -243,10 +350,45 @@ export function DashboardPage() {
             </div>
           )}
 
-          {!error && !loading && vehicles.length === 0 && (
+          {inventoryEmpty && filtersActive && (
             <EmptyState
               title="No vehicles match"
               description="Try clearing filters or adjusting your price range."
+            />
+          )}
+
+          {inventoryEmpty && !filtersActive && canManage && (
+            <EmptyState
+              title="No vehicles yet"
+              description="Add your first vehicle or load the sample catalogue to explore the dashboard."
+            >
+              <div className="flex flex-wrap justify-center gap-3">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() =>
+                    openCreateDrawer(emptyVehicleFormValues(), "Add vehicle")
+                  }
+                >
+                  Add a vehicle
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary min-w-[11rem]"
+                  disabled={loadSampleBusy}
+                  aria-busy={loadSampleBusy}
+                  onClick={() => setLoadSampleOpen(true)}
+                >
+                  {loadSampleBusy ? "Loading…" : "Load sample vehicles"}
+                </button>
+              </div>
+            </EmptyState>
+          )}
+
+          {inventoryEmpty && !filtersActive && !canManage && (
+            <EmptyState
+              title="No vehicles available right now"
+              description="Please check back soon."
             />
           )}
 
@@ -265,10 +407,18 @@ export function DashboardPage() {
                     purchasing={purchasingId === vehicle.id}
                     canManage={canManage}
                     stockHighlight={stockHighlightId === vehicle.id}
+                    insertHighlight={insertHighlightId === vehicle.id}
+                    headingId={`vehicle-heading-${vehicle.id}`}
                     onPurchase={handlePurchase}
                     onEdit={(item) => {
                       window.location.assign(`/admin/vehicles/${item.id}/edit`);
                     }}
+                    onDuplicate={(item) =>
+                      openCreateDrawer(
+                        vehicleToDuplicateFormValues(item),
+                        "Add similar vehicle",
+                      )
+                    }
                     onRestock={(item) => setRestockingVehicle(item)}
                     onDelete={(item) => setDeletingVehicle(item)}
                   />
@@ -320,6 +470,38 @@ export function DashboardPage() {
             setToast({ message, tone: "danger" });
           }
         }}
+      />
+
+      {drawerOpen && (
+        <Suspense fallback={null}>
+          <VehicleCreateDrawer
+            open={drawerOpen}
+            title={drawerTitle}
+            initialValues={drawerInitialValues}
+            onClose={() => setDrawerOpen(false)}
+            onCreate={(payload) =>
+              createVehicleForSearch(payload, deferredFilters)
+            }
+            onSuccess={(created) => {
+              setInsertHighlightId(created.id);
+              setToast({
+                message: `Added ${created.make} ${created.model}`,
+                tone: "success",
+              });
+            }}
+          />
+        </Suspense>
+      )}
+
+      <ConfirmDialog
+        open={loadSampleOpen}
+        title="Load sample vehicles?"
+        description={`This adds the sample catalogue (about ${SAMPLE_CATALOG_VEHICLE_COUNT} vehicles). It is safe to repeat: existing sample vehicles are not duplicated. Continue?`}
+        confirmLabel={loadSampleBusy ? "Loading…" : "Continue"}
+        onCancel={() => {
+          if (!loadSampleBusy) setLoadSampleOpen(false);
+        }}
+        onConfirm={() => void handleLoadSampleConfirm()}
       />
     </div>
   );

@@ -13,6 +13,10 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(15 * 60 * 1000),
+  DEMO_DATA_ENDPOINT_ENABLED: z
+    .enum(["true", "false", "1", "0", ""])
+    .optional()
+    .transform((value) => value === "true" || value === "1"),
 });
 
 export type TrustProxySetting = boolean | number | string;
@@ -24,6 +28,7 @@ export type AppConfig = {
   trustProxy: TrustProxySetting;
   authRateLimitMax: number;
   authRateLimitWindowMs: number;
+  demoDataEndpointEnabled: boolean;
 };
 
 function parseTrustProxy(value: string | undefined): TrustProxySetting {
@@ -74,6 +79,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     trustProxy: parseTrustProxy(parsed.data.TRUST_PROXY),
     authRateLimitMax: parsed.data.AUTH_RATE_LIMIT_MAX,
     authRateLimitWindowMs: parsed.data.AUTH_RATE_LIMIT_WINDOW_MS,
+    demoDataEndpointEnabled: parsed.data.DEMO_DATA_ENDPOINT_ENABLED ?? false,
   };
 }
 

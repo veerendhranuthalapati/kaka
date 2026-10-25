@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 export function SkeletonBlock({
   className = "",
@@ -11,14 +11,19 @@ export function SkeletonBlock({
 export function EmptyState({
   title,
   description,
+  children,
 }: {
   title: string;
   description: string;
+  children?: ReactNode;
 }) {
   return (
-    <div className="surface flex flex-col items-center gap-2 px-6 py-12 text-center">
-      <p className="font-display text-section-title text-ink">{title}</p>
-      <p className="max-w-md font-sans text-body text-muted">{description}</p>
+    <div className="surface flex flex-col items-center gap-4 px-6 py-12 text-center">
+      <div className="flex flex-col items-center gap-2">
+        <p className="font-display text-section-title text-ink">{title}</p>
+        <p className="max-w-md font-sans text-body text-muted">{description}</p>
+      </div>
+      {children}
     </div>
   );
 }

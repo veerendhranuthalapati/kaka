@@ -18,7 +18,12 @@ import {
   updateVehicle,
 } from "../api/vehicles";
 import { ApiError } from "../api/client";
-import type { Vehicle, VehicleInput, VehicleSearchParams, VehicleUpdateInput } from "../types";
+import type {
+  Vehicle,
+  VehicleInput,
+  VehicleSearchParams,
+  VehicleUpdateInput,
+} from "../types";
 import {
   searchCacheKey,
   STALE_MS,
@@ -36,11 +41,16 @@ type VehicleDataContextValue = {
   applyVehicleMutation: (vehicle: Vehicle) => void;
   removeVehicleFromCache: (id: string) => void;
   createVehicleInCache: (input: VehicleInput) => Promise<Vehicle>;
+  createVehicleForSearch: (
+    input: VehicleInput,
+    searchParams: VehicleSearchParams,
+  ) => Promise<Vehicle>;
   updateVehicleInCache: (id: string, input: VehicleUpdateInput) => Promise<Vehicle>;
   restockVehicleInCache: (id: string, amount: number) => Promise<Vehicle>;
   deleteVehicleFromCache: (id: string) => Promise<void>;
   bumpSearchRefresh: () => void;
   searchRefreshToken: number;
+  searchDataVersion: number;
 };
 
 const VehicleDataContext = createContext<VehicleDataContextValue | null>(null);
@@ -48,10 +58,15 @@ const VehicleDataContext = createContext<VehicleDataContextValue | null>(null);
 export function VehicleDataProvider({ children }: { children: ReactNode }) {
   const lastFocusRevalidate = useRef(0);
   const [searchRefreshToken, setSearchRefreshToken] = useState(0);
+  const [searchDataVersion, setSearchDataVersion] = useState(0);
 
   const bumpSearchRefresh = useCallback(() => {
     vehicleDataCache.invalidateAll();
     setSearchRefreshToken((t) => t + 1);
+  }, []);
+
+  const bumpSearchDataVersion = useCallback(() => {
+    setSearchDataVersion((v) => v + 1);
   }, []);
 
   useEffect(() => {
@@ -68,6 +83,7 @@ export function VehicleDataProvider({ children }: { children: ReactNode }) {
   const value = useMemo<VehicleDataContextValue>(
     () => ({
       searchRefreshToken,
+      searchDataVersion,
       bumpSearchRefresh,
       getCachedVehicle: (id) => vehicleDataCache.getVehicle(id),
       loadVehicle: (id) =>
@@ -102,6 +118,13 @@ export function VehicleDataProvider({ children }: { children: ReactNode }) {
         bumpSearchRefresh();
         return created;
       },
+      createVehicleForSearch: async (input, searchParams) => {
+        const created = await createVehicle(input);
+        vehicleDataCache.upsertVehicle(created);
+        vehicleDataCache.appendVehicleToMatchingSearches(created, searchParams);
+        bumpSearchDataVersion();
+        return created;
+      },
       updateVehicleInCache: async (id, input) => {
         const updated = await updateVehicle(id, input);
         vehicleDataCache.upsertVehicle(updated);
@@ -117,7 +140,7 @@ export function VehicleDataProvider({ children }: { children: ReactNode }) {
         vehicleDataCache.removeVehicle(id);
       },
     }),
-    [bumpSearchRefresh, searchRefreshToken],
+    [bumpSearchRefresh, bumpSearchDataVersion, searchRefreshToken, searchDataVersion],
   );
 
   return (
@@ -134,7 +157,7 @@ export function useVehicleData(): VehicleDataContextValue {
 }
 
 export function useVehicleSearch(params: VehicleSearchParams) {
-  const { searchRefreshToken } = useVehicleData();
+  const { searchRefreshToken, searchDataVersion } = useVehicleData();
   const key = searchCacheKey(params);
   const [error, setError] = useState<string | null>(null);
   const cached = vehicleDataCache.getSearch(key);
@@ -174,7 +197,7 @@ export function useVehicleSearch(params: VehicleSearchParams) {
     return () => {
       cancelled = true;
     };
-  }, [key, searchRefreshToken]);
+  }, [key, searchRefreshToken, searchDataVersion]);
 
   const entry = vehicleDataCache.getSearch(key);
   return {
