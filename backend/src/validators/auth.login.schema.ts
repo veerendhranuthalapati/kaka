@@ -1,10 +1,13 @@
 import { z } from "zod";
+import { normalizeEmail } from "./normalizeEmail.js";
+import { safeText } from "./safeText.js";
 
 export const loginBodySchema = z
   .object({
-    email: z.string().email(),
-    password: z
-      .string()
+    email: safeText(320)
+      .email()
+      .transform((value) => normalizeEmail(value)),
+    password: safeText(72)
       .min(8)
       .max(72)
       .refine((value) => Buffer.byteLength(value, "utf8") <= 72, {

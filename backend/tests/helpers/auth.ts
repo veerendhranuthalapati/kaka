@@ -1,9 +1,8 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import type { Role } from "@prisma/client";
+import { signAccessToken } from "../../src/services/auth.service.js";
 import { prisma } from "../../src/lib/prisma.js";
-
-const TEST_PASSWORD = "password1";
+import { TEST_USER_PASSWORD } from "./passwords.js";
 
 export async function createTestUser(
   role: Role = "USER",
@@ -11,17 +10,13 @@ export async function createTestUser(
 ): Promise<{ id: string; email: string; role: Role; auth: string }> {
   const user = await prisma.user.create({
     data: {
-      email,
-      passwordHash: await bcrypt.hash(TEST_PASSWORD, 4),
+      email: email.toLowerCase(),
+      passwordHash: await bcrypt.hash(TEST_USER_PASSWORD, 4),
       role,
     },
   });
 
-  const token = jwt.sign(
-    { sub: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET!,
-    { algorithm: "HS256", expiresIn: 900 },
-  );
+  const token = signAccessToken(user);
 
   return {
     id: user.id,

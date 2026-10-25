@@ -4,8 +4,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import { truncateTables } from "../helpers/db.js";
 
+import { config } from "../../src/config/env.js";
+import { TEST_USER_PASSWORD } from "../helpers/passwords.js";
+
 const EMAIL = "login@example.com";
-const PASSWORD = "password1";
+const PASSWORD = TEST_USER_PASSWORD;
 
 async function registerUser(app: ReturnType<typeof createApp>): Promise<void> {
   await request(app)
@@ -54,7 +57,7 @@ describe("POST /api/auth/login", () => {
     }
   });
 
-  it("returns a JWT with the role claim and no passwordHash", async () => {
+  it("returns a JWT with sub and tv claims and no passwordHash", async () => {
     const app = createApp();
     await registerUser(app);
 
@@ -67,14 +70,17 @@ describe("POST /api/auth/login", () => {
     expect(res.body.user.passwordHash).toBeUndefined();
     expect(res.body.token).toEqual(expect.any(String));
 
-    const payload = jwt.verify(res.body.token, process.env.JWT_SECRET!, {
+    const payload = jwt.verify(res.body.token, config.jwtSecret, {
       algorithms: ["HS256"],
+      issuer: config.jwtIssuer,
+      audience: config.jwtAudience,
     }) as jwt.JwtPayload;
 
     expect(payload).toMatchObject({
       sub: res.body.user.id,
-      email: EMAIL,
-      role: "USER",
+      tv: 0,
     });
+    expect(payload.email).toBeUndefined();
+    expect(payload.role).toBeUndefined();
   });
 });

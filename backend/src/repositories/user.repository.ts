@@ -11,6 +11,17 @@ export type CreateUserInput = {
 export interface UserRepository {
   create(data: CreateUserInput): Promise<User>;
   findByEmail(email: string): Promise<User | null>;
+  findById(id: string): Promise<User | null>;
+  incrementTokenVersion(id: string): Promise<User>;
+}
+
+function mapUniqueViolation(error: Prisma.PrismaClientKnownRequestError): ApiError {
+  const target = error.meta?.target;
+  const fields = Array.isArray(target) ? target : [];
+  if (fields.includes("email")) {
+    return new ApiError(409, "EMAIL_TAKEN", "Email already registered");
+  }
+  return new ApiError(409, "CONFLICT", "Resource conflict");
 }
 
 export class PrismaUserRepository implements UserRepository {
@@ -22,7 +33,7 @@ export class PrismaUserRepository implements UserRepository {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
       ) {
-        throw new ApiError(409, "EMAIL_TAKEN", "Email already registered");
+        throw mapUniqueViolation(error);
       }
       throw error;
     }
@@ -30,5 +41,16 @@ export class PrismaUserRepository implements UserRepository {
 
   findByEmail(email: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { email } });
+  }
+
+  findById(id: string): Promise<User | null> {
+    return prisma.user.findUnique({ where: { id } });
+  }
+
+  async incrementTokenVersion(id: string): Promise<User> {
+    return prisma.user.update({
+      where: { id },
+      data: { tokenVersion: { increment: 1 } },
+    });
   }
 }

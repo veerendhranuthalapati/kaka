@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { afterAll, beforeAll } from "vitest";
+import { afterAll, afterEach, beforeAll } from "vitest";
 
 const databaseUrl =
   process.env.DATABASE_URL_TEST ??
@@ -14,13 +14,24 @@ if (!databaseName.endsWith("_test")) {
 
 process.env.DATABASE_URL = databaseUrl;
 process.env.JWT_SECRET =
-  process.env.JWT_SECRET ?? "test-jwt-secret-for-vitest-0123456789";
+  process.env.JWT_SECRET ??
+  "vitest-jwt-secret-entropy-abcdefgh-0123456789-xy";
+process.env.BCRYPT_COST = process.env.BCRYPT_COST ?? "4";
+process.env.CORS_ORIGIN =
+  process.env.CORS_ORIGIN ?? "http://localhost:5173";
 
 beforeAll(() => {
   execSync("npx prisma migrate deploy", {
     stdio: "inherit",
     env: { ...process.env },
   });
+});
+
+afterEach(async () => {
+  const { loginThrottleStore } = await import(
+    "../src/middleware/loginThrottle.js"
+  );
+  loginThrottleStore.reset();
 });
 
 afterAll(async () => {

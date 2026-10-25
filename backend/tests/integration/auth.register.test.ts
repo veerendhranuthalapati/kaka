@@ -2,6 +2,7 @@ import request from "supertest";
 import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import { truncateTables } from "../helpers/db.js";
+import { TEST_USER_PASSWORD } from "../helpers/passwords.js";
 
 describe("POST /api/auth/register", () => {
   afterEach(async () => {
@@ -12,7 +13,7 @@ describe("POST /api/auth/register", () => {
     const app = createApp();
     const res = await request(app)
       .post("/api/auth/register")
-      .send({ email: "not-an-email", password: "password1" });
+      .send({ email: "not-an-email", password: TEST_USER_PASSWORD });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatchObject({
@@ -51,7 +52,7 @@ describe("POST /api/auth/register", () => {
       .post("/api/auth/register")
       .send({
         email: "user@example.com",
-        password: "password1",
+        password: TEST_USER_PASSWORD,
         role: "ADMIN",
       });
 
@@ -63,7 +64,7 @@ describe("POST /api/auth/register", () => {
     const app = createApp();
     const res = await request(app)
       .post("/api/auth/register")
-      .send({ email: "newuser@example.com", password: "password1" });
+      .send({ email: "newuser@example.com", password: TEST_USER_PASSWORD });
 
     expect(res.status).toBe(201);
     expect(res.body.user).toMatchObject({
@@ -77,7 +78,7 @@ describe("POST /api/auth/register", () => {
 
   it("returns 409 when email is already registered", async () => {
     const app = createApp();
-    const payload = { email: "taken@example.com", password: "password1" };
+    const payload = { email: "taken@example.com", password: TEST_USER_PASSWORD };
     await request(app).post("/api/auth/register").send(payload);
 
     const res = await request(app).post("/api/auth/register").send(payload);
