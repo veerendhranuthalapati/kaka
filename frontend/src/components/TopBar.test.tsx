@@ -3,6 +3,23 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { TopBar } from "./TopBar";
+import {
+  TopBarActionsProvider,
+  useRegisterTopBarActions,
+} from "./TopBarActionsContext";
+
+function TopBarWithActions({
+  user,
+  onLogout,
+  actions,
+}: {
+  user: { id: string; email: string; role: "USER" };
+  onLogout: () => void;
+  actions: { onCategorySelect?: (category: string) => void };
+}) {
+  useRegisterTopBarActions(actions);
+  return <TopBar user={user} onLogout={onLogout} variant="full" />;
+}
 
 describe("TopBar", () => {
   const user = { id: "1", email: "user@test.com", role: "USER" as const };
@@ -11,12 +28,7 @@ describe("TopBar", () => {
     const ui = userEvent.setup();
     render(
       <MemoryRouter>
-        <TopBar
-          user={user}
-          onLogout={vi.fn()}
-          onCategorySelect={vi.fn()}
-          onInventoryClick={vi.fn()}
-        />
+        <TopBar user={user} onLogout={vi.fn()} variant="full" />
       </MemoryRouter>,
     );
 
@@ -31,13 +43,14 @@ describe("TopBar", () => {
     const onCategorySelect = vi.fn();
     const ui = userEvent.setup();
     render(
-      <MemoryRouter>
-        <TopBar
-          user={user}
-          onLogout={vi.fn()}
-          onCategorySelect={onCategorySelect}
-          onInventoryClick={vi.fn()}
-        />
+      <MemoryRouter initialEntries={["/"]}>
+        <TopBarActionsProvider>
+          <TopBarWithActions
+            user={user}
+            onLogout={vi.fn()}
+            actions={{ onCategorySelect }}
+          />
+        </TopBarActionsProvider>
       </MemoryRouter>,
     );
 

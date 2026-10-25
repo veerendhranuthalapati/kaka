@@ -1,9 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
-import { TOKEN_STORAGE_KEY } from "../api/client";
 import { AuthProvider } from "../auth/AuthContext";
-import { makeToken } from "../test/fixtures";
+import { seedAuthSession } from "../test/fixtures";
 import { AdminRoute } from "./AdminRoute";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -38,14 +37,14 @@ describe("route guards", () => {
   });
 
   it("allows an authenticated user through ProtectedRoute", () => {
-    sessionStorage.setItem(TOKEN_STORAGE_KEY, makeToken("USER"));
+    seedAuthSession("USER");
     renderRoutes("/");
 
     expect(screen.getByText("Dashboard screen")).toBeTruthy();
   });
 
   it("redirects a non-admin away from an admin route", () => {
-    sessionStorage.setItem(TOKEN_STORAGE_KEY, makeToken("USER"));
+    seedAuthSession("USER");
     renderRoutes("/admin");
 
     expect(screen.getByText("Dashboard screen")).toBeTruthy();
@@ -53,7 +52,7 @@ describe("route guards", () => {
   });
 
   it("allows an admin through AdminRoute", () => {
-    sessionStorage.setItem(TOKEN_STORAGE_KEY, makeToken("ADMIN"));
+    seedAuthSession("ADMIN");
     renderRoutes("/admin");
 
     expect(screen.getByText("Admin screen")).toBeTruthy();
