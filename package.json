@@ -1,0 +1,11 @@
+{
+  "name": "autoyard-monorepo",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "test:secrets": "node --test scripts/check-secrets.test.mjs"
+  }
+}

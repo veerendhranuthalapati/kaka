@@ -7,3 +7,6 @@ coverage/
 .DS_Store
 docs/design/
 .cache/
+backups/
+*.report.html
+chromewebdata_*/
